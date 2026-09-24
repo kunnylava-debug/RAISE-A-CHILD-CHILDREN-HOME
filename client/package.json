@@ -14,6 +14,7 @@
     "autoprefixer": "^10.6.1",
     "lucide-react": "^1.46.0",
     "postcss": "^8.5.28",
+    "raise-a-child-children-home": "file:..",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^3.4.19"

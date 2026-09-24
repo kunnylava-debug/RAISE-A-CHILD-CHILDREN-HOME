@@ -1,0 +1,10 @@
+{
+  "name": "raise-a-child-children-home",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RAISE A CHILD CHILDREN HOME official website and management system",
+  "scripts": {
+    "build": "npm --prefix client install && npm --prefix client run build",
+    "start": "node server/src/server.js"
+  }
+}
