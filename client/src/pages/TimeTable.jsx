@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Clock, Plus, Edit3, Trash2, ArrowUpDown, X, 
   Check, Bell, Activity, Droplets, Coffee, Bus, 
@@ -119,7 +119,7 @@ export default function TimeTable({ onShowToast }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {schedule.map((item, index) => {
+                {(Array.isArray(schedule) ? schedule : []).map((item, index) => {
                   const Icon = iconMap[item.icon_name] || Clock;
                   const isMorning = item.time_slot.includes('AM');
                   return (

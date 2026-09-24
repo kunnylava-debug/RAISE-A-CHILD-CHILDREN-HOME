@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Heart, Plus, Edit3, Trash2 } from 'lucide-react';
 
 export default function SupportersWall({ supporters, adminUser, onAddSupporter, onEditSupporter, onDeleteSupporter }) {
@@ -30,7 +30,7 @@ export default function SupportersWall({ supporters, adminUser, onAddSupporter, 
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {supporters.map((sup) => (
+        {(Array.isArray(supporters) ? supporters : []).map((sup) => (
           <div
             key={sup.id}
             className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 p-6 flex flex-col justify-between space-y-4 hover:-translate-y-1"

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Gift, Plus, Edit3, Trash2, CheckCircle2 } from 'lucide-react';
 
 export default function NeededItemsTable({ neededItems, adminUser, onPledge, onAddNeed, onEditNeed, onDeleteNeed }) {
@@ -44,7 +44,7 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {neededItems.map((item, index) => {
+              {(Array.isArray(neededItems) ? neededItems : []).map((item, index) => {
                 const isFulfilled = item.quantity_received >= item.quantity_needed || item.is_fulfilled;
                 return (
                   <tr 

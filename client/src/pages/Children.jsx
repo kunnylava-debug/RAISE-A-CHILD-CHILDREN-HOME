@@ -280,14 +280,14 @@ export default function Children({ onShowToast }) {
             <div key={i} className="bg-slate-100 rounded-2xl h-72" />
           ))}
         </div>
-      ) : childrenData.children.length === 0 ? (
+      ) : !Array.isArray(childrenData?.children) || childrenData.children.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
           <p className="text-slate-500 text-sm">No child records found matching your query.</p>
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID VIEW */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {childrenData.children.map((child) => (
+          {(Array.isArray(childrenData?.children) ? childrenData.children : []).map((child) => (
             <div
               key={child.id}
               className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group hover:-translate-y-1"
@@ -390,7 +390,7 @@ export default function Children({ onShowToast }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {childrenData.children.map((child) => (
+              {(Array.isArray(childrenData?.children) ? childrenData.children : []).map((child) => (
                 <tr key={child.id} className="hover:bg-slate-50/80 transition">
                   <td className="py-3 px-4 font-mono font-bold text-slate-900">{child.serial_no}</td>
                   <td className="py-3 px-4">

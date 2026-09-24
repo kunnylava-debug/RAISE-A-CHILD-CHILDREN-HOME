@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Image, Plus, Trash2, ZoomIn, FolderPlus, 
   Upload, X, Layers, Sparkles 
@@ -158,9 +158,9 @@ export default function Views({ onShowToast }) {
               : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          All Facilities ({categories.reduce((acc, c) => acc + (c.photos?.length || 0), 0)} Photos)
+          All Facilities ({(Array.isArray(categories) ? categories : []).reduce((acc, c) => acc + (c.photos?.length || 0), 0)} Photos)
         </button>
-        {categories.map(cat => (
+        {(Array.isArray(categories) ? categories : []).map(cat => (
           <button
             key={cat.id}
             onClick={() => setActiveCategorySlug(cat.slug)}
@@ -185,7 +185,7 @@ export default function Views({ onShowToast }) {
         </div>
       ) : (
         <div className="space-y-16">
-          {filteredCategories.map((category) => (
+          {(Array.isArray(filteredCategories) ? filteredCategories : []).map((category) => (
             <section key={category.id} className="space-y-5">
               {/* Category Title & Controls */}
               <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
@@ -232,7 +232,7 @@ export default function Views({ onShowToast }) {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {category.photos.map((photo, index) => (
+                  {(Array.isArray(category.photos) ? category.photos : []).map((photo, index) => (
                     <div
                       key={photo.id}
                       className="group relative rounded-2xl overflow-hidden bg-white border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between hover:-translate-y-1"

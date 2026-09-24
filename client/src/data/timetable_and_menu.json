@@ -1,0 +1,69 @@
+﻿{
+  "timetable": [
+    { "time_slot": "05:30 AM", "activity": "Wake Up & Morning Bells", "location_or_notes": "Dormitories - Bed making & hygiene", "icon_name": "Bell", "order_num": 1 },
+    { "time_slot": "06:00 AM - 06:45 AM", "activity": "Morning Yoga & Physical Exercise", "location_or_notes": "Open Sports Ground with Physical Trainer", "icon_name": "Activity", "order_num": 2 },
+    { "time_slot": "06:45 AM - 07:30 AM", "activity": "Bathing & Fresh Up", "location_or_notes": "Hostel Washrooms (Solar hot water available)", "icon_name": "Droplets", "order_num": 3 },
+    { "time_slot": "07:30 AM - 08:15 AM", "activity": "Wholesome Nutritious Breakfast", "location_or_notes": "Dining Hall - Milk, boiled eggs/sprouts, porridge", "icon_name": "Coffee", "order_num": 4 },
+    { "time_slot": "08:15 AM - 08:30 AM", "activity": "Assembly & School Departure", "location_or_notes": "Escorted bus / walk to local school campus", "icon_name": "Bus", "order_num": 5 },
+    { "time_slot": "09:00 AM - 02:00 PM", "activity": "Formal Schooling & Classes", "location_or_notes": "Partner Schools", "icon_name": "BookOpen", "order_num": 6 },
+    { "time_slot": "02:15 PM - 03:00 PM", "activity": "Return to Hostel & Hot Lunch", "location_or_notes": "Dining Hall - Fresh rice, dal, sabzi, fish/curd", "icon_name": "Utensils", "order_num": 7 },
+    { "time_slot": "03:00 PM - 03:45 PM", "activity": "Rest & Quiet Reading Time", "location_or_notes": "Hostel Dormitories / Library", "icon_name": "Moon", "order_num": 8 },
+    { "time_slot": "03:45 PM - 05:00 PM", "activity": "Remedial Tutoring & Homework Coaching", "location_or_notes": "Study Hall with Resident Tutors", "icon_name": "GraduationCap", "order_num": 9 },
+    { "time_slot": "05:00 PM - 06:15 PM", "activity": "Sports, Playground Games & Refreshment", "location_or_notes": "Outdoor Ground - Snacks, seasonal fruits & games", "icon_name": "Smile", "order_num": 10 },
+    { "time_slot": "06:30 PM - 07:00 PM", "activity": "Evening Prayer, Meditation & News", "location_or_notes": "Central Hall - Bhajan, inspiring thoughts & reflection", "icon_name": "Sun", "order_num": 11 },
+    { "time_slot": "07:00 PM - 08:30 PM", "activity": "Self-Study & Academic Practice", "location_or_notes": "Individual study desks in Study Hall", "icon_name": "Edit", "order_num": 12 },
+    { "time_slot": "08:30 PM - 09:15 PM", "activity": "Wholesome Dinner", "location_or_notes": "Dining Hall - Roti, seasonal sabzi, dal, warm milk", "icon_name": "Utensils", "order_num": 13 },
+    { "time_slot": "09:30 PM", "activity": "Lights Out & Restful Sleep", "location_or_notes": "Dormitories - Quiet restful sleep", "icon_name": "Bed", "order_num": 14 }
+  ],
+  "menu": [
+    {
+      "day": "Monday",
+      "breakfast": "Vegetable Dalia / Oats porridge, Boiled Eggs / Boiled Kala Chana, Banana, Warm Cow Milk",
+      "lunch": "Steamed Rice, Musur Dal, Cauliflower & Potato Sabzi, Begun Bhaja, Fresh Tomato Chutney",
+      "snacks": "Roasted Poha with Peanuts, Seasonal Guava / Apple, Hot Herbal Ginger Tea / Milk",
+      "dinner": "Fresh Handmade Chapatis, Mix Vegetable Korma, Moong Dal Tadka, Sweet Kheer"
+    },
+    {
+      "day": "Tuesday",
+      "breakfast": "Idli / Vegetable Upma with Coconut Chutney & Sambar, Boiled Egg / Sprouted Moong, Milk",
+      "lunch": "Steamed Rice, Arhar Dal with Drumsticks, Bandhakopi (Cabbage) Tarkari, Crispy Papad, Sweet Curd",
+      "snacks": "Murmura (Puffed Rice) with boiled chana, roasted nuts, Lemonade / Warm Milk",
+      "dinner": "Tawa Rotis, Paneer Bhurji / Soyabean Curry, Yellow Dal Fry, Warm Milk before bedtime"
+    },
+    {
+      "day": "Wednesday",
+      "breakfast": "Wheat Parathas with Aloo Matar Sabzi, Boiled Egg / Curd, Seasonal Orange / Banana, Milk",
+      "lunch": "Fragrant Rice, Katla Fish Curry with potatoes (or Paneer Curry for veg), Masoor Dal, Fresh Salad",
+      "snacks": "Steamed Sweet Corn with butter & chaat masala, Seasonal Fruit, Milk",
+      "dinner": "Fluffy Chapatis, Dal Makhani (lightly spiced), Aloo Gobi Bhaja, Gulab Jamun"
+    },
+    {
+      "day": "Thursday",
+      "breakfast": "Semolina (Suji) Halwa / Chire Polao with fresh vegetables, Boiled Egg / Sprouts, Warm Milk",
+      "lunch": "Steamed Basmati Rice, Cholar Dal with coconut shavings, Potol Dorma, Crispy Potato Fries",
+      "snacks": "Whole Wheat Biscuits, Roasted Makhana, Fresh Watermelon / Papaya, Warm Milk",
+      "dinner": "Phulkas (Rotis), Seasonal Lau Chingri / Bottle Gourd Kofta, Moong Dal, Payesh (Rice Pudding)"
+    },
+    {
+      "day": "Friday",
+      "breakfast": "Vegetable Khichdi with Ghee, Roasted Papad, Boiled Egg / Fruit, Warm Milk",
+      "lunch": "Steamed Rice, Rohu Fish Kaliya (or Shahi Paneer for veg), Moong Dal, Mixed Vegetable Labra, Chutney",
+      "snacks": "Boiled Chickpea Chaat with chopped cucumber & tomatoes, Warm Milk / Badam Milk",
+      "dinner": "Fresh Rotis, Egg Curry (or Soya Chunk Curry), Tadka Dal, Green Salad"
+    },
+    {
+      "day": "Saturday",
+      "breakfast": "Puri with White Chana Masala, Boiled Egg / Banana, Fresh Sweet Lassi / Warm Milk",
+      "lunch": "Jeera Rice, Yellow Dal Tadka, Bhindi Do Pyaza, Crisp Papad, Tomato-Date Chutney, Misti Doi",
+      "snacks": "Vegetable Cutlet / Poha, Seasonal Apple, Masala Milk",
+      "dinner": "Tawa Rotis, Kadai Vegetable curry with Paneer, Chana Dal, Rasgulla"
+    },
+    {
+      "day": "Sunday",
+      "breakfast": "Bread, Butter, Fruit Jam, Boiled Eggs / Bananas, Cornflakes with Warm Milk",
+      "lunch": "Special Sunday Feast: Basmati Pulao, Bengali Chicken Curry with big potatoes / Shahi Paneer, Dal, Salad, Payesh",
+      "snacks": "Singara (Samosa) / Vegetable Puff, Sweets, Warm Cardamom Milk",
+      "dinner": "Ghee Rotis, Palak Paneer / Methi Malai Matar, Yellow Dal, Fruit Custard"
+    }
+  ]
+}

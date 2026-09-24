@@ -1,0 +1,90 @@
+[
+  {
+    "name": "Pradeep Mukherjee",
+    "role": "Hostel Superintendent & Warden",
+    "mobile": "+91 98302 11223",
+    "email": "warden@raiseachildchildrenhome.org",
+    "qualification": "M.A. Sociology, B.Ed.",
+    "experience": "16 Years in Youth Residential Care",
+    "description": "Oversees day-to-day discipline, hostel security, student welfare, and guardian communication with dedicated parental care.",
+    "photo": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80",
+    "order_num": 1
+  },
+  {
+    "name": "Sunita Ghosh",
+    "role": "Senior Resident Educator & Academic Head",
+    "mobile": "+91 98302 33445",
+    "email": "academics@raiseachildchildrenhome.org",
+    "qualification": "M.Sc. Mathematics, B.Ed.",
+    "experience": "12 Years in Teaching & Remedial Coaching",
+    "description": "Leads evening study coaching, tracks academic progress in school, and conducts special STEM workshops for all children.",
+    "photo": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=400&q=80",
+    "order_num": 2
+  },
+  {
+    "name": "Dr. Tarun Roy",
+    "role": "Visiting Medical Officer & Health In-Charge",
+    "mobile": "+91 98302 55667",
+    "email": "health@raiseachildchildrenhome.org",
+    "qualification": "M.B.B.S., D.C.H. (Pediatrics)",
+    "experience": "20 Years Pediatric Practice",
+    "description": "Conducts weekly health checkups, manages emergency medical care, monitors student growth metrics and hygiene.",
+    "photo": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
+    "order_num": 3
+  },
+  {
+    "name": "Madhuri Bhattacharya",
+    "role": "Child Counselor & Emotional Wellbeing Guide",
+    "mobile": "+91 98302 77889",
+    "email": "counselor@raiseachildchildrenhome.org",
+    "qualification": "M.A. Clinical Psychology, PGDGC",
+    "experience": "9 Years in Child & Adolescent Mental Health",
+    "description": "Provides one-on-one psychological counseling, emotional support, and self-confidence building circles.",
+    "photo": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
+    "order_num": 4
+  },
+  {
+    "name": "Rameshwar Mahato",
+    "role": "Head Chef & Kitchen Nutrition Manager",
+    "mobile": "+91 98302 99001",
+    "email": "kitchen@raiseachildchildrenhome.org",
+    "qualification": "Diploma in Food Production & Nutrition",
+    "experience": "15 Years in Institutional Catering",
+    "description": "Prepares fresh, balanced, nutritious vegetarian and non-vegetarian meals following strict hygiene and dietary standards.",
+    "photo": "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=400&q=80",
+    "order_num": 5
+  },
+  {
+    "name": "Bikash Das",
+    "role": "Sports Instructor & Physical Trainer",
+    "mobile": "+91 98303 12345",
+    "email": "sports@raiseachildchildrenhome.org",
+    "qualification": "B.P.Ed., Certified Yoga Instructor",
+    "experience": "8 Years in Youth Sports Coaching",
+    "description": "Trains students in morning yoga, football, cricket, volleyball, and physical fitness routines.",
+    "photo": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+    "order_num": 6
+  },
+  {
+    "name": "Aparna Biswas",
+    "role": "Arts, Crafts & Cultural Coordinator",
+    "mobile": "+91 98303 67890",
+    "email": "culture@raiseachildchildrenhome.org",
+    "qualification": "Bachelor of Fine Arts (B.F.A.)",
+    "experience": "10 Years in Cultural Arts",
+    "description": "Nurtures children's artistic talents in painting, traditional dance, theatre, music, and stage performances.",
+    "photo": "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=400&q=80",
+    "order_num": 7
+  },
+  {
+    "name": "Gopal Mondal",
+    "role": "Campus Facilities & Safety Supervisor",
+    "mobile": "+91 98303 98765",
+    "email": "safety@raiseachildchildrenhome.org",
+    "qualification": "Higher Secondary, Security & First Aid Certified",
+    "experience": "14 Years in Facility Maintenance",
+    "description": "Ensures 24/7 campus security, solar power backup, clean water supply, and general maintenance.",
+    "photo": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+    "order_num": 8
+  }
+]

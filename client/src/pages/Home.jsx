@@ -16,8 +16,8 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
   useEffect(() => {
-    api.getEvents().then(setEvents).catch(console.error);
-    api.getAlumni().then(setAlumni).catch(console.error);
+    api.getEvents().then(data => setEvents(Array.isArray(data) ? data : [])).catch(() => setEvents([]));
+    api.getAlumni().then(data => setAlumni(Array.isArray(data) ? data : [])).catch(() => setAlumni([]));
   }, []);
 
   const openLightbox = (index) => {
@@ -319,7 +319,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
 
                 {/* Gallery Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                  {events.slice(0, 6).map((item, idx) => (
+                  {(Array.isArray(events) ? events : []).slice(0, 6).map((item, idx) => (
                     <div
                       key={item.id}
                       onClick={() => openLightbox(idx)}
@@ -427,7 +427,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {alumni.map((al) => (
+          {(Array.isArray(alumni) ? alumni : []).map((al) => (
             <div 
               key={al.id}
               className="glass-card rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-400 transition-all flex flex-col justify-between group"

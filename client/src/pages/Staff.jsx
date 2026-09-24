@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Phone, Mail, Award, Clock, User, Plus, 
   Edit3, Trash2, X, Check, Shield, GraduationCap 
@@ -109,7 +109,7 @@ export default function Staff({ onShowToast }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {staffList.map((member) => (
+          {(Array.isArray(staffList) ? staffList : []).map((member) => (
             <div
               key={member.id}
               className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group hover:-translate-y-1"

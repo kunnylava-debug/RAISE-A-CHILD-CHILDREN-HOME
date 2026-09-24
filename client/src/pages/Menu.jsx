@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Utensils, Coffee, Sun, Moon, Edit3, X, CheckCircle2, Apple } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -98,7 +98,7 @@ export default function Menu({ onShowToast }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {weeklyMenu.map((item, index) => {
+                {(Array.isArray(weeklyMenu) ? weeklyMenu : []).map((item, index) => {
                   const isSunday = item.day_of_week === 'Sunday';
                   return (
                     <tr
