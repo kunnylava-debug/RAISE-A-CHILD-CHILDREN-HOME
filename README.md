@@ -1,6 +1,6 @@
-﻿# Shanti Niketan Children's Hostel - Official Management & Information Portal
+# RAISE A CHILD CHILDREN HOME - Official Management & Information Portal
 
-A modern, professional, responsive Hostel Management and Information Website built according to strict institutional requirements, with complete database persistence, administrative dashboard, child privacy shielding, and online admissions.
+A modern, professional, responsive Hostel Management and Information Website for **RAISE A CHILD CHILDREN HOME**, founded by **BRO .NELSON**. Built according to strict institutional requirements, with complete database persistence, administrative dashboard, child privacy shielding, automated admission notifications, and public status tracking.
 
 ---
 
