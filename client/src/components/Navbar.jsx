@@ -39,19 +39,19 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
         <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
           <div className="flex items-center space-x-4 text-xs font-medium">
             <a 
-              href={`tel:${settings?.contact_phone || '+919830123456'}`} 
+              href={`tel:${settings?.contact_phone || '+919059491777'}`} 
               className="flex items-center hover:text-blue-300 transition-colors"
             >
               <Phone className="w-3.5 h-3.5 mr-1 text-blue-400" />
-              <span>{settings?.contact_phone || '+91 98301 23456'}</span>
+              <span>{settings?.contact_phone || '+91 90594 91777'}</span>
             </a>
             <span className="hidden sm:inline text-slate-700">|</span>
             <a 
-              href={`mailto:${settings?.contact_email || 'contact@raiseachildchildrenhome.org'}`} 
+              href={`mailto:${settings?.contact_email || 'pn9059491777@gmail.com'}`} 
               className="hidden sm:flex items-center hover:text-blue-300 transition-colors"
             >
               <Mail className="w-3.5 h-3.5 mr-1 text-blue-400" />
-              <span>{settings?.contact_email || 'contact@raiseachildchildrenhome.org'}</span>
+              <span>{settings?.contact_email || 'pn9059491777@gmail.com'}</span>
             </a>
           </div>
 

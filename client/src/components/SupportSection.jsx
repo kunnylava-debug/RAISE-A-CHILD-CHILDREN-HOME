@@ -70,8 +70,8 @@ export default function SupportSection({ settings, onOpenDonationModal, onCopy }
               </h3>
               <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-900">
                 <span className="bg-white px-3 py-1.5 rounded-lg shadow-sm">UPI Transfer</span>
-                <span className="bg-white px-3 py-1.5 rounded-lg shadow-sm">Google Pay ({settings?.gpay_number || '+91 98301 23456'})</span>
-                <span className="bg-white px-3 py-1.5 rounded-lg shadow-sm">PhonePe ({settings?.phonepe_number || '+91 98301 23456'})</span>
+                <span className="bg-white px-3 py-1.5 rounded-lg shadow-sm">Google Pay ({settings?.gpay_number || '+91 90594 91777'})</span>
+                <span className="bg-white px-3 py-1.5 rounded-lg shadow-sm">PhonePe ({settings?.phonepe_number || '+91 90594 91777'})</span>
                 <span className="bg-white px-3 py-1.5 rounded-lg shadow-sm">Paytm / BHIM</span>
               </div>
             </div>

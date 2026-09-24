@@ -5,9 +5,9 @@ import {
 
 export default function Footer({ setActiveTab, settings }) {
   const googleMapsUrl = "https://goo.gl/maps/rVLiCyNsMd157RUC8";
-  const address = settings?.contact_address || 'Mannaripoluru, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121';
-  const phone = settings?.contact_phone || '+91 98301 23456';
-  const email = settings?.contact_email || 'contact@raiseachildchildrenhome.org';
+  const address = settings?.contact_address || 'Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121';
+  const phone = settings?.contact_phone || '+91 90594 91777';
+  const email = settings?.contact_email || 'pn9059491777@gmail.com';
   const hostelName = settings?.hostel_name || "RAISE A CHILD CHILDREN HOME";
   const founderName = settings?.founder_name || "BRO .NELSON";
 

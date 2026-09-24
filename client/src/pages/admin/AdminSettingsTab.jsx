@@ -158,7 +158,7 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
               handleChange('map_address', e.target.value);
               handleChange('contact_address', e.target.value);
             }}
-            placeholder="e.g. Mannaripoluru, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121"
+            placeholder="e.g. Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121"
             className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
@@ -207,7 +207,7 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
               type="text"
               value={form.phonepe_number || ''}
               onChange={e => handleChange('phonepe_number', e.target.value)}
-              placeholder="e.g. +91 98301 23456"
+              placeholder="e.g. +91 90594 91777"
               className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none font-semibold text-slate-900"
             />
           </div>
@@ -217,7 +217,7 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
               type="text"
               value={form.gpay_number || ''}
               onChange={e => handleChange('gpay_number', e.target.value)}
-              placeholder="e.g. +91 98301 23456"
+              placeholder="e.g. +91 90594 91777"
               className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-semibold text-slate-900"
             />
           </div>

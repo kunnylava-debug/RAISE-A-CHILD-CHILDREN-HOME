@@ -127,7 +127,7 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
                 type="text"
                 value={form.phonepe_number}
                 onChange={e => handleChange('phonepe_number', e.target.value)}
-                placeholder="e.g. +91 98301 23456"
+                placeholder="e.g. +91 90594 91777"
                 className="w-full pl-9 pr-3 py-2.5 bg-white border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none text-xs sm:text-sm font-semibold text-slate-900"
               />
             </div>
@@ -156,7 +156,7 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
                 type="text"
                 value={form.gpay_number}
                 onChange={e => handleChange('gpay_number', e.target.value)}
-                placeholder="e.g. +91 98301 23456"
+                placeholder="e.g. +91 90594 91777"
                 className="w-full pl-9 pr-3 py-2.5 bg-white border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs sm:text-sm font-semibold text-slate-900"
               />
             </div>

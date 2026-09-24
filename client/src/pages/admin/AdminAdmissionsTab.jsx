@@ -94,7 +94,7 @@ We are delighted to inform you that the admission application for *${child}* (Cl
 *Next Steps for Admission:*
 1. Please visit our hostel campus with ${child}'s original Birth Certificate, Aadhar Card, and Transfer Certificate/Marks Sheet.
 2. Contact our administration at +91 90594 91777 to confirm your arrival and bed allocation.
-3. Campus Address: Mannaripoluru, Sullurpeta Mandal, Tirupati District, AP - 524121.
+3. Campus Address: Mannar Polur, Sullurpeta Mandal, Tirupati District, AP - 524121.
 ${notes ? `\n*Official Remarks:* "${notes}"\n` : ''}
 With blessings & warm regards,
 *BRO .NELSON*
@@ -194,7 +194,7 @@ RAISE A CHILD CHILDREN HOME`;
           <div class="header">
             <h1 class="title">RAISE A CHILD CHILDREN HOME</h1>
             <div class="subtitle">A Registered Residential Home for Love, Learning & Leadership</div>
-            <div class="address">Mannaripoluru, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121 | Phone: +91 90594 91777</div>
+            <div class="address">Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121 | Phone: +91 90594 91777</div>
           </div>
 
           <div class="ref-date">

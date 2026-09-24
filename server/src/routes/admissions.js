@@ -77,7 +77,7 @@ router.post('/', (req, res) => {
   const newApp = db.prepare('SELECT * FROM admissions WHERE id = ?').get(result.lastInsertRowid);
 
   // Retrieve configured hostel email
-  const hostelEmail = db.prepare("SELECT value FROM settings WHERE key = 'contact_email'").get()?.value || 'contact@raiseachildchildrenhome.org';
+  const hostelEmail = db.prepare("SELECT value FROM settings WHERE key = 'contact_email'").get()?.value || 'pn9059491777@gmail.com';
 
   console.log(`[EMAIL DISPATCH] New application ${app_no} received at RAISE A CHILD CHILDREN HOME for ${child_name}`);
 

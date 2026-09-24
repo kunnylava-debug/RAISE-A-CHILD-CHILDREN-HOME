@@ -14,8 +14,8 @@ function getHostelSettings() {
     hostel_name: settings.hostel_name || 'RAISE A CHILD CHILDREN HOME',
     founder_name: settings.founder_name || 'BRO .NELSON',
     contact_phone: settings.contact_phone || '+91 90594 91777',
-    contact_email: settings.contact_email || 'contact@raiseachildchildrenhome.org',
-    contact_address: settings.contact_address || 'Mannaripoluru, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121'
+    contact_email: settings.contact_email || 'pn9059491777@gmail.com',
+    contact_address: settings.contact_address || 'Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121'
   };
 }
 
