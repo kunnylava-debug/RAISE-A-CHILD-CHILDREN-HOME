@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Production build artifacts
+client/dist/
+dist/
+
+# Environment and sensitive keys
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Database temporary WAL files
+server/*.sqlite-wal
+server/*.sqlite-shm
+server/*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
