@@ -25,10 +25,6 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
     setLightboxOpen(true);
   };
 
-  // Google Maps navigation targeting hostel destination (13.705267, 79.999285)
-  const googleMapsDirectionsUrl = settings?.map_directions_url || "https://www.google.com/maps/dir/?api=1&destination=13.705267,79.999285";
-  const googleMapsSearchUrl = "https://goo.gl/maps/rVLiCyNsMd157RUC8";
-
   return (
     <div className="space-y-16 sm:space-y-24 pb-16">
       {/* 1. HERO SECTION (Clean, Prestigious Navy/Royal Blue/Amber palette with prominent Logo at top) */}
@@ -483,108 +479,6 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* 6. OUR CAMPUS LOCATION & GOOGLE MAPS NAVIGATION (REQUIREMENT 3: Target Google Maps 'Home') */}
-      <section id="location-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="glass-card rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl overflow-hidden relative">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Location Details Left (5 cols) */}
-            <div className="lg:col-span-5 space-y-6">
-              <div>
-                <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
-                  <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Google Maps Fixed Location</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-bold font-serif text-slate-900">
-                  Our Campus Location
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-600 mt-1">
-                  Our hostel is officially configured with direct <strong>Google Maps navigation</strong> to reach our doorstep seamlessly.
-                </p>
-              </div>
-
-              {/* Address Card */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="p-2.5 rounded-xl bg-white text-blue-600 shadow-xs border border-slate-200 flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider block">
-                      Hostel Address & Google Maps Destination
-                    </span>
-                    <p className="text-sm font-semibold text-slate-900 leading-snug mt-0.5">
-                      {settings?.map_address || "Mannaripoluru, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121 (Coordinates: 13.705267, 79.999285)"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600">
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span><strong>Coordinates:</strong> 13.7053° N, 79.9993° E</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span><strong>Location:</strong> Mannaripoluru, Sullurpeta</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href={googleMapsDirectionsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-6 py-3 rounded-xl shadow-md shadow-blue-200 flex items-center space-x-2 text-xs sm:text-sm transition transform hover:-translate-y-0.5"
-                >
-                  <Navigation className="w-4 h-4" />
-                  <span>Get Directions</span>
-                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-                </a>
-
-                <a
-                  href={googleMapsSearchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 font-semibold px-4 py-3 rounded-xl shadow-xs flex items-center space-x-2 text-xs sm:text-sm transition"
-                >
-                  <Compass className="w-4 h-4 text-blue-600" />
-                  <span>Open in Google Maps</span>
-                </a>
-
-                <a
-                  href={`tel:${settings?.contact_phone || '+919830123456'}`}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-semibold px-4 py-3 rounded-xl shadow-xs flex items-center space-x-2 text-xs sm:text-sm transition"
-                >
-                  <Phone className="w-4 h-4 text-slate-600" />
-                  <span>Call Helpdesk</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Embedded Google Map Iframe Right (7 cols) */}
-            <div className="lg:col-span-7 h-72 sm:h-96 rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-slate-100 relative">
-              <iframe
-                src={settings?.map_embed_url || "https://maps.google.com/maps?q=13.705267,79.999285&hl=en&z=17&output=embed"}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen=""
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Hostel Campus Location"
-                className="w-full h-full"
-              />
-              <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-800 shadow border border-slate-200 flex items-center space-x-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Hostel Campus • 13.7053° N, 79.9993° E (Sullurpeta, AP)</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
