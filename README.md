@@ -1,6 +1,6 @@
-# RAISE A CHILD CHILDREN HOME - Official Management & Information Portal
+# RISE A CHILD CHILDREN HOME - Official Management & Information Portal
 
-A modern, professional, responsive Hostel Management and Information Website for **RAISE A CHILD CHILDREN HOME**, founded by **BRO .NELSON**. Built according to strict institutional requirements, with complete database persistence, administrative dashboard, child privacy shielding, automated admission notifications, and public status tracking.
+A modern, professional, responsive Hostel Management and Information Website for **RISE A CHILD CHILDREN HOME**, founded by **BRO .NELSON**. Built according to strict institutional requirements, with complete database persistence, administrative dashboard, child privacy shielding, automated admission notifications, and public status tracking.
 
 ---
 

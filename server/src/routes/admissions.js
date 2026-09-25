@@ -79,7 +79,7 @@ router.post('/', (req, res) => {
   // Retrieve configured hostel email
   const hostelEmail = db.prepare("SELECT value FROM settings WHERE key = 'contact_email'").get()?.value || 'pn9059491777@gmail.com';
 
-  console.log(`[EMAIL DISPATCH] New application ${app_no} received at RAISE A CHILD CHILDREN HOME for ${child_name}`);
+  console.log(`[EMAIL DISPATCH] New application ${app_no} received at RISE A CHILD CHILDREN HOME for ${child_name}`);
 
   res.status(201).json({
     success: true,

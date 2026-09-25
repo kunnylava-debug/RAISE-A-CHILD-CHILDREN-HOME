@@ -114,7 +114,7 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
             </div>
             <div>
               <span className="block text-lg sm:text-xl font-bold font-serif text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
-                {settings?.hostel_name || "RAISE A CHILD CHILDREN HOME"}
+                {settings?.hostel_name || "RISE A CHILD CHILDREN HOME"}
               </span>
               <span className="block text-xs font-semibold text-blue-700 tracking-wide uppercase">
                 {settings?.hostel_tagline || "A Haven of Love, Learning & Leadership"}

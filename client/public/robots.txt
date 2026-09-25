@@ -1,5 +1,5 @@
-# Robots.txt for RAISE A CHILD CHILDREN HOME
-# Official Portal: https://raiseachildchildrenhome.org
+# Robots.txt for RISE A CHILD CHILDREN HOME
+# Official Portal: https://riseachildchildrenhome.org
 
 User-agent: *
 Allow: /
@@ -25,4 +25,4 @@ Disallow: /api/children/sync-google-sheet
 Crawl-delay: 1
 
 # Sitemap reference
-Sitemap: https://raiseachildchildrenhome.org/sitemap.xml
+Sitemap: https://riseachildchildrenhome.org/sitemap.xml

@@ -3,7 +3,7 @@ import { CreditCard, Copy, Building, Send } from 'lucide-react';
 
 export default function SupportSection({ settings, onOpenDonationModal, onCopy }) {
   const upiId = settings?.upi_id || 'nelson@upi';
-  const upiPayLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(settings?.upi_name || "RAISE A CHILD Welfare Trust")}&cu=INR`;
+  const upiPayLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(settings?.upi_name || "RISE A CHILD Welfare Trust")}&cu=INR`;
 
   return (
     <section className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden">
@@ -29,7 +29,7 @@ export default function SupportSection({ settings, onOpenDonationModal, onCopy }
             
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 inline-block shadow-inner">
               <img
-                src={settings?.payment_qr || "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi%3A%2F%2Fpay%3Fpa%3Dnelson%40upi%26pn%3DRAISE%2520A%2520CHILD%2520Hostel%26cu%3DINR"}
+                src={settings?.payment_qr || "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi%3A%2F%2Fpay%3Fpa%3Dnelson%40upi%26pn%3DRISE%2520A%2520CHILD%2520Hostel%26cu%3DINR"}
                 alt="UPI Payment QR Code"
                 className="w-52 h-52 sm:w-60 sm:h-60 mx-auto object-contain"
               />
@@ -88,7 +88,7 @@ export default function SupportSection({ settings, onOpenDonationModal, onCopy }
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-200">
                 <div>
                   <span className="text-slate-400 block text-xs">Account Name:</span>
-                  <span className="font-bold text-white">{settings?.upi_name || "RAISE A CHILD Welfare Trust"}</span>
+                  <span className="font-bold text-white">{settings?.upi_name || "RISE A CHILD Welfare Trust"}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-xs">Bank Name:</span>

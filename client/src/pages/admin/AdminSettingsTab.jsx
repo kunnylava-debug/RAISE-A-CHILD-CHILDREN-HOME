@@ -240,7 +240,7 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
               type="text"
               value={form.upi_name || ''}
               onChange={e => handleChange('upi_name', e.target.value)}
-              placeholder="e.g. RAISE A CHILD Welfare Trust"
+              placeholder="e.g. RISE A CHILD Welfare Trust"
               className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs"
             />
           </div>
@@ -346,7 +346,7 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
           </a>
           <a
             href="/api/children/export/excel"
-            download="RAISE_A_CHILD_Children_Records.xlsx"
+            download="RISE_A_CHILD_Children_Records.xlsx"
             className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition inline-flex items-center space-x-1 shadow-xs"
           >
             <span>Download Live Excel File (.xlsx) 📥</span>

@@ -21,50 +21,50 @@ import { api } from './services/api';
 
 const SEO_CONFIG = {
   home: {
-    title: "RAISE A CHILD CHILDREN HOME | Loving Haven, Education & Care | Sullurpeta",
-    description: "Official website of RAISE A CHILD CHILDREN HOME, founded by BRO .NELSON in Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh. Providing safe residential care, wholesome nutrition, and quality schooling for children and youths."
+    title: "RISE A CHILD CHILDREN HOME | Loving Haven, Education & Care | Sullurpeta",
+    description: "Official website of RISE A CHILD CHILDREN HOME, founded by BRO .NELSON in Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh. Providing safe residential care, wholesome nutrition, and quality schooling for children and youths."
   },
   staff: {
-    title: "Staff & Resident Guardians | RAISE A CHILD CHILDREN HOME",
-    description: "Meet the dedicated resident caregivers, wardens, tutors, and management of RAISE A CHILD CHILDREN HOME providing round-the-clock child care and guidance."
+    title: "Staff & Resident Guardians | RISE A CHILD CHILDREN HOME",
+    description: "Meet the dedicated resident caregivers, wardens, tutors, and management of RISE A CHILD CHILDREN HOME providing round-the-clock child care and guidance."
   },
   licence: {
-    title: "Government Registration & Statutory Licence (JJ Act) | RAISE A CHILD CHILDREN HOME",
-    description: "View statutory registration, JJ Act 2015 institutional certificate, government compliance, and safety inspection records of RAISE A CHILD CHILDREN HOME."
+    title: "Government Registration & Statutory Licence (JJ Act) | RISE A CHILD CHILDREN HOME",
+    description: "View statutory registration, JJ Act 2015 institutional certificate, government compliance, and safety inspection records of RISE A CHILD CHILDREN HOME."
   },
   children: {
-    title: "Children Directory & Student Roster | RAISE A CHILD CHILDREN HOME",
-    description: "Transparent, privacy-protected directory of resident students and youths pursuing primary, secondary, and higher secondary education at RAISE A CHILD CHILDREN HOME."
+    title: "Children Directory & Student Roster | RISE A CHILD CHILDREN HOME",
+    description: "Transparent, privacy-protected directory of resident students and youths pursuing primary, secondary, and higher secondary education at RISE A CHILD CHILDREN HOME."
   },
   views: {
-    title: "Campus Facilities, Dormitories & Infrastructure Views | RAISE A CHILD CHILDREN HOME",
+    title: "Campus Facilities, Dormitories & Infrastructure Views | RISE A CHILD CHILDREN HOME",
     description: "Explore photographic views of our dormitories, dining hall, sanitized washrooms, playground, study lab, and kitchen infrastructure in Mannar Polur, Sullurpeta."
   },
   admissions: {
-    title: "Online Admission Application & Status Tracking | RAISE A CHILD CHILDREN HOME",
-    description: "Apply online for residential schooling admission at RAISE A CHILD CHILDREN HOME or track your existing application number in real time."
+    title: "Online Admission Application & Status Tracking | RISE A CHILD CHILDREN HOME",
+    description: "Apply online for residential schooling admission at RISE A CHILD CHILDREN HOME or track your existing application number in real time."
   },
   needed: {
-    title: "Support Us & Urgent Needs | Donate via UPI, GPay & PhonePe | RAISE A CHILD CHILDREN HOME",
-    description: "Support underprivileged students at RAISE A CHILD CHILDREN HOME. Sponsor meals, educational supplies, uniforms, or donate directly via UPI QR, GPay, and PhonePe."
+    title: "Support Us & Urgent Needs | Donate via UPI, GPay & PhonePe | RISE A CHILD CHILDREN HOME",
+    description: "Support underprivileged students at RISE A CHILD CHILDREN HOME. Sponsor meals, educational supplies, uniforms, or donate directly via UPI QR, GPay, and PhonePe."
   },
   timetable: {
-    title: "Daily Student Routine & Schedule | RAISE A CHILD CHILDREN HOME",
-    description: "Explore the structured daily timetable of prayers, yoga, schooling, study coaching, sports, and wholesome meals at RAISE A CHILD CHILDREN HOME."
+    title: "Daily Student Routine & Schedule | RISE A CHILD CHILDREN HOME",
+    description: "Explore the structured daily timetable of prayers, yoga, schooling, study coaching, sports, and wholesome meals at RISE A CHILD CHILDREN HOME."
   },
   menu: {
-    title: "Weekly Nutritious Food & Dining Menu | RAISE A CHILD CHILDREN HOME",
+    title: "Weekly Nutritious Food & Dining Menu | RISE A CHILD CHILDREN HOME",
     description: "Review the nutritious weekly diet plan served to resident children, including balanced breakfast, hot lunch, evening milk snacks, and wholesome dinner."
   },
   admin: {
-    title: "Hostel Management Console | RAISE A CHILD CHILDREN HOME",
-    description: "Authorized administrator and staff operations portal for RAISE A CHILD CHILDREN HOME."
+    title: "Hostel Management Console | RISE A CHILD CHILDREN HOME",
+    description: "Authorized administrator and staff operations portal for RISE A CHILD CHILDREN HOME."
   }
 };
 
 function updatePageSEO(tabId, hostelName) {
   const meta = SEO_CONFIG[tabId] || SEO_CONFIG.home;
-  const pageTitle = meta.title.replace(/RAISE A CHILD CHILDREN HOME/g, hostelName || 'RAISE A CHILD CHILDREN HOME');
+  const pageTitle = meta.title.replace(/RISE A CHILD CHILDREN HOME/g, hostelName || 'RISE A CHILD CHILDREN HOME');
   document.title = pageTitle;
 
   const updateMeta = (selector, content) => {

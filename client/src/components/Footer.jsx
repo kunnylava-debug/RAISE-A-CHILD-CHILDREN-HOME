@@ -8,12 +8,12 @@ export default function Footer({ setActiveTab, settings }) {
   const address = settings?.contact_address || 'Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121';
   const phone = settings?.contact_phone || '+91 90594 91777';
   const email = settings?.contact_email || 'pn9059491777@gmail.com';
-  const hostelName = settings?.hostel_name || "RAISE A CHILD CHILDREN HOME";
+  const hostelName = settings?.hostel_name || "RISE A CHILD CHILDREN HOME";
   const founderName = settings?.founder_name || "BRO .NELSON";
 
-  const facebookUrl = settings?.social_facebook || "https://facebook.com/raiseachild";
-  const instagramUrl = settings?.social_instagram || "https://instagram.com/raiseachild";
-  const youtubeUrl = settings?.social_youtube || "https://youtube.com/@raiseachild";
+  const facebookUrl = settings?.social_facebook || "https://facebook.com/riseachild";
+  const instagramUrl = settings?.social_instagram || "https://instagram.com/riseachild";
+  const youtubeUrl = settings?.social_youtube || "https://youtube.com/@riseachild";
 
   return (
     <footer className="bg-slate-950 text-slate-300 border-t border-slate-800/80 py-6 sm:py-8 text-xs">

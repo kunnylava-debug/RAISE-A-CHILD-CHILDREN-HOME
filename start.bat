@@ -1,7 +1,7 @@
 @echo off
-title RAISE A CHILD CHILDREN HOME - Server & Client Launcher
+title RISE A CHILD CHILDREN HOME - Server & Client Launcher
 echo ========================================================
-echo   RAISE A CHILD CHILDREN HOME PORTAL
+echo   RISE A CHILD CHILDREN HOME PORTAL
 echo   Starting Backend API (Port 5000) and Web App...
 echo ========================================================
 echo.

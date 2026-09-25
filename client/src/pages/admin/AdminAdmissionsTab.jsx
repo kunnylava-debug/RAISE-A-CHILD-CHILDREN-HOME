@@ -83,13 +83,13 @@ export default function AdminAdmissionsTab({ onShowToast }) {
     const grade = app?.class_applying || '';
 
     if (status === 'Accepted') {
-      return `*RAISE A CHILD CHILDREN HOME*
+      return `*RISE A CHILD CHILDREN HOME*
 🎉 *OFFICIAL ADMISSION ACCEPTED & APPROVED*
 Ref No: ${appNo}
 
 Dear ${guardian},
 
-We are delighted to inform you that the admission application for *${child}* (Class: ${grade}) has been *ACCEPTED & APPROVED* for residence and education at RAISE A CHILD CHILDREN HOME.
+We are delighted to inform you that the admission application for *${child}* (Class: ${grade}) has been *ACCEPTED & APPROVED* for residence and education at RISE A CHILD CHILDREN HOME.
 
 *Next Steps for Admission:*
 1. Please visit our hostel campus with ${child}'s original Birth Certificate, Aadhar Card, and Transfer Certificate/Marks Sheet.
@@ -99,25 +99,25 @@ ${notes ? `\n*Official Remarks:* "${notes}"\n` : ''}
 With blessings & warm regards,
 *BRO .NELSON*
 Founder & Managing Trustee
-RAISE A CHILD CHILDREN HOME`;
+RISE A CHILD CHILDREN HOME`;
     } else if (status === 'Rejected') {
-      return `*RAISE A CHILD CHILDREN HOME*
+      return `*RISE A CHILD CHILDREN HOME*
 📋 *ADMISSION APPLICATION UPDATE*
 Ref No: ${appNo}
 
 Dear ${guardian},
 
-Thank you for your application to RAISE A CHILD CHILDREN HOME for *${child}* (Class: ${grade}). After careful review against our residential bed capacity and safety norms, we regret to inform you that we are unable to approve this admission application at this time.
+Thank you for your application to RISE A CHILD CHILDREN HOME for *${child}* (Class: ${grade}). After careful review against our residential bed capacity and safety norms, we regret to inform you that we are unable to approve this admission application at this time.
 ${notes ? `\n*Official Remarks:* "${notes}"\n` : ''}
 We pray for ${child}'s bright future and educational success.
 
 Warm regards,
 *BRO .NELSON*
 Founder & Managing Trustee
-RAISE A CHILD CHILDREN HOME
+RISE A CHILD CHILDREN HOME
 Phone: +91 90594 91777`;
     } else {
-      return `*RAISE A CHILD CHILDREN HOME*
+      return `*RISE A CHILD CHILDREN HOME*
 🔍 *ADMISSION UNDER REVIEW*
 Ref No: ${appNo}
 
@@ -130,7 +130,7 @@ Our hostel representative may contact you on this number shortly for document ve
 Warm regards,
 *BRO .NELSON*
 Founder & Managing Trustee
-RAISE A CHILD CHILDREN HOME`;
+RISE A CHILD CHILDREN HOME`;
     }
   };
 
@@ -149,7 +149,7 @@ RAISE A CHILD CHILDREN HOME`;
    */
   const getMailtoUrl = (app, status, notes) => {
     if (!app?.email) return '';
-    const subject = `Admission Decision: Application ${app.app_no} - ${status} | RAISE A CHILD CHILDREN HOME`;
+    const subject = `Admission Decision: Application ${app.app_no} - ${status} | RISE A CHILD CHILDREN HOME`;
     const body = getWhatsAppMessage(app, status, notes).replace(/\*/g, '');
     return `mailto:${encodeURIComponent(app.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
@@ -192,7 +192,7 @@ RAISE A CHILD CHILDREN HOME`;
         </head>
         <body>
           <div class="header">
-            <h1 class="title">RAISE A CHILD CHILDREN HOME</h1>
+            <h1 class="title">RISE A CHILD CHILDREN HOME</h1>
             <div class="subtitle">A Registered Residential Home for Love, Learning & Leadership</div>
             <div class="address">Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121 | Phone: +91 90594 91777</div>
           </div>
@@ -232,7 +232,7 @@ RAISE A CHILD CHILDREN HOME`;
           <div class="content">
             <p>Dear ${app.guardian_name},</p>
             ${isAccepted ? `
-              <p>We are pleased to inform you that following due assessment by our Admissions Board, <strong>${app.child_name}</strong> has been <strong>ACCEPTED & APPROVED</strong> for admission into Class <strong>${app.class_applying}</strong> at RAISE A CHILD CHILDREN HOME.</p>
+              <p>We are pleased to inform you that following due assessment by our Admissions Board, <strong>${app.child_name}</strong> has been <strong>ACCEPTED & APPROVED</strong> for admission into Class <strong>${app.class_applying}</strong> at RISE A CHILD CHILDREN HOME.</p>
               <p>Our residential sanctuary provides complete housing, wholesome nutrition, academic coaching, moral development, and medical care in a safe, loving environment.</p>
               <p><strong>Required Documents at Reporting:</strong></p>
               <ul>
@@ -244,7 +244,7 @@ RAISE A CHILD CHILDREN HOME`;
               ${app.admin_notes ? `<p><strong>Official Remarks:</strong> <em>"${app.admin_notes}"</em></p>` : ''}
               <p>Please report on the designated date to complete the hostel intake formalities.</p>
             ` : isRejected ? `
-              <p>Thank you for submitting an admission application for <strong>${app.child_name}</strong> at RAISE A CHILD CHILDREN HOME.</p>
+              <p>Thank you for submitting an admission application for <strong>${app.child_name}</strong> at RISE A CHILD CHILDREN HOME.</p>
               <p>After careful evaluation of current residential capacity and hostel accommodation guidelines, we regret to inform you that we cannot offer admission for the requested academic session.</p>
               ${app.admin_notes ? `<p><strong>Reason / Remarks:</strong> <em>"${app.admin_notes}"</em></p>` : ''}
               <p>We extend our sincere prayers and best wishes for ${app.child_name}'s continued education and bright future.</p>
@@ -259,7 +259,7 @@ RAISE A CHILD CHILDREN HOME`;
             <div class="signature-line">
               <strong>BRO .NELSON</strong><br/>
               Founder & Managing Trustee<br/>
-              RAISE A CHILD CHILDREN HOME
+              RISE A CHILD CHILDREN HOME
             </div>
           </div>
         </body>

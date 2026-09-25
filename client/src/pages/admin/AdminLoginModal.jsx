@@ -54,7 +54,7 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
             Hostel Staff & Admin Portal
           </h3>
           <p className="text-xs text-slate-500">
-            Authorized administrative access for RAISE A CHILD CHILDREN HOME
+            Authorized administrative access for RISE A CHILD CHILDREN HOME
           </p>
         </div>
 

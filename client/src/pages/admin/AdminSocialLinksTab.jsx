@@ -101,7 +101,7 @@ export default function AdminSocialLinksTab({ settings, onRefreshSettings, onSho
             className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm transition"
           />
           <p className="text-[11px] text-slate-400">
-            e.g. https://facebook.com/raiseachild or your organization page link
+            e.g. https://facebook.com/riseachild or your organization page link
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export default function AdminSocialLinksTab({ settings, onRefreshSettings, onSho
             className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-pink-500 focus:outline-none text-sm transition"
           />
           <p className="text-[11px] text-slate-400">
-            e.g. https://instagram.com/raiseachild
+            e.g. https://instagram.com/riseachild
           </p>
         </div>
 
@@ -167,7 +167,7 @@ export default function AdminSocialLinksTab({ settings, onRefreshSettings, onSho
             className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm transition"
           />
           <p className="text-[11px] text-slate-400">
-            e.g. https://youtube.com/@raiseachild
+            e.g. https://youtube.com/@riseachild
           </p>
         </div>
 

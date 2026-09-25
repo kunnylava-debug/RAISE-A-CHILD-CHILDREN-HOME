@@ -72,7 +72,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
               <div className="text-left">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
-                    {settings?.hostel_name || "RAISE A CHILD CHILDREN HOME"}
+                    {settings?.hostel_name || "RISE A CHILD CHILDREN HOME"}
                   </span>
                   <span className="hidden sm:inline-block text-[10px] uppercase font-extrabold bg-amber-500/30 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full">
                     Official Portal
@@ -87,7 +87,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
 
             {/* Welcoming Headline */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-serif tracking-tight text-white leading-tight drop-shadow-md">
-              {settings?.hostel_headline || "Welcome to RAISE A CHILD CHILDREN HOME"}
+              {settings?.hostel_headline || "Welcome to RISE A CHILD CHILDREN HOME"}
             </h1>
 
             {/* Sub-headline: Explicitly for ALL students */}
@@ -307,7 +307,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
                 <div className="space-y-3.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
                   <p>
                     {settings?.founder_bio || 
-                      "BRO .NELSON dedicated over 20 years to child welfare, youth development, and educational reform. Having witnessed the struggles of disadvantaged students deprived of schooling and stable care, he established RAISE A CHILD CHILDREN HOME with a heartfelt mission to ensure every child receives loving shelter, education, and moral guidance."}
+                      "BRO .NELSON dedicated over 20 years to child welfare, youth development, and educational reform. Having witnessed the struggles of disadvantaged students deprived of schooling and stable care, he established RISE A CHILD CHILDREN HOME with a heartfelt mission to ensure every child receives loving shelter, education, and moral guidance."}
                   </p>
                   
                   {/* Founder Vision */}
@@ -333,7 +333,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
               </div>
 
               <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span className="font-medium text-slate-700">RAISE A CHILD CHILDREN HOME Trust</span>
+                <span className="font-medium text-slate-700">RISE A CHILD CHILDREN HOME Trust</span>
                 <button 
                   onClick={() => setActiveTab('staff')}
                   className="text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1"

@@ -11,7 +11,7 @@ function getHostelSettings() {
     settings[r.key] = r.value;
   }
   return {
-    hostel_name: settings.hostel_name || 'RAISE A CHILD CHILDREN HOME',
+    hostel_name: settings.hostel_name || 'RISE A CHILD CHILDREN HOME',
     founder_name: settings.founder_name || 'BRO .NELSON',
     contact_phone: settings.contact_phone || '+91 90594 91777',
     contact_email: settings.contact_email || 'pn9059491777@gmail.com',

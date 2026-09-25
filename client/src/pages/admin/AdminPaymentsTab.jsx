@@ -10,7 +10,7 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
     gpay_number: settings?.gpay_number || '',
     phonepe_number: settings?.phonepe_number || '',
     upi_id: settings?.upi_id || 'nelson@upi',
-    upi_name: settings?.upi_name || "RAISE A CHILD Welfare Trust",
+    upi_name: settings?.upi_name || "RISE A CHILD Welfare Trust",
     payment_qr: settings?.payment_qr || '',
     bank_name: settings?.bank_name || 'State Bank of India',
     bank_account_no: settings?.bank_account_no || '38491029384',
@@ -212,7 +212,7 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
                 type="text"
                 value={form.upi_name}
                 onChange={e => handleChange('upi_name', e.target.value)}
-                placeholder="e.g. RAISE A CHILD Welfare Trust"
+                placeholder="e.g. RISE A CHILD Welfare Trust"
                 className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
               />
             </div>

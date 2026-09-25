@@ -114,7 +114,7 @@ export default function Children({ onShowToast }) {
   };
 
   const handleCopyScript = () => {
-    const scriptCode = `// Google Apps Script for RAISE A CHILD HOME Children Records
+    const scriptCode = `// Google Apps Script for RISE A CHILD HOME Children Records
 // 1. In Google Sheet, click Extensions > Apps Script
 // 2. Paste this code and click Deploy > New deployment > Web app
 // 3. Set 'Who has access' to 'Anyone'
@@ -253,7 +253,7 @@ function doPost(e) {
           </div>
 
           <h3 className="text-lg sm:text-xl font-bold font-serif text-white flex items-center space-x-2">
-            <span>RAISE A CHILD Children Records Excel Form</span>
+            <span>RISE A CHILD Children Records Excel Form</span>
           </h3>
 
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
@@ -284,7 +284,7 @@ function doPost(e) {
           {/* Download Excel */}
           <a
             href={api.getChildrenExportExcelUrl()}
-            download="RAISE_A_CHILD_Children_Records.xlsx"
+            download="RISE_A_CHILD_Children_Records.xlsx"
             className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-900/40"
           >
             <Download className="w-4 h-4" />
@@ -294,7 +294,7 @@ function doPost(e) {
           {/* Download CSV */}
           <a
             href={api.getChildrenExportCsvUrl()}
-            download="RAISE_A_CHILD_Children_Records.csv"
+            download="RISE_A_CHILD_Children_Records.csv"
             className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1 border border-slate-700"
             title="Download CSV Format"
           >
@@ -1001,7 +1001,7 @@ function doPost(e) {
                 </a>
                 <a
                   href={api.getChildrenExportExcelUrl()}
-                  download="RAISE_A_CHILD_Children_Records.xlsx"
+                  download="RISE_A_CHILD_Children_Records.xlsx"
                   className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg transition"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -1065,7 +1065,7 @@ function doPost(e) {
               </div>
 
               <ol className="list-decimal list-inside text-xs text-slate-600 space-y-1.5 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <li>Open your sheet: <a href="https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit" target="_blank" rel="noreferrer" className="text-blue-600 underline font-semibold">RAISE A CHILD HOME</a></li>
+                <li>Open your sheet: <a href="https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit" target="_blank" rel="noreferrer" className="text-blue-600 underline font-semibold">RISE A CHILD HOME</a></li>
                 <li>In Google Sheets menu, click <strong>Extensions &gt; Apps Script</strong>.</li>
                 <li>Delete any code there, paste the copied script, and click <strong>Save (Ctrl+S)</strong>.</li>
                 <li>Click <strong>Deploy &gt; New deployment</strong>, select type <strong>Web app</strong>.</li>

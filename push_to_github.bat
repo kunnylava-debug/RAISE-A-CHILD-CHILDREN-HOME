@@ -3,7 +3,7 @@ set "PATH=C:\ProgramData\win-10\GitHubDesktop\app-3.4.5\resources\app\git\cmd;C:
 cd /d "%~dp0"
 
 echo ======================================================================
-echo    RAISE A CHILD CHILDREN HOME - Official GitHub Pusher
+echo    RISE A CHILD CHILDREN HOME - Official GitHub Pusher
 echo ======================================================================
 echo Target Repository : https://github.com/kunnylava-debug/RAISE-A-CHILD-CHILDREN-HOME.git
 echo Branch            : main

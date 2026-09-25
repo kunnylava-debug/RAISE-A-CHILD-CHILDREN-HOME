@@ -56,7 +56,7 @@ export default function Licence({ onShowToast }) {
           Official Government Licence & Certification
         </h1>
         <p className="text-slate-600 text-sm sm:text-base">
-          RAISE A CHILD CHILDREN HOME operates under full statutory accreditation, state social welfare oversight, building and fire safety certifications, and regular audit inspections.
+          RISE A CHILD CHILDREN HOME operates under full statutory accreditation, state social welfare oversight, building and fire safety certifications, and regular audit inspections.
         </p>
       </div>
 

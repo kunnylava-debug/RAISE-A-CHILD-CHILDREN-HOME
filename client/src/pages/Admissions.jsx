@@ -250,7 +250,7 @@ export default function Admissions({ settings, onShowToast }) {
                       <span>Congratulations! Admission Approved & Accepted</span>
                     </h4>
                     <p>
-                      Your child has been officially selected for enrollment and residence at RAISE A CHILD CHILDREN HOME.
+                      Your child has been officially selected for enrollment and residence at RISE A CHILD CHILDREN HOME.
                       Please report with original certificates (Birth Certificate, Aadhar Card, Transfer Certificate/Marks Sheet) and 3 photographs.
                     </p>
                   </div>
@@ -623,7 +623,7 @@ export default function Admissions({ settings, onShowToast }) {
                     className="mt-1 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
                   />
                   <span className="text-xs text-slate-600 leading-relaxed">
-                    I confirm that I have read the hostel rules, Do's and Don'ts, and agree to abide by all disciplinary and safety standards of RAISE A CHILD CHILDREN HOME.
+                    I confirm that I have read the hostel rules, Do's and Don'ts, and agree to abide by all disciplinary and safety standards of RISE A CHILD CHILDREN HOME.
                   </span>
                 </label>
               </div>

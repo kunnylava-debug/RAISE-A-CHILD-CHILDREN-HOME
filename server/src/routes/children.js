@@ -117,8 +117,8 @@ router.get('/export/excel', (req, res) => {
   try {
     generateChildrenExcel();
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="RAISE_A_CHILD_Children_Records.xlsx"');
-    res.download(EXCEL_PATH, 'RAISE_A_CHILD_Children_Records.xlsx');
+    res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Children_Records.xlsx"');
+    res.download(EXCEL_PATH, 'RISE_A_CHILD_Children_Records.xlsx');
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate Excel file: ' + err.message });
   }
@@ -129,8 +129,8 @@ router.get('/export/csv', (req, res) => {
   try {
     generateChildrenExcel();
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="RAISE_A_CHILD_Children_Records.csv"');
-    res.download(CSV_PATH, 'RAISE_A_CHILD_Children_Records.csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Children_Records.csv"');
+    res.download(CSV_PATH, 'RISE_A_CHILD_Children_Records.csv');
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate CSV file: ' + err.message });
   }
