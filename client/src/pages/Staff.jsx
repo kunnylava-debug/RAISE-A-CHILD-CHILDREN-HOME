@@ -107,9 +107,38 @@ export default function Staff({ onShowToast }) {
             <div key={i} className="bg-slate-100 rounded-2xl h-80" />
           ))}
         </div>
+      ) : !Array.isArray(staffList) || staffList.length === 0 ? (
+        <div className="py-16 px-6 text-center bg-white rounded-3xl border border-dashed border-slate-300 shadow-xs max-w-xl mx-auto space-y-3">
+          <Shield className="w-12 h-12 text-emerald-500/70 mx-auto" />
+          <h3 className="text-lg font-bold text-slate-900 font-serif">Staff Directory Ready</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            No staff profiles have been added yet. Sign in to the Admin Dashboard to add wardens, tutors, counselors, and support staff.
+          </p>
+          {adminUser && (
+            <button
+              onClick={() => {
+                setCurrentEdit({
+                  name: '',
+                  role: '',
+                  mobile: '',
+                  email: '',
+                  qualification: '',
+                  experience: '',
+                  description: '',
+                  photo: ''
+                });
+                setEditModalOpen(true);
+              }}
+              className="mt-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center space-x-1.5 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add First Staff Member</span>
+            </button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {(Array.isArray(staffList) ? staffList : []).map((member) => (
+          {staffList.map((member) => (
             <div
               key={member.id}
               className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group hover:-translate-y-1"

@@ -54,95 +54,13 @@ export function seedData() {
     );
   }
 
-  const staffCount = db.prepare('SELECT COUNT(*) as count FROM staff').get().count;
-  if (staffCount === 0) {
-    const staffMembers = readData('staff.json');
-    const insertStaff = db.prepare(`
-      INSERT INTO staff (name, role, mobile, email, qualification, experience, description, photo, order_num)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    for (const s of staffMembers) {
-      insertStaff.run(s.name, s.role, s.mobile, s.email, s.qualification, s.experience, s.description, s.photo, s.order_num);
-    }
-  }
-
-  const childrenCount = db.prepare('SELECT COUNT(*) as count FROM children').get().count;
-  if (childrenCount < 120) {
-    const insertChild = db.prepare(`
-      INSERT OR REPLACE INTO children (serial_no, name, age, class, gender, admission_date, photo, guardian_name, guardian_phone, guardian_address, medical_notes, hobbies)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const sampleFeatured = [
-      { s: 'SN-CH-001', n: 'Aarav Sharma', a: 11, c: 'Class 6', g: 'Male', d: '2023-06-15', p: 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80', gn: 'Rajesh Sharma', gp: '+91 98765 43210', ga: 'Vill. Raipur, Dist. Bankura', mn: 'No known allergies. Routine immunizations complete.', h: 'Football, Drawing, Science models' },
-      { s: 'SN-CH-002', n: 'Pooja Barman', a: 12, c: 'Class 7', g: 'Female', d: '2022-07-01', p: 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80', gn: 'Maya Barman', gp: '+91 98765 43211', ga: 'Vill. Karimpur, Dist. Nadia', mn: 'Mild seasonal asthma, monitored with nurse.', h: 'Classical Dance, Reading, Gardening' },
-      { s: 'SN-CH-003', n: 'Rohan Mondal', a: 9, c: 'Class 4', g: 'Male', d: '2024-01-10', p: 'https://images.unsplash.com/photo-1485546246426-74dc88dec4d9?auto=format&fit=crop&w=300&q=80', gn: 'Subhash Mondal', gp: '+91 98765 43212', ga: 'P.O. Bethuadahari, Nadia', mn: 'Normal health. Enjoys milk and fruits.', h: 'Cricket, Clay modeling, Singing' },
-      { s: 'SN-CH-004', n: 'Sneha Sarkar', a: 14, c: 'Class 9', g: 'Female', d: '2021-04-18', p: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', gn: 'Geeta Sarkar', gp: '+91 98765 43213', ga: 'Dist. Murshidabad', mn: 'Normal vision, healthy stamina.', h: 'Debating, Mathematics, Chess' },
-      { s: 'SN-CH-005', n: 'Bikram Paul', a: 13, c: 'Class 8', g: 'Male', d: '2022-03-22', p: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80', gn: 'Alok Paul', gp: '+91 98765 43214', ga: 'Vill. Ranaghat, Nadia', mn: 'Excellent physical fitness.', h: 'Athletics, Sketching' },
-      { s: 'SN-CH-006', n: 'Ananya Roy', a: 8, c: 'Class 3', g: 'Female', d: '2024-04-05', p: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=300&q=80', gn: 'Kabita Roy', gp: '+91 98765 43215', ga: 'P.O. Krishnanagar, Nadia', mn: 'Healthy child.', h: 'Poetry recitation, Origami' }
-    ];
-
-    for (const c of sampleFeatured) {
-      insertChild.run(c.s, c.n, c.a, c.c, c.g, c.d, c.p, c.gn, c.gp, c.ga, c.mn, c.h);
-    }
-
-    const boyNames = ['Subham', 'Arjun', 'Manish', 'Kunal', 'Abhi', 'Ritwik', 'Debjit', 'Deepak', 'Samir', 'Pranab', 'Nikhil', 'Aniket'];
-    const girlNames = ['Mousumi', 'Payel', 'Rumpa', 'Madhura', 'Debjani', 'Ishita', 'Koyel', 'Soma', 'Dipannita', 'Swati', 'Piu'];
-    const surnames = ['Sen', 'Dutta', 'Halder', 'Seal', 'Banerjee', 'Chakraborty', 'Karmakar', 'Pramanik', 'Biswas', 'Pal', 'Roy'];
-
-    for (let i = 7; i <= 120; i++) {
-      const sNo = `SN-CH-${String(i).padStart(3, '0')}`;
-      const isBoy = i % 2 === 1;
-      const g = isBoy ? 'Male' : 'Female';
-      const firstName = isBoy ? boyNames[i % boyNames.length] : girlNames[i % girlNames.length];
-      const lastName = surnames[i % surnames.length];
-      const age = 6 + (i % 11);
-      const cls = `Class ${Math.min(10, Math.max(1, age - 5))}`;
-      const photo = isBoy ? 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80' : 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80';
-
-      insertChild.run(
-        sNo,
-        `${firstName} ${lastName}`,
-        age,
-        cls,
-        g,
-        '2023-08-01',
-        photo,
-        'Confidential Guardian',
-        '+91 98765 XXXXX',
-        'Confidential Address, West Bengal',
-        'Routine health checkup normal.',
-        'Academics, Outdoor Sports, Craft'
-      );
-    }
-  }
-
+  // Views categories initialized without dummy photos
   const catCount = db.prepare('SELECT COUNT(*) as count FROM views_categories').get().count;
   if (catCount === 0) {
     const categoriesData = readData('categories_and_photos.json');
     const insertCat = db.prepare('INSERT INTO views_categories (slug, name, description, order_num) VALUES (?, ?, ?, ?)');
-    const insertPhoto = db.prepare('INSERT INTO views_photos (category_id, title, description, image_url, order_num) VALUES (?, ?, ?, ?, ?)');
-
     for (const c of categoriesData) {
-      const res = insertCat.run(c.slug, c.name, c.desc, c.order_num);
-      const catId = res.lastInsertRowid;
-      c.photos.forEach((p, idx) => {
-        insertPhoto.run(catId, p.title, p.desc, p.url, idx + 1);
-      });
-    }
-  } else {
-    const photoCount = db.prepare('SELECT COUNT(*) as count FROM views_photos').get().count;
-    if (photoCount === 0) {
-      const categoriesData = readData('categories_and_photos.json');
-      const insertPhoto = db.prepare('INSERT INTO views_photos (category_id, title, description, image_url, order_num) VALUES (?, ?, ?, ?, ?)');
-      for (const c of categoriesData) {
-        const cat = db.prepare('SELECT id FROM views_categories WHERE slug = ?').get(c.slug);
-        if (cat) {
-          c.photos?.forEach((p, idx) => {
-            insertPhoto.run(cat.id, p.title, p.desc, p.url, idx + 1);
-          });
-        }
-      }
+      insertCat.run(c.slug, c.name, c.desc, c.order_num);
     }
   }
 
@@ -218,18 +136,6 @@ export function seedData() {
     insertDon.run('REC-2026-109', 'Nandini Dasgupta', '+91 98300 67890', 'nandini.d@gmail.com', 5000, 'Google Pay', 'GPAY-839120938', 'Festive sweets for children');
   }
 
-  const alumniCount = db.prepare('SELECT COUNT(*) as count FROM alumni').get().count;
-  if (alumniCount === 0) {
-    const alumniData = readData('alumni.json');
-    const insertAlumni = db.prepare(`
-      INSERT INTO alumni (name, stay_years, current_position, location, photo_url, quote, order_num)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-    for (const a of alumniData) {
-      insertAlumni.run(a.name, a.stay_years, a.current_position, a.location, a.photo_url, a.quote, a.order_num);
-    }
-    console.log('Seeded alumni success stories');
-  }
 
   console.log('Database seeded successfully with all realistic records!');
 }

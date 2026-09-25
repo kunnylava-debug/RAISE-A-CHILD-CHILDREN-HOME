@@ -12,7 +12,7 @@ import { api } from '../services/api';
 export default function Home({ setActiveTab, settings, onShowToast }) {
   const [events, setEvents] = useState([]);
   const [alumni, setAlumni] = useState([]);
-  const [childrenStats, setChildrenStats] = useState({ total: 120, boys: 60, girls: 60 });
+  const [childrenStats, setChildrenStats] = useState({ total: 0, boys: 0, girls: 0 });
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
@@ -20,11 +20,11 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
     api.getEvents().then(data => setEvents(Array.isArray(data) ? data : [])).catch(() => setEvents([]));
     api.getAlumni().then(data => setAlumni(Array.isArray(data) ? data : [])).catch(() => setAlumni([]));
     api.getChildren({ limit: 1 }).then(data => {
-      if (data?.total_children) {
+      if (data && typeof data.total_children === 'number') {
         setChildrenStats({
           total: data.total_children,
-          boys: data.boys_count || 60,
-          girls: data.girls_count || 60
+          boys: data.boys_count || 0,
+          girls: data.girls_count || 0
         });
       }
     }).catch(() => {});
@@ -477,62 +477,78 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(Array.isArray(alumni) ? alumni : []).map((al) => (
-            <div 
-              key={al.id}
-              className="glass-card rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-400 transition-all flex flex-col justify-between group"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-md flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <img 
-                      src={al.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
-                      alt={al.name}
-                      className="w-full h-full object-cover rounded-[14px]"
-                      onError={(e) => {
-                        e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80";
-                      }}
-                    />
+          {!Array.isArray(alumni) || alumni.length === 0 ? (
+            <div className="col-span-full py-12 px-6 text-center bg-white rounded-3xl border border-dashed border-slate-300 text-slate-500 shadow-xs">
+              <GraduationCap className="w-10 h-10 text-blue-500/70 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-slate-800">Alumni Records & Success Stories</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                Profiles of youths and students who graduated or left our home will be displayed here once added via the Admin Dashboard.
+              </p>
+              <button
+                onClick={() => setActiveTab('admin')}
+                className="mt-4 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition inline-flex items-center space-x-1.5"
+              >
+                <span>Go to Admin Panel</span>
+              </button>
+            </div>
+          ) : (
+            alumni.map((al) => (
+              <div 
+                key={al.id}
+                className="glass-card rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-400 transition-all flex flex-col justify-between group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-md flex-shrink-0 group-hover:scale-105 transition-transform">
+                      <img 
+                        src={al.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
+                        alt={al.name}
+                        className="w-full h-full object-cover rounded-[14px]"
+                        onError={(e) => {
+                          e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80";
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                        {al.name}
+                      </h3>
+                      <span className="inline-block text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full mt-0.5">
+                        Hostel Stay: {al.stay_years}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                      {al.name}
-                    </h3>
-                    <span className="inline-block text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full mt-0.5">
-                      Hostel Stay: {al.stay_years}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/80 space-y-1.5">
-                  <div className="flex items-start space-x-2 text-xs font-bold text-slate-900">
-                    <Briefcase className="w-3.5 h-3.5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <span>{al.current_position}</span>
+                  <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/80 space-y-1.5">
+                    <div className="flex items-start space-x-2 text-xs font-bold text-slate-900">
+                      <Briefcase className="w-3.5 h-3.5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <span>{al.current_position}</span>
+                    </div>
+                    {al.location && (
+                      <div className="flex items-center space-x-2 text-[11px] text-slate-600 font-medium">
+                        <MapPin className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <span>{al.location}</span>
+                      </div>
+                    )}
                   </div>
-                  {al.location && (
-                    <div className="flex items-center space-x-2 text-[11px] text-slate-600 font-medium">
-                      <MapPin className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                      <span>{al.location}</span>
+
+                  {al.quote && (
+                    <div className="text-xs text-slate-600 italic border-l-2 border-blue-400 pl-3 leading-relaxed">
+                      "{al.quote}"
                     </div>
                   )}
                 </div>
 
-                {al.quote && (
-                  <div className="text-xs text-slate-600 italic border-l-2 border-blue-400 pl-3 leading-relaxed">
-                    "{al.quote}"
-                  </div>
-                )}
+                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center space-x-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Self-Reliant Professional</span>
+                  </span>
+                  <span className="text-blue-600 font-semibold text-[11px]">Left From Home • Independent</span>
+                </div>
               </div>
-
-              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center space-x-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>Self-Reliant Professional</span>
-                </span>
-                <span className="text-blue-600 font-semibold text-[11px]">Left From Home • Independent</span>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
 

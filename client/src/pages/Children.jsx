@@ -480,8 +480,47 @@ function doPost(e) {
           ))}
         </div>
       ) : !Array.isArray(childrenData?.children) || childrenData.children.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
-          <p className="text-slate-500 text-sm">No child records found matching your query.</p>
+        <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-300 max-w-xl mx-auto space-y-3 shadow-xs">
+          <Users className="w-12 h-12 text-emerald-500/70 mx-auto" />
+          <h3 className="text-lg font-bold text-slate-900 font-serif">Children Directory Ready</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            No children records are registered yet. Sign in to the Admin Dashboard to add children details or import them directly from your connected Google Sheet.
+          </p>
+          {adminUser && (
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setEditChild({
+                    serial_no: '',
+                    name: '',
+                    age: 10,
+                    class: 'Class 5',
+                    gender: 'Male',
+                    admission_date: new Date().toISOString().split('T')[0],
+                    photo: '',
+                    guardian_name: '',
+                    guardian_phone: '',
+                    guardian_address: '',
+                    medical_notes: 'Normal routine health checkup.',
+                    hobbies: 'Sports, Reading'
+                  });
+                  setAddModalOpen(true);
+                }}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center space-x-1.5 shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add First Child</span>
+              </button>
+              <button
+                onClick={handleSyncGoogleSheet}
+                disabled={syncingSheet}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition inline-flex items-center space-x-1.5"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${syncingSheet ? 'animate-spin' : ''}`} />
+                <span>Sync from Google Sheet</span>
+              </button>
+            </div>
+          )}
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID VIEW */

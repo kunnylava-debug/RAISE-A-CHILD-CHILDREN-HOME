@@ -1,67 +1,44 @@
-﻿[
+[
   {
     "slug": "rooms",
     "name": "Rooms & Dormitories",
     "desc": "Spacious, well-ventilated living quarters with personal beds, study tables, secure lockers, and natural sunlight.",
     "order_num": 1,
-    "photos": [
-      { "title": "Junior Boys Dormitory", "desc": "Comfortable individual beds with neat linen and storage", "url": "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Girls Residence Wing", "desc": "Spacious, airy bedrooms with individual reading lamps", "url": "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Senior Study & Bedroom", "desc": "Dedicated quiet study corners inside living rooms", "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80" }
-    ]
+    "photos": []
   },
   {
     "slug": "dining",
     "name": "Dining Area",
     "desc": "Hygienic, bright community dining hall equipped with stainless steel tables, UV water purifier, and clean food service.",
     "order_num": 2,
-    "photos": [
-      { "title": "Main Dining Hall", "desc": "Capacity to seat over 140 children simultaneously in clean rows", "url": "https://images.unsplash.com/photo-1617886903355-9354bb57751f?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Meal Time Togetherness", "desc": "Children enjoying wholesome hot meals prepared fresh", "url": "https://images.unsplash.com/photo-1576867757603-05b134ebc379?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Clean Water Dispensing Station", "desc": "Commercial RO & UV water filtration plant", "url": "https://images.unsplash.com/photo-1584467735815-f778f274e296?auto=format&fit=crop&w=800&q=80" }
-    ]
+    "photos": []
   },
   {
     "slug": "bathrooms",
     "name": "Bathrooms & Sanitation",
     "desc": "Clean, sanitized modern shower stalls, western & Indian toilets, and solar-powered warm water heating systems.",
     "order_num": 3,
-    "photos": [
-      { "title": "Sanitized Washroom Rows", "desc": "Sparkling clean tiled bathrooms with running water 24x7", "url": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Handwash & Basin Area", "desc": "Multiple sensor-fitted handwash taps with soap dispensers", "url": "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Solar Water Heating System", "desc": "Eco-friendly hot water facility for winter months", "url": "https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=800&q=80" }
-    ]
+    "photos": []
   },
   {
     "slug": "playground",
     "name": "Playground & Sports Grounds",
     "desc": "Lush green open ground for football, cricket pitches, badminton courts, swing sets, and fitness exercise zones.",
     "order_num": 4,
-    "photos": [
-      { "title": "Campus Green Sports Field", "desc": "Open green grounds for football matches and morning drill", "url": "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Children Play Park", "desc": "Safe swing sets, see-saws, and slide park for junior children", "url": "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Outdoor Badminton Court", "desc": "All-weather court with night floodlights for evening games", "url": "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80" }
-    ]
+    "photos": []
   },
   {
     "slug": "kitchen",
     "name": "Kitchen & Pantry",
     "desc": "Spacious commercial-grade kitchen with stainless steel cooking ranges, steam cookers, vegetable wash stations, and cold storage.",
     "order_num": 5,
-    "photos": [
-      { "title": "Hygienic Commercial Kitchen", "desc": "Modern stainless steel preparation tables and exhaust chimneys", "url": "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Fresh Vegetable Prep Station", "desc": "Daily fresh farm produce washed and chopped under supervision", "url": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=800&q=80" }
-    ]
+    "photos": []
   },
   {
     "slug": "other-facilities",
     "name": "Other Facilities & Labs",
     "desc": "Quiet air-conditioned study hall, reference library with over 2,500 books, and 20 networked desktop workstations.",
     "order_num": 6,
-    "photos": [
-      { "title": "Hostel Computer Center", "desc": "Broadband-connected workstations for online learning", "url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Children Library & Reading Room", "desc": "Over 2,500 books in Bengali, Hindi, and English", "url": "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=800&q=80" },
-      { "title": "Evening Remedial Study Session", "desc": "Mentored homework and doubt-clearing batches", "url": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80" }
-    ]
+    "photos": []
   }
 ]

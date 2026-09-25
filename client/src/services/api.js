@@ -77,17 +77,12 @@ async function request(endpoint, options = {}) {
       if (endpoint === '/needed') return defaultNeededAndSupporters.needed_items;
       if (endpoint === '/supporters') return defaultNeededAndSupporters.supporters;
       if (endpoint.startsWith('/children')) return {
-        children: [
-          { id: 1, serial_no: 'RAC-2026-0001', name: 'Aarav Patel', age: 10, class: 'Class 5', gender: 'Boy', admission_date: '2023-06-15', guardian_name: 'Verified Legal Guardian', guardian_phone: '+91 98300 XXXXX', guardian_address: 'Tirupati District, AP', photo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80', medical_notes: 'Fit & Healthy', hobbies: 'Drawing & Cricket' },
-          { id: 2, serial_no: 'RAC-2026-0002', name: 'Diya Sharma', age: 12, class: 'Class 7', gender: 'Girl', admission_date: '2022-07-10', guardian_name: 'Verified Legal Guardian', guardian_phone: '+91 98300 XXXXX', guardian_address: 'Sullurpeta Mandal, AP', photo: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=400&q=80', medical_notes: 'Fit & Healthy', hobbies: 'Reading & Science' },
-          { id: 3, serial_no: 'RAC-2026-0003', name: 'Rohan Das', age: 9, class: 'Class 4', gender: 'Boy', admission_date: '2024-01-05', guardian_name: 'Verified Legal Guardian', guardian_phone: '+91 98300 XXXXX', guardian_address: 'Tirupati, AP', photo: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=400&q=80', medical_notes: 'Fit & Healthy', hobbies: 'Football' },
-          { id: 4, serial_no: 'RAC-2026-0004', name: 'Ananya Roy', age: 14, class: 'Class 9', gender: 'Girl', admission_date: '2021-08-20', guardian_name: 'Verified Legal Guardian', guardian_phone: '+91 98300 XXXXX', guardian_address: 'Nellore, AP', photo: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80', medical_notes: 'Fit & Healthy', hobbies: 'Classical Dance' }
-        ],
-        stats: { total: 120, boys: 60, girls: 60, active: 120 },
-        total_children: 120,
-        boys_count: 60,
-        girls_count: 60,
-        filtered_count: 4,
+        children: [],
+        stats: { total: 0, boys: 0, girls: 0, active: 0 },
+        total_children: 0,
+        boys_count: 0,
+        girls_count: 0,
+        filtered_count: 0,
         page: 1,
         total_pages: 1
       };
