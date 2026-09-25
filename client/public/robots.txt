@@ -1,0 +1,28 @@
+# Robots.txt for RAISE A CHILD CHILDREN HOME
+# Official Portal: https://raiseachildchildrenhome.org
+
+User-agent: *
+Allow: /
+Allow: /#home
+Allow: /#staff
+Allow: /#licence
+Allow: /#children
+Allow: /#views
+Allow: /#admissions
+Allow: /#needed
+Allow: /#timetable
+Allow: /#menu
+Allow: /uploads/
+
+# Disallow administrative and staff control pages
+Disallow: /admin
+Disallow: /#admin
+Disallow: /api/auth/
+Disallow: /api/children/setup-google-sheet-webhook
+Disallow: /api/children/sync-google-sheet
+
+# Crawl Delay
+Crawl-delay: 1
+
+# Sitemap reference
+Sitemap: https://raiseachildchildrenhome.org/sitemap.xml

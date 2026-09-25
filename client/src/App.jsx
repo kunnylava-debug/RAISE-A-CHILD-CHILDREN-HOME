@@ -19,6 +19,68 @@ import AdminLoginModal from './pages/admin/AdminLoginModal';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { api } from './services/api';
 
+const SEO_CONFIG = {
+  home: {
+    title: "RAISE A CHILD CHILDREN HOME | Loving Haven, Education & Care | Sullurpeta",
+    description: "Official website of RAISE A CHILD CHILDREN HOME, founded by BRO .NELSON in Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh. Providing safe residential care, wholesome nutrition, and quality schooling for children and youths."
+  },
+  staff: {
+    title: "Staff & Resident Guardians | RAISE A CHILD CHILDREN HOME",
+    description: "Meet the dedicated resident caregivers, wardens, tutors, and management of RAISE A CHILD CHILDREN HOME providing round-the-clock child care and guidance."
+  },
+  licence: {
+    title: "Government Registration & Statutory Licence (JJ Act) | RAISE A CHILD CHILDREN HOME",
+    description: "View statutory registration, JJ Act 2015 institutional certificate, government compliance, and safety inspection records of RAISE A CHILD CHILDREN HOME."
+  },
+  children: {
+    title: "Children Directory & Student Roster | RAISE A CHILD CHILDREN HOME",
+    description: "Transparent, privacy-protected directory of resident students and youths pursuing primary, secondary, and higher secondary education at RAISE A CHILD CHILDREN HOME."
+  },
+  views: {
+    title: "Campus Facilities, Dormitories & Infrastructure Views | RAISE A CHILD CHILDREN HOME",
+    description: "Explore photographic views of our dormitories, dining hall, sanitized washrooms, playground, study lab, and kitchen infrastructure in Mannar Polur, Sullurpeta."
+  },
+  admissions: {
+    title: "Online Admission Application & Status Tracking | RAISE A CHILD CHILDREN HOME",
+    description: "Apply online for residential schooling admission at RAISE A CHILD CHILDREN HOME or track your existing application number in real time."
+  },
+  needed: {
+    title: "Support Us & Urgent Needs | Donate via UPI, GPay & PhonePe | RAISE A CHILD CHILDREN HOME",
+    description: "Support underprivileged students at RAISE A CHILD CHILDREN HOME. Sponsor meals, educational supplies, uniforms, or donate directly via UPI QR, GPay, and PhonePe."
+  },
+  timetable: {
+    title: "Daily Student Routine & Schedule | RAISE A CHILD CHILDREN HOME",
+    description: "Explore the structured daily timetable of prayers, yoga, schooling, study coaching, sports, and wholesome meals at RAISE A CHILD CHILDREN HOME."
+  },
+  menu: {
+    title: "Weekly Nutritious Food & Dining Menu | RAISE A CHILD CHILDREN HOME",
+    description: "Review the nutritious weekly diet plan served to resident children, including balanced breakfast, hot lunch, evening milk snacks, and wholesome dinner."
+  },
+  admin: {
+    title: "Hostel Management Console | RAISE A CHILD CHILDREN HOME",
+    description: "Authorized administrator and staff operations portal for RAISE A CHILD CHILDREN HOME."
+  }
+};
+
+function updatePageSEO(tabId, hostelName) {
+  const meta = SEO_CONFIG[tabId] || SEO_CONFIG.home;
+  const pageTitle = meta.title.replace(/RAISE A CHILD CHILDREN HOME/g, hostelName || 'RAISE A CHILD CHILDREN HOME');
+  document.title = pageTitle;
+
+  const updateMeta = (selector, content) => {
+    let el = document.querySelector(selector);
+    if (el) {
+      el.setAttribute('content', content);
+    }
+  };
+
+  updateMeta('meta[name="description"]', meta.description);
+  updateMeta('meta[property="og:title"]', pageTitle);
+  updateMeta('meta[property="og:description"]', meta.description);
+  updateMeta('meta[name="twitter:title"]', pageTitle);
+  updateMeta('meta[name="twitter:description"]', meta.description);
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [settings, setSettings] = useState(null);
@@ -39,7 +101,28 @@ export default function App() {
     if (accepted === 'true') {
       setHasAcceptedRestriction(true);
     }
+
+    // Support direct hash deep-linking (e.g. #admissions, #needed, #timetable) for SEO
+    const initialHash = window.location.hash.replace('#', '').toLowerCase();
+    const validTabs = ['home', 'staff', 'licence', 'children', 'views', 'admissions', 'needed', 'timetable', 'menu', 'admin'];
+    if (validTabs.includes(initialHash)) {
+      setActiveTab(initialHash);
+    }
+
+    const onHashChange = () => {
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (validTabs.includes(hash)) {
+        setActiveTab(hash);
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  // Update document title and SEO meta tags when tab or settings change
+  useEffect(() => {
+    updatePageSEO(activeTab, settings?.hostel_name);
+  }, [activeTab, settings]);
 
   const handleTabChange = (tabId) => {
     // Check if visiting admissions or children for the first time
@@ -49,6 +132,12 @@ export default function App() {
       return;
     }
     setActiveTab(tabId);
+    if (window.history && window.history.pushState) {
+      const newUrl = tabId === 'home' 
+        ? window.location.pathname + window.location.search 
+        : `#${tabId}`;
+      window.history.pushState(null, '', newUrl);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -58,6 +147,9 @@ export default function App() {
     setRestrictionModalOpen(false);
     if (pendingTab) {
       setActiveTab(pendingTab);
+      if (window.history && window.history.pushState) {
+        window.history.pushState(null, '', `#${pendingTab}`);
+      }
       setPendingTab(null);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

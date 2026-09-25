@@ -1,0 +1,17 @@
+{
+  "short_name": "Raise A Child",
+  "name": "RAISE A CHILD CHILDREN HOME",
+  "description": "A safe, caring, and supportive residential home founded by BRO .NELSON providing quality education, balanced nutrition, and loving shelter for students and youths.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#fcfbf9",
+  "theme_color": "#1e3a8a",
+  "display": "standalone",
+  "orientation": "portrait"
+}
