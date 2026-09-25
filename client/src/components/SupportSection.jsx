@@ -16,7 +16,7 @@ export default function SupportSection({ settings, onOpenDonationModal, onCopy }
             You Can Support Us
           </h2>
           <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Every contribution directly provides food, education, and healthcare for our 120 children. Support seamlessly via UPI or direct bank transfer.
+            Every contribution directly provides food, education, and healthcare for our resident children. Support seamlessly via UPI or direct bank transfer.
           </p>
         </div>
 

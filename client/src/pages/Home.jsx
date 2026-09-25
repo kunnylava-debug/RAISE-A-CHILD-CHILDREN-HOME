@@ -22,9 +22,9 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
     api.getChildren({ limit: 1 }).then(data => {
       if (data && typeof data.total_children === 'number') {
         setChildrenStats({
-          total: data.total_children,
-          boys: data.boys_count || 0,
-          girls: data.girls_count || 0
+          total: data.total_children ?? 0,
+          boys: data.boys_count ?? 0,
+          girls: data.girls_count ?? 0
         });
       }
     }).catch(() => {});

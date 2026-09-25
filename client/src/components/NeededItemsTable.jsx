@@ -14,7 +14,7 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
             Current Hostel Needs & Requirements
           </h1>
           <p className="text-slate-600 text-sm sm:text-base mt-1 max-w-2xl">
-            Support our 120 children by sponsoring specific educational supplies, dormitory beds, or medical equipment.
+            Support our resident children by sponsoring specific educational supplies, dormitory beds, or medical equipment.
           </p>
         </div>
 

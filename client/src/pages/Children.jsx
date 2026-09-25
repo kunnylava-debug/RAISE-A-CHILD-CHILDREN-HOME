@@ -206,7 +206,7 @@ function doPost(e) {
             </div>
             <div className="pt-1">
               <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold font-serif tracking-tight text-white">
-                Total Children: <span className="text-emerald-300">{childrenData.total_children || 120}</span>
+                Total Children: <span className="text-emerald-300">{childrenData.total_children ?? 0}</span>
               </h2>
             </div>
             <p className="text-slate-300 text-xs sm:text-sm max-w-xl leading-relaxed">
@@ -217,11 +217,11 @@ function doPost(e) {
           {/* Aggregate Badges - Mobile Optimized */}
           <div className="grid grid-cols-3 gap-2 sm:gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/15 text-center flex-shrink-0">
             <div className="p-2 sm:px-3 bg-white/5 sm:bg-transparent rounded-xl">
-              <span className="block text-xl sm:text-3xl font-extrabold text-emerald-400">{childrenData.boys_count || 60}</span>
+              <span className="block text-xl sm:text-3xl font-extrabold text-emerald-400">{childrenData.boys_count ?? 0}</span>
               <span className="text-[10px] sm:text-xs text-slate-200 font-semibold uppercase tracking-wider mt-0.5 block">👦 Boys Wing</span>
             </div>
             <div className="p-2 sm:px-3 bg-white/5 sm:bg-transparent rounded-xl sm:border-x sm:border-white/20">
-              <span className="block text-xl sm:text-3xl font-extrabold text-teal-300">{childrenData.girls_count || 60}</span>
+              <span className="block text-xl sm:text-3xl font-extrabold text-teal-300">{childrenData.girls_count ?? 0}</span>
               <span className="text-[10px] sm:text-xs text-slate-200 font-semibold uppercase tracking-wider mt-0.5 block">👧 Girls Wing</span>
             </div>
             <div className="p-2 sm:px-3 bg-white/5 sm:bg-transparent rounded-xl">

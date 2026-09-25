@@ -21,11 +21,11 @@ import { api } from '../../services/api';
 export default function AdminDashboard({ settings, onRefreshSettings, setActiveTab, onShowToast }) {
   const [activeAdminTab, setActiveAdminTab] = useState('overview');
   const [stats, setStats] = useState({
-    total_children: 120,
-    total_staff: 8,
+    total_children: 0,
+    total_staff: 0,
     pending_admissions: 0,
-    total_facilities: 6,
-    needed_items: 8
+    total_facilities: 0,
+    needed_items: 0
   });
 
   const { adminUser, logout, setLoginModalOpen } = useAdminAuth();
@@ -40,11 +40,11 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
       api.getNeededItems()
     ]).then(([childRes, staff, admRes, views, needed]) => {
       setStats({
-        total_children: childRes?.total_children ?? 120,
-        total_staff: Array.isArray(staff) ? staff.length : 8,
+        total_children: childRes?.total_children ?? 0,
+        total_staff: Array.isArray(staff) ? staff.length : 0,
         pending_admissions: admRes?.stats?.pending ?? 0,
-        total_facilities: Array.isArray(views) ? views.length : 6,
-        needed_items: Array.isArray(needed) ? needed.length : 8
+        total_facilities: Array.isArray(views) ? views.length : 0,
+        needed_items: Array.isArray(needed) ? needed.length : 0
       });
     }).catch(console.error);
   }, [adminUser]);
