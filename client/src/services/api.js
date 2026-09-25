@@ -206,8 +206,8 @@ export const api = {
   getChildrenSheetInfo: () => request('/children/sheet-info'),
   syncChildrenGoogleSheet: (sheet_url) => request('/children/sync-google-sheet', { method: 'POST', body: { sheet_url } }),
   setupChildrenGoogleSheetWebhook: (data) => request('/children/setup-google-sheet-webhook', { method: 'POST', body: data }),
-  getChildrenExportExcelUrl: () => `${API_URL}/children/export/excel`,
-  getChildrenExportCsvUrl: () => `${API_URL}/children/export/csv`,
+  getChildrenExportExcelUrl: () => `${API_BASE}/children/export/excel`,
+  getChildrenExportCsvUrl: () => `${API_BASE}/children/export/csv`,
 
   // Views / Facilities
   getViews: () => request('/views'),

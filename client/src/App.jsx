@@ -25,6 +25,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [restrictionModalOpen, setRestrictionModalOpen] = useState(false);
   const [hasAcceptedRestriction, setHasAcceptedRestriction] = useState(false);
+  const [pendingTab, setPendingTab] = useState(null);
 
   const fetchSettings = () => {
     api.getSettings()
@@ -43,6 +44,7 @@ export default function App() {
   const handleTabChange = (tabId) => {
     // Check if visiting admissions or children for the first time
     if (!hasAcceptedRestriction && (tabId === 'admissions' || tabId === 'children')) {
+      setPendingTab(tabId);
       setRestrictionModalOpen(true);
       return;
     }
@@ -54,6 +56,11 @@ export default function App() {
     localStorage.setItem('shanti_restriction_accepted', 'true');
     setHasAcceptedRestriction(true);
     setRestrictionModalOpen(false);
+    if (pendingTab) {
+      setActiveTab(pendingTab);
+      setPendingTab(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     setToast({
       type: 'success',
       title: 'Consent Recorded',

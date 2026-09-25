@@ -189,7 +189,8 @@ export async function syncFromGoogleSheet(sheetUrl) {
     if (serial && existingSerials.has(serial.toLowerCase())) continue;
     if (existingNames.has(name.toLowerCase())) continue;
 
-    const nextId = db.prepare('SELECT id FROM children ORDER BY id DESC LIMIT 1').get()?.id + 1 || 1;
+    const lastChildRow = db.prepare('SELECT id FROM children ORDER BY id DESC LIMIT 1').get();
+    const nextId = (lastChildRow ? lastChildRow.id : 0) + 1;
     const finalSerial = serial || `SN-CH-${String(nextId).padStart(3, '0')}`;
 
     insertStmt.run(

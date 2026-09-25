@@ -86,9 +86,10 @@ router.post('/', (req, res) => {
   );
 
   const newDonation = db.prepare('SELECT * FROM donations WHERE id = ?').get(result.lastInsertRowid);
+  const hostelName = db.prepare("SELECT value FROM settings WHERE key = 'hostel_name'").get()?.value || 'RAISE A CHILD CHILDREN HOME';
   res.status(201).json({
     success: true,
-    message: 'Thank you for supporting Shanti Niketan Children’s Hostel!',
+    message: `Thank you for supporting ${hostelName}!`,
     receipt: newDonation,
     updated_need: updatedNeed
   });

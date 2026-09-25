@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -31,7 +31,7 @@ router.put('/', authenticateToken, (req, res) => {
     for (const [key, value] of Object.entries(data)) {
       const valStr = (key === 'instructions_dos' || key === 'instructions_donts') && Array.isArray(value)
         ? JSON.stringify(value)
-        : String(value);
+        : (value === null || value === undefined ? '' : String(value));
       insertOrUpdate.run(key, valStr);
     }
   });
