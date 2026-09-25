@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -26,20 +26,7 @@ router.post('/', authenticateToken, (req, res) => {
   res.status(201).json(newRow);
 });
 
-// PUT update row (Admin)
-router.put('/:id', authenticateToken, (req, res) => {
-  const { time_slot, activity, location_or_notes, icon_name, order_num } = req.body;
-  db.prepare(`
-    UPDATE timetable
-    SET time_slot = ?, activity = ?, location_or_notes = ?, icon_name = ?, order_num = ?
-    WHERE id = ?
-  `).run(time_slot, activity, location_or_notes || '', icon_name || 'Clock', order_num || 0, req.params.id);
-
-  const updated = db.prepare('SELECT * FROM timetable WHERE id = ?').get(req.params.id);
-  res.json(updated);
-});
-
-// PUT reorder rows (Admin)
+// PUT reorder rows (Admin) - Must come before /:id
 router.put('/reorder', authenticateToken, (req, res) => {
   const { ordered_ids } = req.body; // Array of IDs in order
   if (!Array.isArray(ordered_ids)) {
@@ -55,6 +42,19 @@ router.put('/reorder', authenticateToken, (req, res) => {
 
   reorderTx(ordered_ids);
   res.json({ message: 'Timetable reordered successfully.' });
+});
+
+// PUT update row (Admin)
+router.put('/:id', authenticateToken, (req, res) => {
+  const { time_slot, activity, location_or_notes, icon_name, order_num } = req.body;
+  db.prepare(`
+    UPDATE timetable
+    SET time_slot = ?, activity = ?, location_or_notes = ?, icon_name = ?, order_num = ?
+    WHERE id = ?
+  `).run(time_slot, activity, location_or_notes || '', icon_name || 'Clock', order_num || 0, req.params.id);
+
+  const updated = db.prepare('SELECT * FROM timetable WHERE id = ?').get(req.params.id);
+  res.json(updated);
 });
 
 // DELETE row (Admin)

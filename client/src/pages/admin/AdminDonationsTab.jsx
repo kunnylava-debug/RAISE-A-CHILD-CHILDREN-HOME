@@ -202,19 +202,26 @@ export default function AdminDonationsTab({ onShowToast }) {
             <p className="text-xs text-slate-500 mt-1">Switch filter or record a new donation.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
-                <tr>
-                  <th className="p-4">Receipt / Donor</th>
-                  <th className="p-4">Cross-Checked Need</th>
-                  <th className="p-4">Amount / Qty</th>
-                  <th className="p-4">Method & Ref</th>
-                  <th className="p-4">Need Status</th>
-                  <th className="p-4">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+          <div className="overflow-hidden rounded-2xl border border-slate-200">
+            {/* Mobile swipe helper */}
+            <div className="sm:hidden flex items-center justify-between px-4 py-2 bg-slate-50 text-[11px] text-slate-500 border-b border-slate-200">
+              <span>Donations Ledger</span>
+              <span className="font-semibold text-emerald-700">← Swipe table sideways →</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 text-[10px] sm:text-xs uppercase">
+                  <tr>
+                    <th className="p-3 sm:p-4 whitespace-nowrap">Receipt / Donor</th>
+                    <th className="p-3 sm:p-4 min-w-[140px]">Cross-Checked Need</th>
+                    <th className="p-3 sm:p-4 whitespace-nowrap">Amount / Qty</th>
+                    <th className="p-3 sm:p-4 whitespace-nowrap">Method & Ref</th>
+                    <th className="p-3 sm:p-4 whitespace-nowrap">Need Status</th>
+                    <th className="p-3 sm:p-4 whitespace-nowrap">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
                 {displayedDonations.map((d) => {
                   const isMatched = !!d.needed_item_id;
                   return (
@@ -290,7 +297,8 @@ export default function AdminDonationsTab({ onShowToast }) {
               </tbody>
             </table>
           </div>
-        )}
+        </div>
+      )}
       </div>
 
       {/* Record Offline Donation Modal */}

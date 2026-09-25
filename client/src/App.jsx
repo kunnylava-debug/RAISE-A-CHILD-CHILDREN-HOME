@@ -143,7 +143,10 @@ export default function App() {
           onCancel={() => setRestrictionModalOpen(false)}
         />
 
-        <AdminLoginModal onShowToast={setToast} />
+        <AdminLoginModal 
+          onShowToast={setToast} 
+          onLoginSuccess={() => setActiveTab('admin')} 
+        />
 
         <Toast toast={toast} onClose={() => setToast(null)} />
       </div>

@@ -35,5 +35,11 @@
   "map_address": "Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121 (Coordinates: 13.705267, 79.999285)",
   "map_embed_url": "https://maps.google.com/maps?q=13.705267,79.999285&hl=en&z=17&output=embed",
   "map_directions_url": "https://www.google.com/maps/dir/?api=1&destination=13.705267,79.999285",
-  "important_restriction_text": "Please read and accept the hostel instructions and student safety code of conduct before continuing. We ensure a safe, disciplined, and loving environment for all students and youths."
+  "important_restriction_text": "Please read and accept the hostel instructions and student safety code of conduct before continuing. We ensure a safe, disciplined, and loving environment for all students and youths.",
+  "social_facebook": "https://facebook.com/raiseachild",
+  "social_instagram": "https://instagram.com/raiseachild",
+  "social_youtube": "https://youtube.com/@raiseachild",
+  "children_google_sheet_url": "https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing",
+  "children_google_sheet_webhook_url": ""
 }
+

@@ -3,10 +3,12 @@ import {
   LayoutDashboard, Settings, UserCheck, Users, 
   FileText, ShieldCheck, Image, Clock, Utensils, 
   Heart, CreditCard, LogOut, ArrowRight, ExternalLink, 
-  Sparkles, CheckCircle2, Calendar, PackageCheck, GraduationCap, KeyRound 
+  Sparkles, CheckCircle2, Calendar, PackageCheck, GraduationCap, KeyRound, Lock, Share2 
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import AdminSettingsTab from './AdminSettingsTab';
+import AdminSocialLinksTab from './AdminSocialLinksTab';
+import AdminTimetableTab from './AdminTimetableTab';
 import AdminFounderVideoTab from './AdminFounderVideoTab';
 import AdminAdmissionsTab from './AdminAdmissionsTab';
 import AdminEventsTab from './AdminEventsTab';
@@ -26,9 +28,10 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
     needed_items: 8
   });
 
-  const { adminUser, logout } = useAdminAuth();
+  const { adminUser, logout, setLoginModalOpen } = useAdminAuth();
 
   useEffect(() => {
+    if (!adminUser) return;
     Promise.all([
       api.getChildren({ limit: 1 }),
       api.getStaff(),
@@ -37,17 +40,51 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
       api.getNeededItems()
     ]).then(([childRes, staff, admRes, views, needed]) => {
       setStats({
-        total_children: childRes.total_children || 120,
-        total_staff: staff.length || 8,
-        pending_admissions: admRes.stats?.pending || 0,
-        total_facilities: views.length || 6,
-        needed_items: needed.length || 8
+        total_children: childRes?.total_children ?? 120,
+        total_staff: Array.isArray(staff) ? staff.length : 8,
+        pending_admissions: admRes?.stats?.pending ?? 0,
+        total_facilities: Array.isArray(views) ? views.length : 6,
+        needed_items: Array.isArray(needed) ? needed.length : 8
       });
     }).catch(console.error);
-  }, []);
+  }, [adminUser]);
+
+  if (!adminUser) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-16">
+        <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto shadow-sm">
+            <Lock className="w-8 h-8" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold font-serif text-slate-900">Administrator Access Required</h2>
+            <p className="text-xs text-slate-500 mt-2">
+              You must be signed in with valid staff or administrator credentials to view and manage hostel operations.
+            </p>
+          </div>
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={() => setLoginModalOpen(true)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2"
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>Open Staff / Admin Login</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('home')}
+              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl transition text-xs"
+            >
+              Return to Public Website
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const menuItems = [
     { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
+    { id: 'social_links', label: 'Follow Us (Facebook, Instagram & YouTube)', icon: Share2 },
     { id: 'payments', label: 'PhonePe, GPay & UPI Options', icon: CreditCard },
     { id: 'events', label: 'Events & Celebrations', icon: Calendar },
     { id: 'donations', label: 'Donations & Needs Sync', icon: PackageCheck },
@@ -60,10 +97,19 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
     { id: 'manage_staff', label: 'Staff Profiles', icon: Users, navigateTo: 'staff' },
     { id: 'manage_licence', label: 'Licence & Certificate', icon: ShieldCheck, navigateTo: 'licence' },
     { id: 'manage_views', label: 'Facility Photos', icon: Image, navigateTo: 'views' },
-    { id: 'manage_timetable', label: 'Daily Timetable', icon: Clock, navigateTo: 'timetable' },
+    { id: 'timetable', label: 'Daily Routine & Schedule', icon: Clock },
     { id: 'manage_menu', label: 'Food Menu', icon: Utensils, navigateTo: 'menu' },
     { id: 'manage_needed', label: 'Needs & Supporters', icon: Heart, navigateTo: 'needed' },
   ];
+
+  const handleSelectAdminTab = (tabId) => {
+    setActiveAdminTab(tabId);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        document.getElementById('admin-content-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -117,7 +163,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
                   if (item.navigateTo) {
                     setActiveTab(item.navigateTo);
                   } else {
-                    setActiveAdminTab(item.id);
+                    handleSelectAdminTab(item.id);
                   }
                 }}
                 className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-between transition text-left ${
@@ -144,7 +190,33 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
         </aside>
 
         {/* Content Area (approx 9 cols) */}
-        <main className="lg:col-span-9">
+        <main id="admin-content-section" className="lg:col-span-9 scroll-mt-24">
+          {/* Mobile Quick Tab Switcher */}
+          <div className="lg:hidden mb-5 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Active Section</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-900 truncate block">
+                {menuItems.find(m => m.id === activeAdminTab)?.label || 'Overview'}
+              </span>
+            </div>
+            <select
+              value={activeAdminTab}
+              onChange={(e) => {
+                const found = menuItems.find(m => m.id === e.target.value);
+                if (found?.navigateTo) {
+                  setActiveTab(found.navigateTo);
+                } else {
+                  handleSelectAdminTab(e.target.value);
+                }
+              }}
+              className="bg-slate-50 border border-slate-300 text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[170px] truncate"
+            >
+              {menuItems.map(m => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+
           {activeAdminTab === 'overview' && (
             <div className="space-y-8">
               {/* Metrics Grid */}
@@ -205,6 +277,22 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs sm:text-sm">
                   <button
+                    onClick={() => handleSelectAdminTab('timetable')}
+                    className="p-4 bg-white hover:bg-emerald-50/70 rounded-2xl border border-emerald-200 font-bold text-slate-800 text-left transition flex items-center justify-between shadow-xs hover:border-emerald-400"
+                  >
+                    <span>Adjust Daily Routine & Schedule</span>
+                    <ArrowRight className="w-4 h-4 text-emerald-600" />
+                  </button>
+
+                  <button
+                    onClick={() => setActiveAdminTab('social_links')}
+                    className="p-4 bg-white hover:bg-indigo-50/70 rounded-2xl border border-indigo-200 font-bold text-slate-800 text-left transition flex items-center justify-between shadow-xs hover:border-indigo-400"
+                  >
+                    <span>Edit Facebook, Instagram & YouTube Links</span>
+                    <ArrowRight className="w-4 h-4 text-indigo-600" />
+                  </button>
+
+                  <button
                     onClick={() => setActiveAdminTab('events')}
                     className="p-4 bg-white hover:bg-blue-50/60 rounded-2xl border border-slate-200 font-bold text-slate-800 text-left transition flex items-center justify-between shadow-xs hover:border-blue-300"
                   >
@@ -262,6 +350,18 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
                 </div>
               </div>
             </div>
+          )}
+
+          {activeAdminTab === 'timetable' && (
+            <AdminTimetableTab onShowToast={onShowToast} />
+          )}
+
+          {activeAdminTab === 'social_links' && (
+            <AdminSocialLinksTab 
+              settings={settings}
+              onRefreshSettings={onRefreshSettings}
+              onShowToast={onShowToast}
+            />
           )}
 
           {activeAdminTab === 'payments' && (

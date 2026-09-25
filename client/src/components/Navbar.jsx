@@ -261,7 +261,7 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
                 })}
               </div>
 
-              {adminUser && (
+              {adminUser ? (
                 <div className="pt-2 border-t border-slate-100 my-2">
                   <button
                     onClick={() => handleNavClick('admin')}
@@ -269,6 +269,19 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
                   >
                     <UserCheck className="w-5 h-5 text-blue-400" />
                     <span>Admin Dashboard</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="pt-2 border-t border-slate-100 my-2">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setLoginModalOpen(true);
+                    }}
+                    className="w-full px-4 py-3 rounded-xl text-base font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 text-left flex items-center space-x-2 transition"
+                  >
+                    <Lock className="w-5 h-5 text-slate-600" />
+                    <span>Staff / Admin Login</span>
                   </button>
                 </div>
               )}

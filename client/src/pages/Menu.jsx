@@ -64,100 +64,176 @@ export default function Menu({ onShowToast }) {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-slate-900 text-white font-semibold uppercase text-[11px] tracking-wider">
-                <tr>
-                  <th className="py-4 px-6 w-32">Day</th>
-                  <th className="py-4 px-6 min-w-[200px]">
-                    <div className="flex items-center space-x-1.5">
-                      <Coffee className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Breakfast (07:30 AM)</span>
-                    </div>
-                  </th>
-                  <th className="py-4 px-6 min-w-[220px]">
-                    <div className="flex items-center space-x-1.5">
-                      <Sun className="w-3.5 h-3.5 text-yellow-400" />
-                      <span>Lunch (02:15 PM)</span>
-                    </div>
-                  </th>
-                  <th className="py-4 px-6 min-w-[180px]">
-                    <div className="flex items-center space-x-1.5">
-                      <Apple className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Snacks (05:00 PM)</span>
-                    </div>
-                  </th>
-                  <th className="py-4 px-6 min-w-[220px]">
-                    <div className="flex items-center space-x-1.5">
-                      <Moon className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>Dinner (08:30 PM)</span>
-                    </div>
-                  </th>
-                  {adminUser && <th className="py-4 px-6 text-right w-20">Edit</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {(Array.isArray(weeklyMenu) ? weeklyMenu : []).map((item, index) => {
-                  const isSunday = item.day_of_week === 'Sunday';
-                  return (
-                    <tr
-                      key={item.id}
-                      className={`hover:bg-slate-50/80 transition-colors ${
-                        isSunday ? 'bg-amber-50/30' : index % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
-                      }`}
-                    >
-                      {/* Day Column */}
-                      <td className="py-4 px-6 font-bold text-slate-900 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                          isSunday ? 'bg-amber-100 text-amber-900 font-extrabold' : 'bg-slate-100 text-slate-800'
-                        }`}>
-                          {item.day_of_week}
+        <div className="space-y-6">
+          {/* MOBILE VIEW: Responsive Day Cards (Ideal for smartphone screens) */}
+          <div className="lg:hidden space-y-4">
+            {(Array.isArray(weeklyMenu) ? weeklyMenu : []).map((item) => {
+              const isSunday = item.day_of_week === 'Sunday';
+              return (
+                <div 
+                  key={item.id} 
+                  className={`rounded-2xl border p-4 shadow-sm transition ${
+                    isSunday ? 'bg-amber-50/50 border-amber-200' : 'bg-white border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold ${
+                        isSunday ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-900 text-white'
+                      }`}>
+                        {item.day_of_week}
+                      </span>
+                      {isSunday && (
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase">
+                          Festive Feast
                         </span>
-                        {isSunday && (
-                          <span className="block text-[10px] text-amber-700 font-bold uppercase mt-1">
-                            Festive Feast
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Breakfast */}
-                      <td className="py-4 px-6 text-slate-700 leading-relaxed text-xs">
-                        {item.breakfast}
-                      </td>
-
-                      {/* Lunch */}
-                      <td className="py-4 px-6 text-slate-700 leading-relaxed text-xs font-medium">
-                        {item.lunch}
-                      </td>
-
-                      {/* Snacks */}
-                      <td className="py-4 px-6 text-slate-600 leading-relaxed text-xs">
-                        {item.snacks || 'Fresh seasonal fruit / milk'}
-                      </td>
-
-                      {/* Dinner */}
-                      <td className="py-4 px-6 text-slate-700 leading-relaxed text-xs">
-                        {item.dinner}
-                      </td>
-
-                      {/* Admin Edit */}
-                      {adminUser && (
-                        <td className="py-4 px-6 text-right whitespace-nowrap">
-                          <button
-                            onClick={() => setEditingDay(item)}
-                            className="p-1.5 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg transition"
-                            title="Edit meal schedule"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                        </td>
                       )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    </div>
+                    {adminUser && (
+                      <button
+                        onClick={() => setEditingDay(item)}
+                        className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center space-x-1"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                    <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/60">
+                      <div className="flex items-center space-x-1 text-amber-800 font-bold text-[11px] mb-1">
+                        <Coffee className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Breakfast (07:30 AM)</span>
+                      </div>
+                      <p className="text-slate-800 leading-relaxed">{item.breakfast}</p>
+                    </div>
+
+                    <div className="bg-yellow-50/70 p-2.5 rounded-xl border border-yellow-200/60">
+                      <div className="flex items-center space-x-1 text-yellow-800 font-bold text-[11px] mb-1">
+                        <Sun className="w-3.5 h-3.5 text-yellow-600" />
+                        <span>Lunch (02:15 PM)</span>
+                      </div>
+                      <p className="text-slate-800 leading-relaxed font-medium">{item.lunch}</p>
+                    </div>
+
+                    <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200/60">
+                      <div className="flex items-center space-x-1 text-emerald-800 font-bold text-[11px] mb-1">
+                        <Apple className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Evening Snacks (05:00 PM)</span>
+                      </div>
+                      <p className="text-slate-800 leading-relaxed">{item.snacks || 'Fresh seasonal fruit / milk'}</p>
+                    </div>
+
+                    <div className="bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-200/60">
+                      <div className="flex items-center space-x-1 text-indigo-800 font-bold text-[11px] mb-1">
+                        <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Dinner (08:30 PM)</span>
+                      </div>
+                      <p className="text-slate-800 leading-relaxed">{item.dinner}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* DESKTOP VIEW: Full Comparative Weekly Table */}
+          <div className="hidden lg:block bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead className="bg-slate-900 text-white font-semibold uppercase text-[11px] tracking-wider">
+                  <tr>
+                    <th className="py-4 px-6 w-32">Day</th>
+                    <th className="py-4 px-6 min-w-[200px]">
+                      <div className="flex items-center space-x-1.5">
+                        <Coffee className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Breakfast (07:30 AM)</span>
+                      </div>
+                    </th>
+                    <th className="py-4 px-6 min-w-[220px]">
+                      <div className="flex items-center space-x-1.5">
+                        <Sun className="w-3.5 h-3.5 text-yellow-400" />
+                        <span>Lunch (02:15 PM)</span>
+                      </div>
+                    </th>
+                    <th className="py-4 px-6 min-w-[180px]">
+                      <div className="flex items-center space-x-1.5">
+                        <Apple className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Snacks (05:00 PM)</span>
+                      </div>
+                    </th>
+                    <th className="py-4 px-6 min-w-[220px]">
+                      <div className="flex items-center space-x-1.5">
+                        <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Dinner (08:30 PM)</span>
+                      </div>
+                    </th>
+                    {adminUser && <th className="py-4 px-6 text-right w-20">Edit</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(Array.isArray(weeklyMenu) ? weeklyMenu : []).map((item, index) => {
+                    const isSunday = item.day_of_week === 'Sunday';
+                    return (
+                      <tr
+                        key={item.id}
+                        className={`hover:bg-slate-50/80 transition-colors ${
+                          isSunday ? 'bg-amber-50/30' : index % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
+                        }`}
+                      >
+                        {/* Day Column */}
+                        <td className="py-4 px-6 font-bold text-slate-900 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            isSunday ? 'bg-amber-100 text-amber-900 font-extrabold' : 'bg-slate-100 text-slate-800'
+                          }`}>
+                            {item.day_of_week}
+                          </span>
+                          {isSunday && (
+                            <span className="block text-[10px] text-amber-700 font-bold uppercase mt-1">
+                              Festive Feast
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Breakfast */}
+                        <td className="py-4 px-6 text-slate-700 leading-relaxed text-xs">
+                          {item.breakfast}
+                        </td>
+
+                        {/* Lunch */}
+                        <td className="py-4 px-6 text-slate-700 leading-relaxed text-xs font-medium">
+                          {item.lunch}
+                        </td>
+
+                        {/* Snacks */}
+                        <td className="py-4 px-6 text-slate-600 leading-relaxed text-xs">
+                          {item.snacks || 'Fresh seasonal fruit / milk'}
+                        </td>
+
+                        {/* Dinner */}
+                        <td className="py-4 px-6 text-slate-700 leading-relaxed text-xs">
+                          {item.dinner}
+                        </td>
+
+                        {/* Admin Edit */}
+                        {adminUser && (
+                          <td className="py-4 px-6 text-right whitespace-nowrap">
+                            <button
+                              onClick={() => setEditingDay(item)}
+                              className="p-1.5 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg transition"
+                              title="Edit meal schedule"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

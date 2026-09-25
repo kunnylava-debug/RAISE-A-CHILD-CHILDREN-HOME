@@ -29,7 +29,92 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
         )}
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+      {/* MOBILE VIEW: Clean Responsive Cards (Fits 100% of mobile width) */}
+      <div className="md:hidden space-y-3.5">
+        {(Array.isArray(neededItems) ? neededItems : []).map((item, index) => {
+          const isFulfilled = item.quantity_received >= item.quantity_needed || item.is_fulfilled;
+          return (
+            <div 
+              key={item.id} 
+              className={`bg-white rounded-2xl border p-4 shadow-sm space-y-3 transition ${
+                isFulfilled ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    #{index + 1} • {item.category}
+                  </span>
+                  <h4 className="font-bold text-slate-900 text-sm mt-0.5">{item.item_name}</h4>
+                  {item.description && (
+                    <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                  )}
+                </div>
+
+                <div>
+                  {isFulfilled ? (
+                    <span className="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full text-[11px] flex items-center">
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      Fulfilled
+                    </span>
+                  ) : (
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                      item.urgency === 'High' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {item.urgency || 'Needed'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl text-xs border border-slate-100">
+                <div>
+                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Quantity</span>
+                  <span className="font-bold text-slate-800">{item.quantity_needed} needed</span>
+                  <span className="text-[11px] text-slate-500 block">({item.quantity_received} received)</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Estimated Cost</span>
+                  <span className="font-extrabold text-emerald-800 font-mono text-sm block">
+                    ₹{item.estimated_price?.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                {adminUser && (
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => onEditNeed(item)}
+                      className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-slate-100 rounded-lg text-xs"
+                      title="Edit"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => onDeleteNeed(item.id)}
+                      className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg text-xs"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => onPledge(item)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-sm ml-auto"
+                >
+                  Pledge / Donate
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* DESKTOP VIEW: Full Table */}
+      <div className="hidden md:block bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-slate-900 text-white font-semibold uppercase text-[11px] tracking-wider">

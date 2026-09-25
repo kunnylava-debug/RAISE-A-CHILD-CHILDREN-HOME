@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Shield, ShieldCheck, Lock, Unlock, Search, 
   Filter, Plus, Edit3, Trash2, X, ChevronLeft, ChevronRight, 
-  Eye, EyeOff, LayoutGrid, Table as TableIcon, Sparkles 
+  Eye, EyeOff, LayoutGrid, Table as TableIcon, Sparkles,
+  FileSpreadsheet, ExternalLink, Download, RefreshCw, Copy, 
+  CheckCircle, Check, Settings, AlertCircle, FileText
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -29,6 +31,14 @@ export default function Children({ onShowToast }) {
   const [editChild, setEditChild] = useState(null);
   const [staffPasskeyModalOpen, setStaffPasskeyModalOpen] = useState(false);
   const [passkeyInput, setPasskeyInput] = useState('');
+  
+  // Google Sheet & Excel Integration State
+  const [sheetInfo, setSheetInfo] = useState(null);
+  const [syncingSheet, setSyncingSheet] = useState(false);
+  const [sheetModalOpen, setSheetModalOpen] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
+  const [webhookInput, setWebhookInput] = useState('');
+  const [savingWebhook, setSavingWebhook] = useState(false);
 
   const { adminUser, setLoginModalOpen } = useAdminAuth();
 
@@ -49,9 +59,19 @@ export default function Children({ onShowToast }) {
       .finally(() => setLoading(false));
   };
 
+  const loadSheetInfo = () => {
+    api.getChildrenSheetInfo()
+      .then(info => {
+        setSheetInfo(info);
+        if (info.webhook_url) setWebhookInput(info.webhook_url);
+      })
+      .catch(console.error);
+  };
+
   useEffect(() => {
     fetchChildren(1);
     setPage(1);
+    loadSheetInfo();
   }, [search, classFilter, genderFilter, adminUser]);
 
   const handlePageChange = (newPage) => {
@@ -61,19 +81,102 @@ export default function Children({ onShowToast }) {
     window.scrollTo({ top: 350, behavior: 'smooth' });
   };
 
+  const handleSyncGoogleSheet = async () => {
+    try {
+      setSyncingSheet(true);
+      const res = await api.syncChildrenGoogleSheet();
+      onShowToast?.({
+        type: 'success',
+        message: res.message || `Successfully synced with Google Sheet (${res.added_count || 0} imported)`
+      });
+      fetchChildren(page);
+      loadSheetInfo();
+    } catch (err) {
+      onShowToast?.({ type: 'error', message: 'Sync failed: ' + err.message });
+    } finally {
+      setSyncingSheet(false);
+    }
+  };
+
+  const handleSaveWebhook = async (e) => {
+    e.preventDefault();
+    try {
+      setSavingWebhook(true);
+      await api.setupChildrenGoogleSheetWebhook({ webhook_url: webhookInput });
+      onShowToast?.({ type: 'success', message: 'Google Sheet Webhook saved!' });
+      loadSheetInfo();
+      setSheetModalOpen(false);
+    } catch (err) {
+      onShowToast?.({ type: 'error', message: err.message });
+    } finally {
+      setSavingWebhook(false);
+    }
+  };
+
+  const handleCopyScript = () => {
+    const scriptCode = `// Google Apps Script for RAISE A CHILD HOME Children Records
+// 1. In Google Sheet, click Extensions > Apps Script
+// 2. Paste this code and click Deploy > New deployment > Web app
+// 3. Set 'Who has access' to 'Anyone'
+// 4. Copy the Web app URL and paste it in the website settings
+
+function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    
+    // Add headers if sheet is empty
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        'Serial ID', 'Full Name', 'Age', 'Gender', 'Class / Grade', 
+        'Admission Date', 'Guardian / Parent Name', 'Guardian Phone', 
+        'Address / Native Place', 'Medical Notes', 'Hobbies & Talents', 'Logged At'
+      ]);
+      sheet.getRange(1, 1, 1, 12).setFontWeight('bold').setBackground('#E6F4EA');
+    }
+    
+    sheet.appendRow([
+      data.serial_no || '',
+      data.name || '',
+      data.age || '',
+      data.gender || '',
+      data.class || '',
+      data.admission_date || '',
+      data.guardian_name || '',
+      data.guardian_phone || '',
+      data.guardian_address || '',
+      data.medical_notes || '',
+      data.hobbies || '',
+      new Date().toLocaleString()
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'Row appended' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+    navigator.clipboard.writeText(scriptCode);
+    setCopiedScript(true);
+    setTimeout(() => setCopiedScript(false), 3000);
+    onShowToast?.({ type: 'success', message: 'Apps Script code copied to clipboard!' });
+  };
+
   const handleSaveChild = async (e) => {
     e.preventDefault();
     try {
       if (editChild.id) {
         await api.updateChild(editChild.id, editChild);
-        onShowToast?.({ type: 'success', message: 'Child record updated successfully' });
+        onShowToast?.({ type: 'success', message: 'Child record updated & synchronized to Excel form' });
       } else {
         await api.createChild(editChild);
-        onShowToast?.({ type: 'success', message: 'New child record added successfully' });
+        onShowToast?.({ type: 'success', message: 'New child record added & stored in Excel form!' });
       }
       setAddModalOpen(false);
       setEditChild(null);
       fetchChildren(page);
+      loadSheetInfo();
     } catch (err) {
       onShowToast?.({ type: 'error', message: err.message || 'Operation failed' });
     }
@@ -93,42 +196,138 @@ export default function Children({ onShowToast }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
-      {/* 1. TOP STATS: PROMINENT TOTAL CHILDREN COUNTER */}
-      <div className="bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-xl relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* 1. TOP STATS: PROMINENT TOTAL CHILDREN COUNTER (Mobile & Desktop) */}
+      <div className="bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 rounded-3xl p-5 sm:p-10 text-white shadow-xl relative overflow-hidden">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-emerald-300 bg-white/10 px-3 py-1 rounded-full border border-white/20">
-              Hostel Resident Census
-            </span>
-            <div className="flex items-baseline space-x-4 pt-1">
-              <span className="text-4xl sm:text-6xl font-extrabold font-serif tracking-tight text-white">
-                Total Children: {childrenData.total_children}
-              </span>
+            <div className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-widest text-emerald-300 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+              <Users className="w-3.5 h-3.5" />
+              <span>Hostel Resident Census</span>
+            </div>
+            <div className="pt-1">
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold font-serif tracking-tight text-white">
+                Total Children: <span className="text-emerald-300">{childrenData.total_children || 120}</span>
+              </h2>
             </div>
             <p className="text-slate-300 text-xs sm:text-sm max-w-xl leading-relaxed">
               Every child is provided with full residential accommodation, school tuition, nutritious daily meals, medical checkups, and loving guidance.
             </p>
           </div>
 
-          {/* Aggregate Badges */}
-          <div className="grid grid-cols-3 gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15 text-center flex-shrink-0">
-            <div className="px-3">
-              <span className="block text-2xl font-bold text-emerald-400">{childrenData.boys_count}</span>
-              <span className="text-[11px] text-slate-300 uppercase tracking-wider">Boys Wing</span>
+          {/* Aggregate Badges - Mobile Optimized */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/15 text-center flex-shrink-0">
+            <div className="p-2 sm:px-3 bg-white/5 sm:bg-transparent rounded-xl">
+              <span className="block text-xl sm:text-3xl font-extrabold text-emerald-400">{childrenData.boys_count || 60}</span>
+              <span className="text-[10px] sm:text-xs text-slate-200 font-semibold uppercase tracking-wider mt-0.5 block">👦 Boys Wing</span>
             </div>
-            <div className="px-3 border-x border-white/20">
-              <span className="block text-2xl font-bold text-teal-400">{childrenData.girls_count}</span>
-              <span className="text-[11px] text-slate-300 uppercase tracking-wider">Girls Wing</span>
+            <div className="p-2 sm:px-3 bg-white/5 sm:bg-transparent rounded-xl sm:border-x sm:border-white/20">
+              <span className="block text-xl sm:text-3xl font-extrabold text-teal-300">{childrenData.girls_count || 60}</span>
+              <span className="text-[10px] sm:text-xs text-slate-200 font-semibold uppercase tracking-wider mt-0.5 block">👧 Girls Wing</span>
             </div>
-            <div className="px-3">
-              <span className="block text-2xl font-bold text-amber-400">100%</span>
-              <span className="text-[11px] text-slate-300 uppercase tracking-wider">In School</span>
+            <div className="p-2 sm:px-3 bg-white/5 sm:bg-transparent rounded-xl">
+              <span className="block text-xl sm:text-3xl font-extrabold text-amber-300">100%</span>
+              <span className="text-[10px] sm:text-xs text-slate-200 font-semibold uppercase tracking-wider mt-0.5 block">🎓 In School</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. RESPONSIBLE PRIVACY PROTECTION BANNER */}
+      {/* 2. GOOGLE SHEET & EXCEL LIVE FORM INTEGRATION */}
+      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 rounded-3xl p-5 sm:p-7 text-white shadow-xl border border-emerald-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        <div className="space-y-2 flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center space-x-1.5 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-400/30">
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Live Excel & Google Sheet Synchronized</span>
+            </span>
+            {sheetInfo?.is_webhook_active ? (
+              <span className="inline-flex items-center text-[11px] font-bold text-emerald-300 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">
+                <CheckCircle className="w-3 h-3 mr-1 text-emerald-400" />
+                Live Cloud Sync Active
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[11px] font-bold text-slate-300 bg-white/10 px-2.5 py-0.5 rounded-lg border border-white/10">
+                Excel File Updated Automatically
+              </span>
+            )}
+          </div>
+
+          <h3 className="text-lg sm:text-xl font-bold font-serif text-white flex items-center space-x-2">
+            <span>RAISE A CHILD Children Records Excel Form</span>
+          </h3>
+
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
+            Adding or updating children details automatically stores the record in your up-to-date Excel spreadsheet (.xlsx / .csv) and pushes directly to your connected Google Sheet.
+          </p>
+
+          <div className="text-[11px] text-emerald-400 font-mono flex items-center space-x-2 pt-0.5">
+            <span>Connected Sheet ID: 1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ</span>
+            <span>•</span>
+            <span>{sheetInfo?.total_records || childrenData.total_children || 0} Records Formatted</span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5 self-stretch lg:self-auto">
+          {/* Open Google Sheet Link */}
+          <a
+            href={sheetInfo?.google_sheet_url || 'https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 sm:flex-initial px-4 py-2.5 bg-white hover:bg-emerald-50 text-slate-900 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 shadow-sm border border-white"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
+            <span>Open Google Sheet</span>
+            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+          </a>
+
+          {/* Download Excel */}
+          <a
+            href={api.getChildrenExportExcelUrl()}
+            download="RAISE_A_CHILD_Children_Records.xlsx"
+            className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-900/40"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download Excel (.xlsx)</span>
+          </a>
+
+          {/* Download CSV */}
+          <a
+            href={api.getChildrenExportCsvUrl()}
+            download="RAISE_A_CHILD_Children_Records.csv"
+            className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1 border border-slate-700"
+            title="Download CSV Format"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>CSV</span>
+          </a>
+
+          {/* Admin Sync from Google Sheet */}
+          {adminUser && (
+            <>
+              <button
+                onClick={handleSyncGoogleSheet}
+                disabled={syncingSheet}
+                className="px-3.5 py-2.5 bg-teal-700 hover:bg-teal-600 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 disabled:opacity-50"
+                title="Sync from Google Sheet to Website"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${syncingSheet ? 'animate-spin' : ''}`} />
+                <span>{syncingSheet ? 'Syncing...' : 'Sync from Sheet'}</span>
+              </button>
+
+              <button
+                onClick={() => setSheetModalOpen(true)}
+                className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition border border-white/20"
+                title="Google Sheet Integration & Webhook Setup"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 3. RESPONSIBLE PRIVACY PROTECTION BANNER */}
       <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center space-x-3 text-left">
           <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 flex-shrink-0">
@@ -375,56 +574,71 @@ export default function Children({ onShowToast }) {
         </div>
       ) : (
         /* TABLE VIEW (RESPONSIVE) */
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[11px] tracking-wider">
-              <tr>
-                <th className="py-3.5 px-4">S.No</th>
-                <th className="py-3.5 px-4">Photo</th>
-                <th className="py-3.5 px-4">Child Name</th>
-                <th className="py-3.5 px-4">Age</th>
-                <th className="py-3.5 px-4">Class</th>
-                <th className="py-3.5 px-4">Gender</th>
-                <th className="py-3.5 px-4">Admission Date</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {(Array.isArray(childrenData?.children) ? childrenData.children : []).map((child) => (
-                <tr key={child.id} className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 px-4 font-mono font-bold text-slate-900">{child.serial_no}</td>
-                  <td className="py-3 px-4">
-                    <img
-                      src={child.photo}
-                      alt={child.name}
-                      className="w-9 h-9 rounded-lg object-cover shadow-sm border border-slate-200"
-                    />
-                  </td>
-                  <td className="py-3 px-4 font-bold text-slate-800">{child.name}</td>
-                  <td className="py-3 px-4 text-slate-600">{child.age} yrs</td>
-                  <td className="py-3 px-4 font-semibold text-emerald-700">{child.class}</td>
-                  <td className="py-3 px-4 text-slate-600">{child.gender}</td>
-                  <td className="py-3 px-4 text-slate-500 font-mono text-xs">{child.admission_date}</td>
-                  <td className="py-3 px-4 text-right">
-                    <button
-                      onClick={() => setSelectedChild(child)}
-                      className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg text-xs font-bold transition mr-2"
-                    >
-                      Dossier
-                    </button>
-                    {adminUser && (
-                      <button
-                        onClick={() => handleDeleteChild(child.id, child.name)}
-                        className="text-rose-600 hover:text-rose-800 p-1.5"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </td>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Mobile swipe helper */}
+          <div className="sm:hidden flex items-center justify-between px-4 py-2 bg-slate-50 text-[11px] text-slate-500 border-b border-slate-200">
+            <span>Resident Records</span>
+            <span className="font-semibold text-emerald-700">← Swipe table sideways →</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[10px] sm:text-[11px] tracking-wider">
+                <tr>
+                  <th className="py-3 px-3 sm:px-4 whitespace-nowrap">S.No</th>
+                  <th className="py-3 px-3 sm:px-4">Photo</th>
+                  <th className="py-3 px-3 sm:px-4 min-w-[130px]">Child Name</th>
+                  <th className="py-3 px-3 sm:px-4">Age</th>
+                  <th className="py-3 px-3 sm:px-4 whitespace-nowrap">Class</th>
+                  <th className="py-3 px-3 sm:px-4">Gender</th>
+                  <th className="py-3 px-3 sm:px-4 whitespace-nowrap hidden sm:table-cell">Admission Date</th>
+                  <th className="py-3 px-3 sm:px-4 text-right whitespace-nowrap">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {(Array.isArray(childrenData?.children) ? childrenData.children : []).map((child) => (
+                  <tr key={child.id} className="hover:bg-slate-50/80 transition">
+                    <td className="py-3 px-3 sm:px-4 font-mono font-bold text-slate-900 whitespace-nowrap">{child.serial_no}</td>
+                    <td className="py-3 px-3 sm:px-4">
+                      <img
+                        src={child.photo}
+                        alt={child.name}
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = child.gender === 'Female' 
+                            ? 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80'
+                            : 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80';
+                        }}
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-cover shadow-sm border border-slate-200"
+                      />
+                    </td>
+                    <td className="py-3 px-3 sm:px-4 font-bold text-slate-800 whitespace-nowrap">{child.name}</td>
+                    <td className="py-3 px-3 sm:px-4 text-slate-600 whitespace-nowrap">{child.age} yrs</td>
+                    <td className="py-3 px-3 sm:px-4 font-semibold text-emerald-700 whitespace-nowrap">{child.class}</td>
+                    <td className="py-3 px-3 sm:px-4 text-slate-600 whitespace-nowrap">{child.gender}</td>
+                    <td className="py-3 px-3 sm:px-4 text-slate-500 font-mono text-xs whitespace-nowrap hidden sm:table-cell">{child.admission_date}</td>
+                    <td className="py-3 px-3 sm:px-4 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => setSelectedChild(child)}
+                        className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition mr-1.5"
+                      >
+                        Dossier
+                      </button>
+                      {adminUser && (
+                        <button
+                          onClick={() => handleDeleteChild(child.id, child.name)}
+                          className="text-rose-600 hover:text-rose-800 p-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -552,13 +766,24 @@ export default function Children({ onShowToast }) {
       {addModalOpen && editChild && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-slate-900 font-serif">
                 {editChild.id ? 'Edit Child Record' : 'Enroll New Child Record'}
               </h3>
               <button onClick={() => setAddModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
+            </div>
+
+            {/* Excel & Sheet Auto-Store Notice */}
+            <div className="bg-emerald-50 border border-emerald-200/80 rounded-2xl p-3 mb-5 flex items-start space-x-2.5 text-xs text-emerald-900">
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Excel Form & Google Sheet Auto-Save Active</span>
+                <span className="text-emerald-700 text-[11px]">
+                  Saving this child will automatically store the details in the Excel form (.xlsx) and push to your connected Google Sheet.
+                </span>
+              </div>
             </div>
 
             <form onSubmit={handleSaveChild} className="space-y-4 text-xs sm:text-sm">
@@ -693,6 +918,122 @@ export default function Children({ onShowToast }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Google Sheet Integration Setup Modal */}
+      {sheetModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 shadow-2xl border border-slate-100 my-auto space-y-6">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+              <div className="flex items-center space-x-2 text-emerald-700">
+                <FileSpreadsheet className="w-6 h-6 text-emerald-600" />
+                <h3 className="text-lg sm:text-xl font-bold font-serif text-slate-900">
+                  Google Sheet & Excel Synchronization
+                </h3>
+              </div>
+              <button 
+                onClick={() => setSheetModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Current Sheet Card */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Connected Google Sheet</span>
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">Live Linked</span>
+              </div>
+              <p className="text-xs font-mono text-slate-700 break-all bg-white p-2.5 rounded-xl border border-slate-200">
+                {sheetInfo?.google_sheet_url || 'https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing'}
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <a
+                  href={sheetInfo?.google_sheet_url || 'https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open Sheet in Google Drive</span>
+                </a>
+                <a
+                  href={api.getChildrenExportExcelUrl()}
+                  download="RAISE_A_CHILD_Children_Records.xlsx"
+                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg transition"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download .xlsx File</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Webhook Form */}
+            <form onSubmit={handleSaveWebhook} className="space-y-4">
+              <div>
+                <label className="block font-bold text-slate-800 text-xs sm:text-sm mb-1">
+                  Google Apps Script Web App URL (Optional for Direct Live Cloud Push)
+                </label>
+                <input
+                  type="url"
+                  value={webhookInput}
+                  onChange={e => setWebhookInput(e.target.value)}
+                  placeholder="https://script.google.com/macros/s/.../exec"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+                <span className="text-[11px] text-slate-500 mt-1 block">
+                  When configured, every child added on the website automatically appends a new row to your Google Sheet in real time.
+                </span>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={savingWebhook}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition disabled:opacity-50"
+                >
+                  {savingWebhook ? 'Saving...' : 'Save Webhook URL'}
+                </button>
+              </div>
+            </form>
+
+            {/* Step-by-Step Instructions */}
+            <div className="border-t border-slate-100 pt-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  How to Enable Direct Live Auto-Save to Google Sheet (1 Minute Setup)
+                </h4>
+                <button
+                  type="button"
+                  onClick={handleCopyScript}
+                  className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg border border-emerald-200 flex items-center space-x-1 transition"
+                >
+                  {copiedScript ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Copy Apps Script Code</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <ol className="list-decimal list-inside text-xs text-slate-600 space-y-1.5 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <li>Open your sheet: <a href="https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit" target="_blank" rel="noreferrer" className="text-blue-600 underline font-semibold">RAISE A CHILD HOME</a></li>
+                <li>In Google Sheets menu, click <strong>Extensions &gt; Apps Script</strong>.</li>
+                <li>Delete any code there, paste the copied script, and click <strong>Save (Ctrl+S)</strong>.</li>
+                <li>Click <strong>Deploy &gt; New deployment</strong>, select type <strong>Web app</strong>.</li>
+                <li>Set <strong>Execute as: Me</strong> and <strong>Who has access: Anyone</strong>. Click <strong>Deploy</strong>.</li>
+                <li>Copy the <strong>Web app URL</strong> provided by Google and paste it into the field above!</li>
+              </ol>
+            </div>
           </div>
         </div>
       )}

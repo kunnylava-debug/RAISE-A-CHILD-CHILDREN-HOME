@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Image, Plus, Trash2, ZoomIn, FolderPlus, 
-  Upload, X, Layers, Sparkles 
+  Upload, X, Layers, Sparkles, Camera 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -25,6 +25,7 @@ export default function Views({ onShowToast }) {
   const [photoTitle, setPhotoTitle] = useState('');
   const [photoDesc, setPhotoDesc] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const { adminUser } = useAdminAuth();
 
@@ -77,6 +78,21 @@ export default function Views({ onShowToast }) {
       fetchViews();
     } catch (err) {
       onShowToast?.({ type: 'error', message: err.message });
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const res = await api.uploadFile(file);
+      setPhotoUrl(res.url);
+      onShowToast?.({ type: 'success', message: 'Photo uploaded from device successfully' });
+    } catch (err) {
+      onShowToast?.({ type: 'error', message: err.message || 'File upload failed' });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -244,6 +260,11 @@ export default function Views({ onShowToast }) {
                         <img
                           src={photo.image_url}
                           alt={photo.title || category.name}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
+                          }}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -251,6 +272,11 @@ export default function Views({ onShowToast }) {
                             <ZoomIn className="w-3.5 h-3.5" />
                             <span>Click to Zoom</span>
                           </span>
+                        </div>
+                        {/* Always visible mobile hint badge */}
+                        <div className="sm:hidden absolute bottom-2 right-2 bg-slate-950/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center space-x-1 shadow backdrop-blur-xs">
+                          <ZoomIn className="w-3 h-3" />
+                          <span>Tap to zoom</span>
                         </div>
                       </div>
 
@@ -372,15 +398,47 @@ export default function Views({ onShowToast }) {
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Photograph Image URL *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Upload Photo from Device (or Paste Image URL) *
+                </label>
+                
+                {/* Mobile / Device File Picker */}
+                <div className="mb-2">
+                  <label className="inline-flex items-center space-x-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer border border-emerald-200 transition">
+                    <Camera className="w-4 h-4 text-emerald-600" />
+                    <span>{uploading ? 'Uploading from device...' : 'Choose Photo from Gallery or Camera'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
                 <input
                   type="text"
                   required
                   value={photoUrl}
                   onChange={e => setPhotoUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  placeholder="https://... or uploaded file path"
+                  className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs font-mono"
                 />
+
+                {photoUrl && (
+                  <div className="mt-2 relative h-28 w-full bg-slate-100 rounded-xl overflow-hidden border border-slate-200">
+                    <img 
+                      src={photoUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={e => { e.target.style.display = 'none'; }}
+                    />
+                    <span className="absolute bottom-1.5 right-1.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow">
+                      Image Ready
+                    </span>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Description</label>

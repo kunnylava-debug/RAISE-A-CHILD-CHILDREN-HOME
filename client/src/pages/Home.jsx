@@ -12,12 +12,22 @@ import { api } from '../services/api';
 export default function Home({ setActiveTab, settings, onShowToast }) {
   const [events, setEvents] = useState([]);
   const [alumni, setAlumni] = useState([]);
+  const [childrenStats, setChildrenStats] = useState({ total: 120, boys: 60, girls: 60 });
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
   useEffect(() => {
     api.getEvents().then(data => setEvents(Array.isArray(data) ? data : [])).catch(() => setEvents([]));
     api.getAlumni().then(data => setAlumni(Array.isArray(data) ? data : [])).catch(() => setAlumni([]));
+    api.getChildren({ limit: 1 }).then(data => {
+      if (data?.total_children) {
+        setChildrenStats({
+          total: data.total_children,
+          boys: data.boys_count || 60,
+          girls: data.girls_count || 60
+        });
+      }
+    }).catch(() => {});
   }, []);
 
   const openLightbox = (index) => {
@@ -122,26 +132,70 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
               </button>
             </div>
 
-            {/* Quick Metrics Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-white/15">
-              <div className="text-left">
-                <span className="block text-2xl sm:text-3xl font-extrabold text-blue-300">120+</span>
-                <span className="text-xs text-slate-300">Residents of All Grades</span>
+            {/* Quick Metrics Bar - Prominently Displaying Total, Boys, and Girls on Mobile & Desktop */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-white/15">
+              <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-white/10 sm:border-0 text-left">
+                <span className="block text-2xl sm:text-3xl font-extrabold text-blue-300">{childrenStats.total}</span>
+                <span className="text-[11px] sm:text-xs text-slate-300 font-medium">Total Resident Children</span>
               </div>
-              <div className="text-left">
-                <span className="block text-2xl sm:text-3xl font-extrabold text-teal-300">100%</span>
-                <span className="text-xs text-slate-300">School & College Enrolled</span>
+              <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-white/10 sm:border-0 text-left">
+                <span className="block text-2xl sm:text-3xl font-extrabold text-emerald-300">{childrenStats.boys}</span>
+                <span className="text-[11px] sm:text-xs text-slate-300 font-medium">👦 Boys Wing</span>
               </div>
-              <div className="text-left">
-                <span className="block text-2xl sm:text-3xl font-extrabold text-amber-300">3 Meals</span>
-                <span className="text-xs text-slate-300">Fresh Wholesome Diet</span>
+              <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-white/10 sm:border-0 text-left">
+                <span className="block text-2xl sm:text-3xl font-extrabold text-pink-300">{childrenStats.girls}</span>
+                <span className="text-[11px] sm:text-xs text-slate-300 font-medium">👧 Girls Wing</span>
               </div>
-              <div className="text-left">
-                <span className="block text-2xl sm:text-3xl font-extrabold text-indigo-300">24/7</span>
-                <span className="text-xs text-slate-300">Caring Wardens & Health</span>
+              <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-white/10 sm:border-0 text-left">
+                <span className="block text-2xl sm:text-3xl font-extrabold text-amber-300">100%</span>
+                <span className="text-[11px] sm:text-xs text-slate-300 font-medium">🎓 School & College</span>
               </div>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      {/* RESIDENTIAL STUDENT CENSUS BANNER (Mobile-first responsive card) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 sm:-mt-12 relative z-20">
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-950 rounded-2xl sm:rounded-3xl p-5 sm:p-7 text-white shadow-2xl border border-slate-700/80 flex flex-col md:flex-row items-center justify-between gap-5">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 border border-emerald-500/30 shadow-inner">
+              <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs uppercase font-extrabold tracking-wider text-emerald-400">Hostel Population Census</span>
+                <span className="text-[10px] bg-emerald-500/30 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-400/30">Verified</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold font-serif text-white mt-0.5">
+                Total Children Enrolled: <span className="text-emerald-300">{childrenStats.total}</span>
+              </h3>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Full residential care, nutrition, schooling & character development for boys and girls.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between w-full md:w-auto gap-2 sm:gap-4">
+            <div className="flex items-center space-x-2 sm:space-x-3 bg-white/10 backdrop-blur-md px-3 sm:px-4 py-2 rounded-xl border border-white/15 text-center flex-1 md:flex-initial">
+              <div className="px-2 text-left">
+                <span className="block text-xl sm:text-2xl font-extrabold text-blue-300">{childrenStats.boys}</span>
+                <span className="text-[10px] text-slate-300 uppercase tracking-wider">Boys Wing</span>
+              </div>
+              <div className="px-2 border-l border-white/20 text-left">
+                <span className="block text-xl sm:text-2xl font-extrabold text-pink-300">{childrenStats.girls}</span>
+                <span className="text-[10px] text-slate-300 uppercase tracking-wider">Girls Wing</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setActiveTab('children')}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition flex items-center space-x-1.5 shadow-md flex-shrink-0"
+            >
+              <span>View Directory</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </section>

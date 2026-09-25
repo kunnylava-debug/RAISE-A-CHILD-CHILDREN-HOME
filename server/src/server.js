@@ -81,6 +81,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`RAISE A CHILD CHILDREN HOME Backend & Web App running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`RAISE A CHILD CHILDREN HOME Backend & Web App running on:`);
+  console.log(`  - Local:   http://localhost:${PORT}`);
+  console.log(`  - Network: http://192.168.1.53:${PORT}`);
 });
+

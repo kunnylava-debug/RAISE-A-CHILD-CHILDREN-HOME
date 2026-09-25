@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Image, Phone, Mail, MapPin, Shield, CheckCircle2, CreditCard } from 'lucide-react';
+import { Save, Image, Phone, Mail, MapPin, Shield, CheckCircle2, CreditCard, Share2, FileSpreadsheet } from 'lucide-react';
 import { api } from '../../services/api';
 
 export default function AdminSettingsTab({ settings, onRefreshSettings, onShowToast }) {
@@ -255,6 +255,102 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
             placeholder="https://... (or leave blank to auto-generate from UPI ID)"
             className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-xs"
           />
+        </div>
+      </div>
+
+      {/* Social Media & Follow Us Links */}
+      <div className="space-y-4 p-5 sm:p-6 bg-slate-50/80 rounded-2xl border border-slate-200">
+        <div className="flex items-center space-x-2 text-indigo-700 font-bold text-sm">
+          <Share2 className="w-4 h-4" />
+          <span>Follow Us Social Links (Footer Integration)</span>
+        </div>
+        <p className="text-xs text-slate-500">
+          Enter your official Facebook, Instagram, and YouTube links. These will be displayed as clickable buttons in the website footer.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">Facebook Page URL</label>
+            <input
+              type="url"
+              value={form.social_facebook || ''}
+              onChange={e => handleChange('social_facebook', e.target.value)}
+              placeholder="https://facebook.com/yourpage"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs"
+            />
+          </div>
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">Instagram Profile URL</label>
+            <input
+              type="url"
+              value={form.social_instagram || ''}
+              onChange={e => handleChange('social_instagram', e.target.value)}
+              placeholder="https://instagram.com/yourprofile"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:outline-none text-xs"
+            />
+          </div>
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1">YouTube Channel URL</label>
+            <input
+              type="url"
+              value={form.social_youtube || ''}
+              onChange={e => handleChange('social_youtube', e.target.value)}
+              placeholder="https://youtube.com/@yourchannel"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none text-xs"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Google Sheets & Excel Integration for Children Records */}
+      <div className="bg-emerald-50/60 rounded-2xl p-5 border border-emerald-200 space-y-4">
+        <div className="flex items-center space-x-2 text-emerald-800">
+          <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+          <h3 className="font-bold font-serif text-base">Children Records Google Sheet & Excel Integration</h3>
+        </div>
+        <p className="text-xs text-slate-600">
+          Connect your official Google Sheet to automatically store and synchronize all children records added through the website.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1 text-xs">Connected Google Sheet URL</label>
+            <input
+              type="url"
+              value={form.children_google_sheet_url || ''}
+              onChange={e => handleChange('children_google_sheet_url', e.target.value)}
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs font-mono"
+            />
+          </div>
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1 text-xs">Google Apps Script Webhook URL (For Direct Live Append)</label>
+            <input
+              type="url"
+              value={form.children_google_sheet_webhook_url || ''}
+              onChange={e => handleChange('children_google_sheet_webhook_url', e.target.value)}
+              placeholder="https://script.google.com/macros/s/.../exec"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs font-mono"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <a
+            href={form.children_google_sheet_url || 'https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 bg-white text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold hover:bg-emerald-100/50 transition inline-flex items-center space-x-1"
+          >
+            <span>Open Current Google Sheet ↗</span>
+          </a>
+          <a
+            href="/api/children/export/excel"
+            download="RAISE_A_CHILD_Children_Records.xlsx"
+            className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition inline-flex items-center space-x-1 shadow-xs"
+          >
+            <span>Download Live Excel File (.xlsx) 📥</span>
+          </a>
         </div>
       </div>
 

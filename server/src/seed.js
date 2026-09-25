@@ -67,9 +67,9 @@ export function seedData() {
   }
 
   const childrenCount = db.prepare('SELECT COUNT(*) as count FROM children').get().count;
-  if (childrenCount === 0) {
+  if (childrenCount < 120) {
     const insertChild = db.prepare(`
-      INSERT INTO children (serial_no, name, age, class, gender, admission_date, photo, guardian_name, guardian_phone, guardian_address, medical_notes, hobbies)
+      INSERT OR REPLACE INTO children (serial_no, name, age, class, gender, admission_date, photo, guardian_name, guardian_phone, guardian_address, medical_notes, hobbies)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
@@ -129,6 +129,20 @@ export function seedData() {
       c.photos.forEach((p, idx) => {
         insertPhoto.run(catId, p.title, p.desc, p.url, idx + 1);
       });
+    }
+  } else {
+    const photoCount = db.prepare('SELECT COUNT(*) as count FROM views_photos').get().count;
+    if (photoCount === 0) {
+      const categoriesData = readData('categories_and_photos.json');
+      const insertPhoto = db.prepare('INSERT INTO views_photos (category_id, title, description, image_url, order_num) VALUES (?, ?, ?, ?, ?)');
+      for (const c of categoriesData) {
+        const cat = db.prepare('SELECT id FROM views_categories WHERE slug = ?').get(c.slug);
+        if (cat) {
+          c.photos?.forEach((p, idx) => {
+            insertPhoto.run(cat.id, p.title, p.desc, p.url, idx + 1);
+          });
+        }
+      }
     }
   }
 

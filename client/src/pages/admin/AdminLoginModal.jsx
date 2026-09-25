@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Lock, User, Key, X, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
-export default function AdminLoginModal({ onShowToast }) {
+export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
   const { loginModalOpen, setLoginModalOpen, login } = useAdminAuth();
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
@@ -24,8 +24,13 @@ export default function AdminLoginModal({ onShowToast }) {
         message: 'Welcome back to the Administrative Portal.'
       });
       setLoginModalOpen(false);
+      onLoginSuccess?.();
     } catch (err) {
-      setError(err.message || 'Invalid credentials.');
+      let msg = err.message || 'Invalid credentials.';
+      if (/json|fetch|network|failed/i.test(msg)) {
+        msg = 'Unable to connect to server. Please check your network or use default: admin / admin123';
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

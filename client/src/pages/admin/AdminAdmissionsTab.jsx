@@ -330,19 +330,26 @@ RAISE A CHILD CHILDREN HOME`;
           No admission applications found.
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[11px] tracking-wider">
-              <tr>
-                <th className="py-3.5 px-4">App Ref</th>
-                <th className="py-3.5 px-4">Child Name</th>
-                <th className="py-3.5 px-4">Class</th>
-                <th className="py-3.5 px-4">Guardian & Phone</th>
-                <th className="py-3.5 px-4">Decision</th>
-                <th className="py-3.5 px-4">Notification Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Mobile swipe helper */}
+          <div className="sm:hidden flex items-center justify-between px-4 py-2 bg-slate-50 text-[11px] text-slate-500 border-b border-slate-200">
+            <span>Admission Applications</span>
+            <span className="font-semibold text-emerald-700">← Swipe table sideways →</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[10px] sm:text-[11px] tracking-wider">
+                <tr>
+                  <th className="py-3 px-3 sm:px-4 whitespace-nowrap">App Ref</th>
+                  <th className="py-3 px-3 sm:px-4 min-w-[130px]">Child Name</th>
+                  <th className="py-3 px-3 sm:px-4 whitespace-nowrap">Class</th>
+                  <th className="py-3 px-3 sm:px-4 min-w-[140px]">Guardian & Phone</th>
+                  <th className="py-3 px-3 sm:px-4 whitespace-nowrap">Decision</th>
+                  <th className="py-3 px-3 sm:px-4 whitespace-nowrap">Notification</th>
+                  <th className="py-3 px-3 sm:px-4 text-right whitespace-nowrap">Actions</th>
+                </tr>
+              </thead>
             <tbody className="divide-y divide-slate-100">
               {admissions.map(app => (
                 <tr key={app.id} className="hover:bg-slate-50/80 transition">
@@ -399,7 +406,8 @@ RAISE A CHILD CHILDREN HOME`;
             </tbody>
           </table>
         </div>
-      )}
+      </div>
+    )}
 
       {/* Detailed Applicant Dossier Modal */}
       {selectedApp && (
