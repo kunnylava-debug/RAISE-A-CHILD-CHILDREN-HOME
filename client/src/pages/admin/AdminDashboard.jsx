@@ -285,7 +285,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
                   </button>
 
                   <button
-                    onClick={() => setActiveAdminTab('social_links')}
+                    onClick={() => handleSelectAdminTab('social_links')}
                     className="p-4 bg-white hover:bg-indigo-50/70 rounded-2xl border border-indigo-200 font-bold text-slate-800 text-left transition flex items-center justify-between shadow-xs hover:border-indigo-400"
                   >
                     <span>Edit Facebook, Instagram & YouTube Links</span>

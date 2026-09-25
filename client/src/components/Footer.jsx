@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
-  MapPin, Phone, Mail, ExternalLink, Navigation, Compass, ShieldCheck, 
-  Edit3, Save, X, Share2, CheckCircle2 
+  MapPin, Phone, Mail, ExternalLink, Navigation, Compass, ShieldCheck 
 } from 'lucide-react';
-import { useAdminAuth } from '../context/AdminAuthContext';
-import { api } from '../services/api';
 
 export default function Footer({ setActiveTab, settings }) {
-  const { adminUser, setLoginModalOpen } = useAdminAuth();
-
   const googleMapsUrl = "https://goo.gl/maps/rVLiCyNsMd157RUC8";
   const address = settings?.contact_address || 'Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121';
   const phone = settings?.contact_phone || '+91 90594 91777';
@@ -16,64 +11,9 @@ export default function Footer({ setActiveTab, settings }) {
   const hostelName = settings?.hostel_name || "RAISE A CHILD CHILDREN HOME";
   const founderName = settings?.founder_name || "BRO .NELSON";
 
-  const [facebookUrl, setFacebookUrl] = useState(settings?.social_facebook || "https://facebook.com/raiseachild");
-  const [instagramUrl, setInstagramUrl] = useState(settings?.social_instagram || "https://instagram.com/raiseachild");
-  const [youtubeUrl, setYoutubeUrl] = useState(settings?.social_youtube || "https://youtube.com/@raiseachild");
-
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [fbInput, setFbInput] = useState(facebookUrl);
-  const [igInput, setIgInput] = useState(instagramUrl);
-  const [ytInput, setYtInput] = useState(youtubeUrl);
-  const [saving, setSaving] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
-
-  useEffect(() => {
-    if (settings) {
-      if (settings.social_facebook) setFacebookUrl(settings.social_facebook);
-      if (settings.social_instagram) setInstagramUrl(settings.social_instagram);
-      if (settings.social_youtube) setYoutubeUrl(settings.social_youtube);
-      setFbInput(settings.social_facebook || '');
-      setIgInput(settings.social_instagram || '');
-      setYtInput(settings.social_youtube || '');
-    }
-  }, [settings]);
-
-  const handleOpenEdit = () => {
-    if (!adminUser) {
-      setLoginModalOpen(true);
-      return;
-    }
-    setFbInput(facebookUrl);
-    setIgInput(instagramUrl);
-    setYtInput(youtubeUrl);
-    setSavedSuccess(false);
-    setEditModalOpen(true);
-  };
-
-  const handleSaveSocial = async (e) => {
-    e?.preventDefault();
-    try {
-      setSaving(true);
-      await api.updateSettings({
-        social_facebook: fbInput.trim(),
-        social_instagram: igInput.trim(),
-        social_youtube: ytInput.trim()
-      });
-
-      setFacebookUrl(fbInput.trim());
-      setInstagramUrl(igInput.trim());
-      setYoutubeUrl(ytInput.trim());
-      setSavedSuccess(true);
-      setTimeout(() => {
-        setEditModalOpen(false);
-        setSavedSuccess(false);
-      }, 1200);
-    } catch (err) {
-      alert('Failed to save links: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
+  const facebookUrl = settings?.social_facebook || "https://facebook.com/raiseachild";
+  const instagramUrl = settings?.social_instagram || "https://instagram.com/raiseachild";
+  const youtubeUrl = settings?.social_youtube || "https://youtube.com/@raiseachild";
 
   return (
     <footer className="bg-slate-950 text-slate-300 border-t border-slate-800/80 py-6 sm:py-8 text-xs">
@@ -116,7 +56,7 @@ export default function Footer({ setActiveTab, settings }) {
           </div>
         </div>
 
-        {/* Row 2: Follow Us on Social Media */}
+        {/* Row 2: Follow Us on Social Media (Clean Public Links - Management in Admin Dashboard) */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3 px-4 bg-slate-900/90 rounded-xl border border-slate-800/90 shadow-sm">
           <div className="flex items-center space-x-2 text-slate-200">
             <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Follow Us:</span>
@@ -156,16 +96,6 @@ export default function Footer({ setActiveTab, settings }) {
               <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
               <span>YouTube</span>
             </a>
-
-            {/* Quick Edit Links Button for Admin */}
-            <button
-              onClick={handleOpenEdit}
-              className="inline-flex items-center space-x-1.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/40 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
-              title="Edit Facebook, Instagram & YouTube links"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit Links</span>
-            </button>
           </div>
         </div>
 
@@ -190,7 +120,7 @@ export default function Footer({ setActiveTab, settings }) {
           </a>
         </div>
 
-        {/* Row 3: Minimal Inline Navigation */}
+        {/* Row 4: Minimal Inline Navigation & Copyright */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-[11px] text-slate-400">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
             <button 
@@ -270,108 +200,6 @@ export default function Footer({ setActiveTab, settings }) {
         </div>
 
       </div>
-
-      {/* Quick Edit Social Media Links Modal */}
-      {editModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 text-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-5 animate-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center space-x-2.5 text-amber-400">
-                <Share2 className="w-5 h-5" />
-                <h3 className="text-base font-bold font-serif text-white">Edit Social Media Links</h3>
-              </div>
-              <button
-                onClick={() => setEditModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {savedSuccess && (
-              <div className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 p-3 rounded-xl text-xs flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <span>Links saved and updated across footer and website!</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveSocial} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-300 mb-1 flex items-center space-x-1.5">
-                  <span className="w-4 h-4 rounded bg-[#1877F2] text-white flex items-center justify-center text-[10px] font-bold">f</span>
-                  <span>Facebook Page URL</span>
-                </label>
-                <input
-                  type="url"
-                  value={fbInput}
-                  onChange={e => setFbInput(e.target.value)}
-                  placeholder="https://facebook.com/your-page"
-                  className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl focus:border-blue-500 focus:outline-none text-white text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-300 mb-1 flex items-center space-x-1.5">
-                  <span className="w-4 h-4 rounded bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white flex items-center justify-center text-[10px] font-bold">IG</span>
-                  <span>Instagram Profile URL</span>
-                </label>
-                <input
-                  type="url"
-                  value={igInput}
-                  onChange={e => setIgInput(e.target.value)}
-                  placeholder="https://instagram.com/your-profile"
-                  className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl focus:border-pink-500 focus:outline-none text-white text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-300 mb-1 flex items-center space-x-1.5">
-                  <span className="w-4 h-4 rounded bg-[#FF0000] text-white flex items-center justify-center text-[10px] font-bold">▶</span>
-                  <span>YouTube Channel URL</span>
-                </label>
-                <input
-                  type="url"
-                  value={ytInput}
-                  onChange={e => setYtInput(e.target.value)}
-                  placeholder="https://youtube.com/@your-channel"
-                  className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl focus:border-red-500 focus:outline-none text-white text-xs"
-                />
-              </div>
-
-              <div className="flex items-center justify-between gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditModalOpen(false);
-                    setActiveTab('admin');
-                  }}
-                  className="text-[11px] text-blue-400 hover:text-blue-300 underline"
-                >
-                  Open in Admin Dashboard
-                </button>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-md transition flex items-center space-x-1.5"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>{saving ? 'Saving...' : 'Save Links'}</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </footer>
   );
 }
