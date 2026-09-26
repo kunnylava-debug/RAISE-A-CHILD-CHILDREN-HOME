@@ -58,11 +58,20 @@
           "value": "public, max-age=86400, stale-while-revalidate=604800"
         }
       ]
+    },
+    {
+      "source": "/(index\\.html)?",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     }
   ],
   "rewrites": [
     {
-      "source": "/((?!api/|.*\\.(?:ico|png|jpg|jpeg|svg|webp|json|txt|xml|pdf)$).*)",
+      "source": "/((?!api/|.*\\.(?:ico|png|jpg|jpeg|svg|webp|json|txt|xml|pdf|js|css|map|woff|woff2|ttf)$).*)",
       "destination": "/index.html"
     }
   ]
