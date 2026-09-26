@@ -2,6 +2,7 @@ import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 import * as XLSX from 'xlsx';
+import { sendExcelBackupToAdmin } from '../services/notificationService.js';
 
 const router = express.Router();
 
@@ -38,6 +39,14 @@ router.get('/export/excel', (req, res) => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Staff Directory');
     const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+
+    // Automatically archive & dispatch copy to official email pn9059491777@gmail.com
+    sendExcelBackupToAdmin({
+      buffer,
+      filename: 'RISE_A_CHILD_Staff_Directory.xlsx',
+      reportType: 'Staff & Guardian Directory (Downloaded)'
+    }).catch(err => console.warn('[STAFF EXCEL EMAIL DISPATCH WARN]', err.message));
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Staff_Directory.xlsx"');
     res.send(buffer);

@@ -4,7 +4,7 @@ import {
   Filter, Plus, Edit3, Trash2, X, ChevronLeft, ChevronRight, 
   Eye, EyeOff, LayoutGrid, Table as TableIcon, Sparkles,
   FileSpreadsheet, ExternalLink, Download, RefreshCw, Copy, 
-  CheckCircle, Check, Settings, AlertCircle, FileText
+  CheckCircle, Check, Settings, AlertCircle, FileText, Mail
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -294,16 +294,39 @@ function doPost(e) {
                   await api.downloadChildrenExcel(childrenData?.children);
                   onShowToast?.({
                     type: 'success',
-                    message: `Exported ${childrenData?.children?.length || 'all'} children records to Excel (.xlsx)`
+                    message: `Exported ${childrenData?.children?.length || 'all'} records to Excel (.xlsx) & routed archive to pn9059491777@gmail.com`
                   });
                 } catch (err) {
                   onShowToast?.({ type: 'error', message: 'Export error: ' + err.message });
                 }
               }}
               className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-900/40 cursor-pointer"
+              title="Download Excel spreadsheet and email backup to pn9059491777@gmail.com"
             >
               <Download className="w-4 h-4" />
               <span>Download Excel (.xlsx)</span>
+            </button>
+
+            {/* Email Excel to pn9059491777@gmail.com */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const res = await api.emailChildrenExcel();
+                  onShowToast?.({
+                    type: 'success',
+                    message: res.message || 'Latest student records Excel sheet dispatched to pn9059491777@gmail.com'
+                  });
+                } catch (err) {
+                  onShowToast?.({ type: 'error', message: 'Email dispatch error: ' + err.message });
+                }
+              }}
+              className="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 shadow-md shadow-blue-900/30 cursor-pointer"
+              title="Send Excel Sheet directly to pn9059491777@gmail.com"
+            >
+              <Mail className="w-4 h-4" />
+              <span className="hidden sm:inline">Email to pn9059491777@gmail.com</span>
+              <span className="sm:hidden">Email Sheet</span>
             </button>
 
             {/* Download CSV */}

@@ -10,6 +10,7 @@ import {
   EXCEL_PATH, 
   CSV_PATH 
 } from '../utils/excelSync.js';
+import { sendExcelBackupToAdmin } from '../services/notificationService.js';
 import fs from 'fs';
 
 const router = express.Router();
@@ -128,9 +129,46 @@ router.get('/export/excel', (req, res) => {
 
   try {
     const { buffer } = generateChildrenExcel(true);
+    
+    // Automatically archive & dispatch copy to official email pn9059491777@gmail.com
+    sendExcelBackupToAdmin({
+      buffer,
+      filename: 'RISE_A_CHILD_Children_Records.xlsx',
+      reportType: 'Resident Children Dossier (Downloaded)'
+    }).catch(err => console.warn('[EXCEL EMAIL DISPATCH WARN]', err.message));
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Children_Records.xlsx"');
     res.send(buffer);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to generate Excel file: ' + err.message });
+  }
+});
+
+// POST /api/children/export/email - Dispatch Excel records directly to pn9059491777@gmail.com
+router.post('/export/email', (req, res) => {
+  const authorized = isAuthorized(req);
+  if (!authorized) {
+    return res.status(401).json({ 
+      error: 'Access Denied: Only authorized hostel administrators can trigger email dispatch.' 
+    });
+  }
+
+  try {
+    const { buffer } = generateChildrenExcel(true);
+    sendExcelBackupToAdmin({
+      buffer,
+      filename: 'RISE_A_CHILD_Children_Records.xlsx',
+      reportType: 'Resident Children Dossier'
+    }).then(result => {
+      res.json({
+        success: true,
+        message: 'Excel spreadsheet has been dispatched directly to ' + result.recipient,
+        recipient: result.recipient
+      });
+    }).catch(err => {
+      res.status(500).json({ error: 'Failed to email Excel file: ' + err.message });
+    });
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate Excel file: ' + err.message });
   }

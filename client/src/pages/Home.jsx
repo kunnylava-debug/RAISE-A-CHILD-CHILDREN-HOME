@@ -42,15 +42,28 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
     <div className="space-y-16 sm:space-y-24 pb-16">
       {/* 1. HERO SECTION (Clean, Prestigious Navy/Royal Blue/Amber palette with prominent Logo at top) */}
       <section className="relative overflow-hidden bg-slate-950 text-white min-h-[600px] sm:min-h-[660px] flex items-center">
-        {/* Realistic Hostel Background Image - Natural daylight, unblurred, zero black gradient cover */}
-        <div className="absolute inset-0 z-0">
+        {/* Realistic Hostel Background Image - High clarity, all members visible, right side dulled as requested */}
+        <div className="absolute inset-0 z-0 bg-slate-950 flex items-center justify-center overflow-hidden">
+          {/* Ambient matching backdrop for seamless ultra-wide coverage */}
           <img
             src={settings?.hero_image || "/hero_group_hd.jpg"}
-            alt="Children, Founder and Staff of RISE A CHILD CHILDREN HOME"
-            className="w-full h-full object-cover object-[center_28%]"
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-20 scale-105 pointer-events-none"
           />
-          {/* Subtle top & bottom soft vignettes only to frame header and stats smoothly, leaving the entire middle photo 100% visible and bright */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-transparent to-slate-950/70 pointer-events-none" />
+
+          {/* Sharp High-Definition Group Photo containing ALL members without cropping */}
+          <img
+            src={settings?.hero_image || "/hero_group_hd.jpg"}
+            alt="All Resident Children, Founder BRO.NELSON A, and Staff of RISE A CHILD CHILDREN HOME"
+            className="w-full h-full object-contain sm:object-cover sm:object-[18%_35%] lg:object-contain object-center transition-all duration-700"
+          />
+
+          {/* DULL THE RIGHT SIDE as requested by user ("dull the right side as in the previous") */}
+          <div className="absolute inset-y-0 right-0 w-full sm:w-3/5 lg:w-1/2 bg-gradient-to-l from-slate-950 via-slate-950/70 to-transparent pointer-events-none" />
+
+          {/* Soft top & bottom edge vignettes to smoothly blend header & census card */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-transparent to-slate-950/80 pointer-events-none" />
         </div>
 
         {/* Quick Admin Shortcut to change Background Photo & Inspect Photo */}
@@ -151,6 +164,16 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
               >
                 <Heart className="w-4 h-4 fill-slate-950" />
                 <span>Support Us</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHeroLightboxOpen(true)}
+                className="bg-slate-900/80 hover:bg-slate-800 text-amber-300 border border-amber-400/30 font-semibold px-5 py-3.5 rounded-xl transition-all flex items-center space-x-2 shadow-md cursor-pointer"
+                title="View full group photo of all resident children and founder in Ultra HD"
+              >
+                <Camera className="w-4 h-4 text-amber-400" />
+                <span>All Members View (Ultra HD)</span>
               </button>
             </div>
 

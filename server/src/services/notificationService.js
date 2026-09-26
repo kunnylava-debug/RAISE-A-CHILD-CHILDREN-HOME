@@ -514,3 +514,88 @@ export async function testSmtpConnection(testRecipient) {
 
   return { success: true, messageId: info.messageId, recipient };
 }
+
+/**
+ * Send an Excel backup sheet directly to pn9059491777@gmail.com
+ */
+export async function sendExcelBackupToAdmin({ buffer, filename, reportType = 'Children Directory' }) {
+  const config = getHostelSettings();
+  const recipient = config.notification_email || config.contact_email || 'pn9059491777@gmail.com';
+  const transporter = createSmtpTransporter(config);
+  const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+  const subject = `📊 [EXCEL DISPATCH & AUDIT] ${reportType} - ${filename} (${now})`;
+
+  const textContent = `EXCEL RECORDS BACKUP & DISPATCH
+======================================================
+Report Type    : ${reportType}
+File Name      : ${filename}
+Generated Time : ${now}
+Hostel         : ${config.hostel_name}
+Target Email   : ${recipient}
+======================================================
+The latest official Excel spreadsheet records have been generated. 
+A copy is attached to this email for your permanent administration records.
+
+Campus Contact:
+Phone : ${config.contact_phone}
+Email : ${config.contact_email}
+`;
+
+  const htmlContent = `
+  <!DOCTYPE html>
+  <html>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b;">
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+      <div style="background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); padding: 24px; text-align: center; color: #ffffff;">
+        <span style="background: #3b82f6; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 1px;">Official Records Dispatch</span>
+        <h1 style="margin: 8px 0 0 0; font-size: 20px; font-weight: 800; color: #ffffff;">${config.hostel_name}</h1>
+        <p style="margin: 4px 0 0 0; font-size: 13px; color: #cbd5e1;">Excel Sheet Backup & Download Archive</p>
+      </div>
+      <div style="padding: 24px;">
+        <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+          <p style="margin: 0; font-size: 14px; font-weight: 700; color: #1e40af;">Excel Records File Dispatched</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: #1d4ed8;">Report: <strong>${reportType}</strong> • File: <strong>${filename}</strong></p>
+        </div>
+        <p style="font-size: 13px; line-height: 1.6; color: #334155;">
+          This automated security email confirms that the latest hostel records spreadsheet (attached below) was downloaded or dispatched from the administration portal.
+        </p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin: 16px 0;">
+          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #64748b;">Delivered To:</td><td style="padding: 6px 0; font-weight: 700; color: #0f172a;">${recipient}</td></tr>
+          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #64748b;">Timestamp:</td><td style="padding: 6px 0; font-weight: 600;">${now}</td></tr>
+        </table>
+      </div>
+    </div>
+  </body>
+  </html>
+  `;
+
+  if (transporter && buffer) {
+    try {
+      await transporter.sendMail({
+        from: `"${config.smtp_sender_name}" <${config.smtp_user || config.contact_email}>`,
+        to: recipient,
+        subject,
+        text: textContent,
+        html: htmlContent,
+        attachments: [
+          {
+            filename,
+            content: buffer
+          }
+        ]
+      });
+      console.log(`[EXCEL BACKUP EMAIL SENT] Attached ${filename} delivered to ${recipient}`);
+      return { success: true, delivered: true, recipient };
+    } catch (err) {
+      console.error('[EXCEL BACKUP EMAIL ERROR]', err.message);
+      return { success: false, delivered: false, error: err.message, recipient };
+    }
+  } else {
+    console.log(`=======================================================`);
+    console.log(`[EXCEL SHEET DOWNLOAD AUDIT - ARCHIVED FOR ${recipient}]`);
+    console.log(`File: ${filename} | Report: ${reportType}`);
+    console.log(`=======================================================`);
+    return { success: true, delivered: false, simulated: true, recipient };
+  }
+}

@@ -455,7 +455,7 @@ export default function Staff({ onShowToast }) {
                     value={currentEdit.email}
                     onChange={e => setCurrentEdit({ ...currentEdit, email: e.target.value })}
                     className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    placeholder="warden@shantiniketanhostel.org"
+                    placeholder="pn9059491777@gmail.com"
                   />
                 </div>
               </div>
