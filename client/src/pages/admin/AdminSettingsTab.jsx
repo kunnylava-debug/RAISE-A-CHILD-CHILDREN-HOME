@@ -361,7 +361,7 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
             <span>Open Current Google Sheet ↗</span>
           </a>
           <a
-            href="/api/children/export/excel"
+            href={api.getChildrenExportExcelUrl()}
             download="RISE_A_CHILD_Children_Records.xlsx"
             className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition inline-flex items-center space-x-1 shadow-xs"
           >

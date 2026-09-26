@@ -112,35 +112,70 @@ router.get('/', (req, res) => {
   });
 });
 
-// GET /api/children/export/excel - Direct Excel download (.xlsx)
+// GET /api/children/export/excel - Direct Excel download (.xlsx) (Protected / Admin Only)
 router.get('/export/excel', (req, res) => {
+  let token = req.query.token;
+  if (!token && req.headers['authorization']) {
+    token = req.headers['authorization'].split(' ')[1];
+  }
+  
+  const authorized = isAuthorized({ headers: { authorization: token ? `Bearer ${token}` : undefined } });
+  if (!authorized) {
+    return res.status(401).json({ 
+      error: 'Access Denied: Children directory download is private and only accessible to authorized hostel administrators.' 
+    });
+  }
+
   try {
-    generateChildrenExcel();
+    const { buffer } = generateChildrenExcel(true);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Children_Records.xlsx"');
-    res.download(EXCEL_PATH, 'RISE_A_CHILD_Children_Records.xlsx');
+    res.send(buffer);
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate Excel file: ' + err.message });
   }
 });
 
-// GET /api/children/export/csv - Direct CSV download (.csv)
+// GET /api/children/export/csv - Direct CSV download (.csv) (Protected / Admin Only)
 router.get('/export/csv', (req, res) => {
+  let token = req.query.token;
+  if (!token && req.headers['authorization']) {
+    token = req.headers['authorization'].split(' ')[1];
+  }
+  
+  const authorized = isAuthorized({ headers: { authorization: token ? `Bearer ${token}` : undefined } });
+  if (!authorized) {
+    return res.status(401).json({ 
+      error: 'Access Denied: Children directory download is private and only accessible to authorized hostel administrators.' 
+    });
+  }
+
   try {
-    generateChildrenExcel();
-    res.setHeader('Content-Type', 'text/csv');
+    const { csvData } = generateChildrenExcel(true);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Children_Records.csv"');
-    res.download(CSV_PATH, 'RISE_A_CHILD_Children_Records.csv');
+    res.send(csvData);
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate CSV file: ' + err.message });
   }
 });
 
-// GET /api/children/sheet-info - Sheet metadata and connected Google Sheet URL
+// GET /api/children/sheet-info - Sheet metadata and connected Google Sheet URL (Protected)
 router.get('/sheet-info', (req, res) => {
+  const authorized = isAuthorized(req);
+  const totalCount = db.prepare('SELECT COUNT(*) as count FROM children WHERE is_active = 1').get().count;
+
+  if (!authorized) {
+    return res.json({
+      is_authorized: false,
+      total_records: totalCount,
+      google_sheet_url: null,
+      is_webhook_active: false
+    });
+  }
+
   const sheetSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('children_google_sheet_url');
   const webhookSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('children_google_sheet_webhook_url');
-  const totalCount = db.prepare('SELECT COUNT(*) as count FROM children WHERE is_active = 1').get().count;
 
   const defaultSheetUrl = 'https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing';
   const googleSheetUrl = sheetSetting?.value || defaultSheetUrl;
@@ -156,6 +191,7 @@ router.get('/sheet-info', (req, res) => {
   }
 
   res.json({
+    is_authorized: true,
     google_sheet_url: googleSheetUrl,
     webhook_url: webhookUrl,
     is_webhook_active: Boolean(webhookUrl && webhookUrl.startsWith('http')),

@@ -506,8 +506,52 @@ export const api = {
   getChildrenSheetInfo: () => request('/children/sheet-info'),
   syncChildrenGoogleSheet: (sheet_url) => request('/children/sync-google-sheet', { method: 'POST', body: { sheet_url } }),
   setupChildrenGoogleSheetWebhook: (data) => request('/children/setup-google-sheet-webhook', { method: 'POST', body: data }),
-  getChildrenExportExcelUrl: () => `${API_BASE}/children/export/excel`,
-  getChildrenExportCsvUrl: () => `${API_BASE}/children/export/csv`,
+  getChildrenExportExcelUrl: () => {
+    const token = getAuthToken();
+    return `${API_BASE}/children/export/excel${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+  },
+  getChildrenExportCsvUrl: () => {
+    const token = getAuthToken();
+    return `${API_BASE}/children/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+  },
+  downloadChildrenExcel: async () => {
+    const token = getAuthToken();
+    const res = await fetch(`${API_BASE}/children/export/excel${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to download Excel file');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RISE_A_CHILD_Children_Records.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
+  downloadChildrenCsv: async () => {
+    const token = getAuthToken();
+    const res = await fetch(`${API_BASE}/children/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to download CSV file');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RISE_A_CHILD_Children_Records.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
 
   // Views / Facilities
   getViews: () => request('/views'),

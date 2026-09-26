@@ -19,7 +19,7 @@ const CSV_PATH = path.join(uploadsDir, 'children_records.csv');
  * Generates and saves an up-to-date Excel (.xlsx) and CSV (.csv) file
  * containing all active children records.
  */
-export function generateChildrenExcel() {
+export function generateChildrenExcel(isAuthorized = true) {
   const children = db.prepare(`
     SELECT serial_no, name, age, gender, class, admission_date, 
            guardian_name, guardian_phone, guardian_address, medical_notes, hobbies
@@ -28,37 +28,53 @@ export function generateChildrenExcel() {
     ORDER BY id ASC
   `).all();
 
-  const formattedRows = children.map((c, idx) => ({
-    'S.No': idx + 1,
-    'Serial ID': c.serial_no || `SN-CH-${String(idx + 1).padStart(3, '0')}`,
-    'Full Name': c.name || '',
-    'Age': c.age || '',
-    'Gender': c.gender || '',
-    'Class / Grade': c.class || '',
-    'Admission Date': c.admission_date || '',
-    'Guardian / Parent Name': c.guardian_name || '',
-    'Guardian Phone': c.guardian_phone || '',
-    'Address / Native Place': c.guardian_address || '',
-    'Medical & Health Notes': c.medical_notes || '',
-    'Hobbies & Talents': c.hobbies || ''
-  }));
+  const headers = [
+    'S.No',
+    'Serial ID',
+    'Full Name',
+    'Age',
+    'Gender',
+    'Class / Grade',
+    'Admission Date',
+    'Guardian / Parent Name',
+    'Guardian Phone',
+    'Address / Native Place',
+    'Medical & Health Notes',
+    'Hobbies & Talents'
+  ];
 
-  const worksheet = XLSX.utils.json_to_sheet(formattedRows);
+  const dataRows = children.map((c, idx) => [
+    idx + 1,
+    c.serial_no || `SN-CH-${String(idx + 1).padStart(3, '0')}`,
+    c.name || '',
+    c.age || '',
+    c.gender || '',
+    c.class || '',
+    c.admission_date || '',
+    isAuthorized ? (c.guardian_name || '') : 'Protected (Admin Only)',
+    isAuthorized ? (c.guardian_phone || '') : 'Protected',
+    isAuthorized ? (c.guardian_address || '') : 'Protected',
+    isAuthorized ? (c.medical_notes || '') : 'Confidential',
+    c.hobbies || ''
+  ]);
+
+  const aoaData = [headers, ...dataRows];
+  const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
 
   // Set column widths for readability
   worksheet['!cols'] = [
     { wch: 6 },   // S.No
     { wch: 14 },  // Serial ID
-    { wch: 22 },  // Full Name
-    { wch: 6 },   // Age
+    { wch: 24 },  // Full Name
+    { wch: 8 },   // Age
     { wch: 10 },  // Gender
-    { wch: 15 },  // Class
-    { wch: 15 },  // Admission Date
-    { wch: 24 },  // Guardian Name
-    { wch: 16 },  // Guardian Phone
-    { wch: 30 },  // Address
-    { wch: 25 },  // Medical Notes
-    { wch: 25 }   // Hobbies
+    { wch: 16 },  // Class
+    { wch: 16 },  // Admission Date
+    { wch: 25 },  // Guardian Name
+    { wch: 18 },  // Guardian Phone
+    { wch: 32 },  // Address
+    { wch: 28 },  // Medical Notes
+    { wch: 28 }   // Hobbies
   ];
 
   const workbook = XLSX.utils.book_new();
@@ -76,6 +92,7 @@ export function generateChildrenExcel() {
     excelPath: EXCEL_PATH,
     csvPath: CSV_PATH,
     buffer: excelBuffer,
+    csvData: csvData,
     count: children.length,
     updatedAt: new Date().toISOString()
   };

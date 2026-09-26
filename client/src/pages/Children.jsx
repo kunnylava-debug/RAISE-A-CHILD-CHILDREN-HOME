@@ -232,100 +232,113 @@ function doPost(e) {
         </div>
       </div>
 
-      {/* 2. GOOGLE SHEET & EXCEL LIVE FORM INTEGRATION */}
-      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 rounded-3xl p-5 sm:p-7 text-white shadow-xl border border-emerald-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-        <div className="space-y-2 flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center space-x-1.5 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-400/30">
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Live Excel & Google Sheet Synchronized</span>
-            </span>
-            {sheetInfo?.is_webhook_active ? (
-              <span className="inline-flex items-center text-[11px] font-bold text-emerald-300 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">
-                <CheckCircle className="w-3 h-3 mr-1 text-emerald-400" />
-                Live Cloud Sync Active
+      {/* 2. GOOGLE SHEET & EXCEL LIVE FORM INTEGRATION (PRIVATE - AUTHORIZED ADMIN ONLY) */}
+      {adminUser && (
+        <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 rounded-3xl p-5 sm:p-7 text-white shadow-xl border border-emerald-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-2 flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center space-x-1.5 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-400/30">
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Live Excel & Google Sheet Synchronized</span>
               </span>
-            ) : (
-              <span className="inline-flex items-center text-[11px] font-bold text-slate-300 bg-white/10 px-2.5 py-0.5 rounded-lg border border-white/10">
-                Excel File Updated Automatically
+              <span className="inline-flex items-center text-[11px] font-bold text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-lg border border-amber-500/30">
+                🔒 Private Staff / Admin Only
               </span>
-            )}
+              {sheetInfo?.is_webhook_active ? (
+                <span className="inline-flex items-center text-[11px] font-bold text-emerald-300 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">
+                  <CheckCircle className="w-3 h-3 mr-1 text-emerald-400" />
+                  Live Cloud Sync Active
+                </span>
+              ) : (
+                <span className="inline-flex items-center text-[11px] font-bold text-slate-300 bg-white/10 px-2.5 py-0.5 rounded-lg border border-white/10">
+                  Excel File Updated Automatically
+                </span>
+              )}
+            </div>
+
+            <h3 className="text-lg sm:text-xl font-bold font-serif text-white flex items-center space-x-2">
+              <span>RISE A CHILD Children Records Excel Form</span>
+            </h3>
+
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
+              Adding or updating children details automatically stores the record in your up-to-date Excel spreadsheet (.xlsx / .csv) and pushes directly to your connected Google Sheet.
+            </p>
+
+            <div className="text-[11px] text-emerald-400 font-mono flex items-center space-x-2 pt-0.5">
+              <span>Connected Sheet ID: 1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ</span>
+              <span>•</span>
+              <span>{sheetInfo?.total_records || childrenData.total_children || 0} Records Formatted</span>
+            </div>
           </div>
 
-          <h3 className="text-lg sm:text-xl font-bold font-serif text-white flex items-center space-x-2">
-            <span>RISE A CHILD Children Records Excel Form</span>
-          </h3>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5 self-stretch lg:self-auto">
+            {/* Open Google Sheet Link */}
+            <a
+              href={sheetInfo?.google_sheet_url || 'https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 sm:flex-initial px-4 py-2.5 bg-white hover:bg-emerald-50 text-slate-900 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 shadow-sm border border-white"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
+              <span>Open Google Sheet</span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+            </a>
 
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
-            Adding or updating children details automatically stores the record in your up-to-date Excel spreadsheet (.xlsx / .csv) and pushes directly to your connected Google Sheet.
-          </p>
+            {/* Download Excel */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await api.downloadChildrenExcel();
+                } catch (err) {
+                  window.open(api.getChildrenExportExcelUrl(), '_blank');
+                }
+              }}
+              className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-900/40 cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download Excel (.xlsx)</span>
+            </button>
 
-          <div className="text-[11px] text-emerald-400 font-mono flex items-center space-x-2 pt-0.5">
-            <span>Connected Sheet ID: 1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ</span>
-            <span>•</span>
-            <span>{sheetInfo?.total_records || childrenData.total_children || 0} Records Formatted</span>
+            {/* Download CSV */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await api.downloadChildrenCsv();
+                } catch (err) {
+                  window.open(api.getChildrenExportCsvUrl(), '_blank');
+                }
+              }}
+              className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1 border border-slate-700 cursor-pointer"
+              title="Download CSV Format"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>CSV</span>
+            </button>
+
+            {/* Admin Sync from Google Sheet */}
+            <button
+              onClick={handleSyncGoogleSheet}
+              disabled={syncingSheet}
+              className="px-3.5 py-2.5 bg-teal-700 hover:bg-teal-600 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 disabled:opacity-50"
+              title="Sync from Google Sheet to Website"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncingSheet ? 'animate-spin' : ''}`} />
+              <span>{syncingSheet ? 'Syncing...' : 'Sync from Sheet'}</span>
+            </button>
+
+            <button
+              onClick={() => setSheetModalOpen(true)}
+              className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition border border-white/20"
+              title="Google Sheet Integration & Webhook Setup"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5 self-stretch lg:self-auto">
-          {/* Open Google Sheet Link */}
-          <a
-            href={sheetInfo?.google_sheet_url || 'https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 sm:flex-initial px-4 py-2.5 bg-white hover:bg-emerald-50 text-slate-900 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 shadow-sm border border-white"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
-            <span>Open Google Sheet</span>
-            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-          </a>
-
-          {/* Download Excel */}
-          <a
-            href={api.getChildrenExportExcelUrl()}
-            download="RISE_A_CHILD_Children_Records.xlsx"
-            className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-900/40"
-          >
-            <Download className="w-4 h-4" />
-            <span>Download Excel (.xlsx)</span>
-          </a>
-
-          {/* Download CSV */}
-          <a
-            href={api.getChildrenExportCsvUrl()}
-            download="RISE_A_CHILD_Children_Records.csv"
-            className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1 border border-slate-700"
-            title="Download CSV Format"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>CSV</span>
-          </a>
-
-          {/* Admin Sync from Google Sheet */}
-          {adminUser && (
-            <>
-              <button
-                onClick={handleSyncGoogleSheet}
-                disabled={syncingSheet}
-                className="px-3.5 py-2.5 bg-teal-700 hover:bg-teal-600 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 disabled:opacity-50"
-                title="Sync from Google Sheet to Website"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${syncingSheet ? 'animate-spin' : ''}`} />
-                <span>{syncingSheet ? 'Syncing...' : 'Sync from Sheet'}</span>
-              </button>
-
-              <button
-                onClick={() => setSheetModalOpen(true)}
-                className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition border border-white/20"
-                title="Google Sheet Integration & Webhook Setup"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* 3. RESPONSIBLE PRIVACY PROTECTION BANNER */}
       <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1009,14 +1022,20 @@ function doPost(e) {
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span>Open Sheet in Google Drive</span>
                 </a>
-                <a
-                  href={api.getChildrenExportExcelUrl()}
-                  download="RISE_A_CHILD_Children_Records.xlsx"
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg transition"
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await api.downloadChildrenExcel();
+                    } catch (err) {
+                      window.open(api.getChildrenExportExcelUrl(), '_blank');
+                    }
+                  }}
+                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg transition cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download .xlsx File</span>
-                </a>
+                </button>
               </div>
             </div>
 
