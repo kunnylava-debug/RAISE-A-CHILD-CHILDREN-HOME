@@ -282,6 +282,9 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
                       <img
                         src={settings?.founder_photo || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80"}
                         alt={settings?.founder_name || "Hostel Founder"}
+                        onError={(e) => {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80";
+                        }}
                         className="w-full h-full object-cover rounded-full"
                       />
                     </div>

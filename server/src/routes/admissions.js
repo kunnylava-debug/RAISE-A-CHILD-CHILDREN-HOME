@@ -1,7 +1,12 @@
 import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { dispatchAdmissionNotification, formatAdmissionMessage } from '../services/notificationService.js';
+import { 
+  dispatchAdmissionNotification, 
+  formatAdmissionMessage,
+  sendNewApplicationAlertToAdmin,
+  sendApplicationReceivedConfirmationToApplicant
+} from '../services/notificationService.js';
 
 const router = express.Router();
 
@@ -43,7 +48,7 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // POST submit admission application (Public)
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const { child_name, age, dob, class_applying, gender, address, guardian_name, phone, email, photo_url, reason, hear_about, previous_school } = req.body;
 
   if (!child_name || !age || !class_applying || !gender || !address || !guardian_name || !phone || !reason) {
@@ -76,16 +81,30 @@ router.post('/', (req, res) => {
 
   const newApp = db.prepare('SELECT * FROM admissions WHERE id = ?').get(result.lastInsertRowid);
 
-  // Retrieve configured hostel email
-  const hostelEmail = db.prepare("SELECT value FROM settings WHERE key = 'contact_email'").get()?.value || 'pn9059491777@gmail.com';
+  // 1. Dispatch email alert to hostel administration email
+  let adminAlertStatus = null;
+  try {
+    adminAlertStatus = await sendNewApplicationAlertToAdmin(newApp);
+  } catch (err) {
+    console.error('Error sending new application alert to admin:', err.message);
+  }
 
-  console.log(`[EMAIL DISPATCH] New application ${app_no} received at RISE A CHILD CHILDREN HOME for ${child_name}`);
+  // 2. Dispatch acknowledgment confirmation to applicant if email was provided
+  let applicantAckStatus = null;
+  try {
+    if (newApp.email) {
+      applicantAckStatus = await sendApplicationReceivedConfirmationToApplicant(newApp);
+    }
+  } catch (err) {
+    console.error('Error sending confirmation email to applicant:', err.message);
+  }
 
   res.status(201).json({
     success: true,
-    message: 'Admission application submitted successfully.',
+    message: 'Admission application submitted successfully. Our administration has received your details.',
     application_number: app_no,
-    email_notification_sent_to: hostelEmail,
+    admin_alert: adminAlertStatus,
+    applicant_acknowledgment: applicantAckStatus,
     data: newApp
   });
 });
@@ -97,7 +116,7 @@ router.get('/track', (req, res) => {
     return res.status(400).json({ error: 'Please provide your Application Number (e.g. ADM-2026-0001).' });
   }
 
-  let row = db.prepare('SELECT id, app_no, child_name, class_applying, guardian_name, phone, status, admin_notes, created_at, notification_sent_at FROM admissions WHERE app_no = ?').get(app_no.trim());
+  let row = db.prepare('SELECT id, app_no, child_name, class_applying, guardian_name, phone, email, status, admin_notes, created_at, notification_sent_at FROM admissions WHERE UPPER(TRIM(app_no)) = UPPER(TRIM(?))').get(app_no.trim());
   if (row && phone) {
     const cleanReqPhone = phone.replace(/\D/g, '').slice(-10);
     const cleanDbPhone = (row.phone || '').replace(/\D/g, '').slice(-10);

@@ -1,12 +1,28 @@
 import React, { useState } from 'react';
-import { Save, Image, Phone, Mail, MapPin, Shield, CheckCircle2, CreditCard, Share2, FileSpreadsheet } from 'lucide-react';
+import { Save, Image, Phone, Mail, MapPin, Shield, CheckCircle2, CreditCard, Share2, FileSpreadsheet, Send, Key, AlertCircle } from 'lucide-react';
 import { api } from '../../services/api';
 
 export default function AdminSettingsTab({ settings, onRefreshSettings, onShowToast }) {
   const [form, setForm] = useState({ ...settings });
   const [loading, setLoading] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
 
   const handleChange = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      // First save current settings so backend has updated credentials
+      await api.updateSettings(form);
+      const recipient = form.notification_email || form.contact_email || 'pn9059491777@gmail.com';
+      const res = await api.testEmail(recipient);
+      onShowToast?.({ type: 'success', message: res.message || `Test email successfully delivered to ${recipient}!` });
+    } catch (err) {
+      onShowToast?.({ type: 'error', message: err.message || 'SMTP Connection failed. Verify email and App Password.' });
+    } finally {
+      setTestingEmail(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -351,6 +367,112 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
           >
             <span>Download Live Excel File (.xlsx) 📥</span>
           </a>
+        </div>
+      </div>
+
+      {/* Admissions Email Notifications & Automated SMTP Delivery */}
+      <div className="bg-blue-50/70 rounded-2xl p-5 sm:p-6 border border-blue-200 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-2 text-blue-900">
+            <Mail className="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <div>
+              <h3 className="font-bold font-serif text-base">Admission Email Alerts & Automated SMTP Delivery</h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Automatically delivers online application alerts to your inbox, and sends official decision emails (Accepted/Rejected) to applicants.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={testingEmail}
+            onClick={handleTestEmail}
+            className="self-start sm:self-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm disabled:opacity-50 flex-shrink-0"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>{testingEmail ? 'Testing Connection...' : 'Send Test Verification Email'}</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1 text-xs">
+              Admissions Notification Recipient Email (Where alerts arrive)
+            </label>
+            <input
+              type="email"
+              value={form.notification_email || form.contact_email || ''}
+              onChange={e => handleChange('notification_email', e.target.value)}
+              placeholder="e.g. pn9059491777@gmail.com"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-semibold"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1 text-xs">
+              Outgoing Email Sender Name
+            </label>
+            <input
+              type="text"
+              value={form.smtp_sender_name || ''}
+              onChange={e => handleChange('smtp_sender_name', e.target.value)}
+              placeholder="e.g. RISE A CHILD CHILDREN HOME Admissions"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1 text-xs">SMTP Host</label>
+            <input
+              type="text"
+              value={form.smtp_host || ''}
+              onChange={e => handleChange('smtp_host', e.target.value)}
+              placeholder="smtp.gmail.com"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1 text-xs">SMTP Port</label>
+            <input
+              type="text"
+              value={form.smtp_port || ''}
+              onChange={e => handleChange('smtp_port', e.target.value)}
+              placeholder="465 (SSL) or 587 (TLS)"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1 text-xs">SMTP Username / Email</label>
+            <input
+              type="email"
+              value={form.smtp_user || ''}
+              onChange={e => handleChange('smtp_user', e.target.value)}
+              placeholder="e.g. pn9059491777@gmail.com"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 mb-1 text-xs">SMTP App Password</label>
+            <input
+              type="password"
+              value={form.smtp_pass || ''}
+              onChange={e => handleChange('smtp_pass', e.target.value)}
+              placeholder="••••••••••••••••"
+              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-mono"
+            />
+          </div>
+        </div>
+
+        <div className="bg-white/80 p-3 rounded-xl border border-blue-100 flex items-start space-x-2 text-[11px] text-slate-600">
+          <Key className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <strong className="text-slate-800">Gmail Setup Guide:</strong> If using a Gmail account (<code className="bg-slate-100 px-1 py-0.5 rounded text-blue-800">@gmail.com</code>), go to your <strong>Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords</strong>, generate a 16-letter password for &quot;Mail&quot;, and paste it in the <em>SMTP App Password</em> field above.
+          </div>
         </div>
       </div>
 

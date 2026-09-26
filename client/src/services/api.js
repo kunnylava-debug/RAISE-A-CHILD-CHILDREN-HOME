@@ -481,6 +481,7 @@ export const api = {
   // Settings
   getSettings: () => request('/settings'),
   updateSettings: (data) => request('/settings', { method: 'PUT', body: data }),
+  testEmail: (recipient) => request('/settings/test-email', { method: 'POST', body: { recipient } }),
 
   // Staff
   getStaff: () => request('/staff'),

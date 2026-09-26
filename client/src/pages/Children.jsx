@@ -537,6 +537,11 @@ function doPost(e) {
                 <img
                   src={child.photo}
                   alt={child.name}
+                  onError={(e) => {
+                    e.currentTarget.src = child.gender === 'Female' 
+                      ? 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80' 
+                      : 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80';
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
@@ -725,6 +730,11 @@ function doPost(e) {
               <img
                 src={selectedChild.photo}
                 alt={selectedChild.name}
+                onError={(e) => {
+                  e.currentTarget.src = selectedChild.gender === 'Female' 
+                    ? 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80' 
+                    : 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80';
+                }}
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-lg border-2 border-emerald-100"
               />
               <div className="text-center sm:text-left">

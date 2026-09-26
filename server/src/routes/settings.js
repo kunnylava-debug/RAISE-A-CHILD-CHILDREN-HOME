@@ -1,6 +1,7 @@
 import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { testSmtpConnection } from '../services/notificationService.js';
 
 const router = express.Router();
 
@@ -41,6 +42,24 @@ router.put('/', authenticateToken, (req, res) => {
     res.json({ message: 'Settings saved successfully.' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to save settings: ' + err.message });
+  }
+});
+
+// POST test email delivery (Admin only)
+router.post('/test-email', authenticateToken, async (req, res) => {
+  const { recipient } = req.body;
+  try {
+    const result = await testSmtpConnection(recipient);
+    res.json({
+      success: true,
+      message: `Test email successfully sent to ${result.recipient}!`,
+      data: result
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      error: err.message || 'SMTP Connection failed.'
+    });
   }
 });
 

@@ -346,11 +346,19 @@ export default function Admissions({ settings, onShowToast }) {
               <span className="font-semibold text-slate-800">{formData.class_applying}</span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500">Dispatched Notification To:</span>
-              <span className="text-slate-700 font-mono text-[11px] truncate">
-                {submittedData.email_notification_sent_to}
+              <span className="text-slate-500">Admissions Desk Notified:</span>
+              <span className="text-emerald-700 font-semibold text-[11px] truncate">
+                {submittedData.email_notification_sent_to || settings?.contact_email || 'pn9059491777@gmail.com'}
               </span>
             </div>
+            {formData.email && (
+              <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-200">
+                <span className="text-slate-500">Acknowledgment Sent To:</span>
+                <span className="text-blue-700 font-semibold text-[11px] truncate">
+                  {formData.email}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
