@@ -51,7 +51,7 @@
       ]
     },
     {
-      "source": "/(favicon.*|apple-touch-icon.*|logo.*)",
+      "source": "/(favicon.*|apple-touch-icon.*|logo.*|founder.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -62,7 +62,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!api/|robots.txt|sitemap.xml|favicon|apple-touch-icon|logo|assets/|manifest.json).*)",
+      "source": "/((?!api/|.*\\.(?:ico|png|jpg|jpeg|svg|webp|json|txt|xml|pdf)$).*)",
       "destination": "/index.html"
     }
   ]
