@@ -17,6 +17,7 @@ import AdminDonationsTab from './AdminDonationsTab';
 import AdminAlumniTab from './AdminAlumniTab';
 import AdminCredentialsTab from './AdminCredentialsTab';
 import AdminPaymentsTab from './AdminPaymentsTab';
+import AdminLicenceTab from './AdminLicenceTab';
 import { api } from '../../services/api';
 
 export default function AdminDashboard({ settings, onRefreshSettings, setActiveTab, onShowToast }) {
@@ -94,9 +95,9 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
     { id: 'settings', label: 'Home, Logo & Maps', icon: Settings },
     { id: 'credentials', label: 'Username & Password', icon: KeyRound },
     { id: 'founder_video', label: 'Founder & Video', icon: UserCheck },
+    { id: 'licence', label: 'Licence & Certificate', icon: ShieldCheck },
     { id: 'manage_children', label: 'Children Records', icon: Users, navigateTo: 'children' },
     { id: 'manage_staff', label: 'Staff Profiles', icon: Users, navigateTo: 'staff' },
-    { id: 'manage_licence', label: 'Licence & Certificate', icon: ShieldCheck, navigateTo: 'licence' },
     { id: 'manage_views', label: 'Facility Photos', icon: Image, navigateTo: 'views' },
     { id: 'timetable', label: 'Daily Routine & Schedule', icon: Clock },
     { id: 'manage_menu', label: 'Food Menu', icon: Utensils, navigateTo: 'menu' },
@@ -468,6 +469,14 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
                   </button>
 
                   <button
+                    onClick={() => handleSelectAdminTab('licence')}
+                    className="p-4 bg-white hover:bg-emerald-50/70 rounded-2xl border border-emerald-200 font-bold text-slate-800 text-left transition flex items-center justify-between shadow-xs hover:border-emerald-400"
+                  >
+                    <span>Edit Licence & Certificate</span>
+                    <ArrowRight className="w-4 h-4 text-emerald-600" />
+                  </button>
+
+                  <button
                     onClick={() => setActiveTab('needed')}
                     className="p-4 bg-white hover:bg-blue-50/60 rounded-2xl border border-slate-200 font-bold text-slate-800 text-left transition flex items-center justify-between shadow-xs hover:border-blue-300"
                   >
@@ -533,6 +542,10 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
               onRefreshSettings={onRefreshSettings} 
               onShowToast={onShowToast} 
             />
+          )}
+
+          {activeAdminTab === 'licence' && (
+            <AdminLicenceTab onShowToast={onShowToast} />
           )}
         </main>
       </div>

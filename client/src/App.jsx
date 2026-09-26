@@ -185,7 +185,7 @@ export default function App() {
           )}
 
           {activeTab === 'licence' && (
-            <Licence onShowToast={setToast} />
+            <Licence onShowToast={setToast} setActiveTab={setActiveTab} />
           )}
 
           {activeTab === 'children' && (

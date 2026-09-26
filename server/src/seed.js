@@ -37,22 +37,7 @@ export function seedData() {
   insertSetting.run('instructions_dos', JSON.stringify(rulesData.dos));
   insertSetting.run('instructions_donts', JSON.stringify(rulesData.donts));
 
-  const existingLicence = db.prepare('SELECT id FROM licence LIMIT 1').get();
-  if (!existingLicence) {
-    db.prepare(`
-      INSERT INTO licence (licence_no, licence_type, issuing_authority, issue_date, expiry_date, status, document_url, remarks)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      'WB-CW-2022/4190-R',
-      'Child Care Institution & Residential Hostel Licence (JJ Act 2015)',
-      'Department of Women & Child Development and Social Welfare, Govt. of West Bengal',
-      '2022-04-12',
-      '2029-04-11',
-      'Active & Verified',
-      'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80',
-      'Hostel is fully inspected, accredited, and verified compliant with all child safety norms, building codes, sanitation standards, and annual government audits.'
-    );
-  }
+  // Licence table left empty so official licence is provided via Admin Console login
 
   // Views categories initialized without dummy photos
   const catCount = db.prepare('SELECT COUNT(*) as count FROM views_categories').get().count;

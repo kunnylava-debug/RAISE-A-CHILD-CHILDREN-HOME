@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -30,6 +30,12 @@ router.put('/', authenticateToken, (req, res) => {
 
   const updated = db.prepare('SELECT * FROM licence ORDER BY id DESC LIMIT 1').get();
   res.json(updated);
+});
+
+// DELETE clear licence (Admin)
+router.delete('/', authenticateToken, (req, res) => {
+  db.prepare('DELETE FROM licence').run();
+  res.json({ message: 'Licence records cleared successfully' });
 });
 
 export default router;

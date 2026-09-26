@@ -516,18 +516,38 @@ async function request(endpoint, options = {}) {
       if (endpoint === '/needed') return getStorage('rac_cached_needed', defaultNeededAndSupporters.needed_items || []);
       if (endpoint === '/supporters') return getStorage('rac_cached_supporters', defaultNeededAndSupporters.supporters || []);
       if (endpoint === '/licence') {
-        return {
-          licence_no: 'JJ-ACT-2015-CERT-AP-2024-889',
-          licence_type: 'Statutory Child Care Institutional Registration under JJ Act 2015',
-          issuing_authority: 'Department of Women Development and Child Welfare, Govt. of Andhra Pradesh',
-          issue_date: '2024-01-10',
-          expiry_date: '2029-01-09',
-          status: 'Active & Verified',
-          document_url: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80',
-          remarks: 'Institutional premises inspected and certified for safety, nutrition, and child protection.'
-        };
+        const cached = getStorage('rac_cached_licence', null);
+        if (cached && (cached.licence_no === 'JJ-ACT-2015-CERT-AP-2024-889' || cached.licence_no === 'WB-CW-2022/4190-R')) {
+          if (typeof window !== 'undefined') localStorage.removeItem('rac_cached_licence');
+          return null;
+        }
+        return cached || null;
       }
       if (endpoint === '/donations') return [];
+    }
+
+    // 7.4 LICENCE WRITE OPERATIONS (PUT, DELETE)
+    if (endpoint === '/licence') {
+      if (method === 'PUT') {
+        const updated = {
+          licence_no: parsedBody.licence_no || '',
+          licence_type: parsedBody.licence_type || '',
+          issuing_authority: parsedBody.issuing_authority || '',
+          issue_date: parsedBody.issue_date || '',
+          expiry_date: parsedBody.expiry_date || '',
+          status: parsedBody.status || 'Active & Fully Verified',
+          document_url: parsedBody.document_url || '',
+          remarks: parsedBody.remarks || ''
+        };
+        setStorage('rac_cached_licence', updated);
+        return updated;
+      }
+      if (method === 'DELETE') {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('rac_cached_licence');
+        }
+        return { message: 'Licence cleared successfully' };
+      }
     }
 
     // 7.5 ADMISSIONS OPERATIONS (GET, POST, PUT, DELETE, TRACK, NOTIFY)
@@ -712,6 +732,7 @@ export const api = {
   // Licence
   getLicence: () => request('/licence'),
   updateLicence: (data) => request('/licence', { method: 'PUT', body: data }),
+  deleteLicence: () => request('/licence', { method: 'DELETE' }),
 
   // Children
   getChildren: (params = {}) => {
