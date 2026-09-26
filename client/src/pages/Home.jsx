@@ -291,10 +291,10 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
                   <div className="relative group flex-shrink-0">
                     <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full p-1 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-xl">
                       <img
-                        src={settings?.founder_photo || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80"}
-                        alt={settings?.founder_name || "Hostel Founder"}
+                        src={settings?.founder_photo || "/founder_square.jpg"}
+                        alt={settings?.founder_name || "BRO.NELSON A - Founder"}
                         onError={(e) => {
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80";
+                          e.currentTarget.src = "/founder_square.jpg";
                         }}
                         className="w-full h-full object-cover rounded-full"
                       />

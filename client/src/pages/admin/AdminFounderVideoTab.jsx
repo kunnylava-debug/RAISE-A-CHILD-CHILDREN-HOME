@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Save, UserCheck, Video } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -69,12 +69,26 @@ export default function AdminFounderVideoTab({ settings, onRefreshSettings, onSh
 
         <div>
           <label className="block font-semibold text-slate-700 mb-1">Founder Photograph URL</label>
-          <input
-            type="text"
-            value={form.founder_photo || ''}
-            onChange={e => handleChange('founder_photo', e.target.value)}
-            className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-          />
+          <div className="flex items-center space-x-3">
+            <div className="w-14 h-14 rounded-full border-2 border-emerald-500 overflow-hidden bg-slate-100 flex-shrink-0 shadow-sm">
+              <img
+                src={form.founder_photo || "/founder_square.jpg"}
+                alt="Founder Preview"
+                className="w-full h-full object-cover"
+                onError={(e) => { e.currentTarget.src = "/founder_square.jpg"; }}
+              />
+            </div>
+            <div className="flex-1">
+              <input
+                type="text"
+                value={form.founder_photo || ''}
+                onChange={e => handleChange('founder_photo', e.target.value)}
+                placeholder="/founder_square.jpg"
+                className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              />
+              <span className="text-[11px] text-slate-400 mt-1 block">Default: /founder_square.jpg (Official enhanced portrait of BRO.NELSON A)</span>
+            </div>
+          </div>
         </div>
 
         <div>
