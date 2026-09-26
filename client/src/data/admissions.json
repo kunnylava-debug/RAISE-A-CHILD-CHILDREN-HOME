@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "app_no": "ADM-2026-0041",
+    "child_name": "Rahul Karmakar",
+    "age": 10,
+    "dob": "2016-03-12",
+    "class_applying": "Class 5",
+    "gender": "Male",
+    "address": "Vill. Kalinarayanpur, P.O. Taherpur, Dist. Nadia",
+    "guardian_name": "Bimal Karmakar (Uncle)",
+    "phone": "+91 98321 45678",
+    "email": "bimal.karmakar@gmail.com",
+    "photo_url": "https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80",
+    "reason": "Single parent family needing residential schooling support.",
+    "hear_about": "Referred by Local Panchayat",
+    "previous_school": "Taherpur Primary School",
+    "status": "Under Review",
+    "admin_notes": "Interview scheduled with Superintendent",
+    "created_at": "2026-09-24T10:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "app_no": "ADM-2026-0042",
+    "child_name": "Mitali Sardar",
+    "age": 12,
+    "dob": "2014-08-25",
+    "class_applying": "Class 7",
+    "gender": "Female",
+    "address": "Vill. Gosaba, South 24 Parganas",
+    "guardian_name": "Padma Sardar (Mother)",
+    "phone": "+91 98321 89012",
+    "email": "padma.sardar@yahoo.com",
+    "photo_url": "https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80",
+    "reason": "Child is keen on studies and drawing; seeking hostel stay.",
+    "hear_about": "Alumni Community",
+    "previous_school": "Gosaba Girls High School",
+    "status": "Pending",
+    "admin_notes": "Application received online.",
+    "created_at": "2026-09-25T11:30:00.000Z"
+  }
+]

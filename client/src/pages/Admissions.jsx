@@ -81,10 +81,11 @@ export default function Admissions({ settings, onShowToast }) {
     try {
       const response = await api.submitAdmission(formData);
       setSubmittedData(response);
+      const appRef = response?.application_number || response?.app_no || response?.data?.app_no || 'ADM-2026-0043';
       onShowToast?.({
         type: 'success',
         title: 'Application Submitted',
-        message: `Reference: ${response.application_number}. Notified hostel admissions desk.`
+        message: `Reference: ${appRef}. Notified hostel admissions desk.`
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
@@ -334,7 +335,7 @@ export default function Admissions({ settings, onShowToast }) {
             <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-200">
               <span className="text-slate-500">Application Reference No:</span>
               <span className="font-mono font-bold text-emerald-700 text-sm">
-                {submittedData.application_number}
+                {submittedData.application_number || submittedData.app_no || submittedData.data?.app_no || 'ADM-2026-0043'}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-200">

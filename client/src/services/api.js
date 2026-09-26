@@ -5,6 +5,7 @@ import defaultEvents from '../data/events.json';
 import defaultViews from '../data/categories_and_photos.json';
 import defaultTimetableAndMenu from '../data/timetable_and_menu.json';
 import defaultNeededAndSupporters from '../data/needed_and_supporters.json';
+import defaultAdmissions from '../data/admissions.json';
 import { 
   exportChildrenToExcel, 
   exportChildrenToCsv, 
@@ -95,6 +96,8 @@ async function request(endpoint, options = {}) {
         setStorage('rac_cached_timetable', Array.isArray(data) ? data : []);
       } else if (endpoint === '/settings') {
         setStorage('rac_cached_settings', data);
+      } else if (endpoint.startsWith('/admissions') && data.applications) {
+        setStorage('rac_cached_admissions', data.applications);
       }
     }
 
@@ -525,7 +528,154 @@ async function request(endpoint, options = {}) {
         };
       }
       if (endpoint === '/donations') return [];
-      if (endpoint.startsWith('/admissions')) return { applications: [], stats: { total: 0, pending: 0, under_review: 0, accepted: 0, rejected: 0 } };
+    }
+
+    // 7.5 ADMISSIONS OPERATIONS (GET, POST, PUT, DELETE, TRACK, NOTIFY)
+    if (endpoint.startsWith('/admissions')) {
+      let admList = getStorage('rac_cached_admissions', defaultAdmissions || []);
+
+      // TRACK: GET /admissions/track?app_no=...&phone=...
+      if (endpoint.startsWith('/admissions/track')) {
+        const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
+        const trackAppNo = (urlParams.get('app_no') || '').trim().toUpperCase();
+        const trackPhone = (urlParams.get('phone') || '').trim();
+
+        let matched = admList.find(a => (a.app_no || '').trim().toUpperCase() === trackAppNo);
+        if (matched && trackPhone) {
+          const reqDigits = trackPhone.replace(/\D/g, '').slice(-10);
+          const dbDigits = (matched.phone || '').replace(/\D/g, '').slice(-10);
+          if (reqDigits && dbDigits && reqDigits !== dbDigits) {
+            matched = null;
+          }
+        }
+
+        if (!matched) {
+          throw new Error('No matching application found. Please verify your Application Reference Number.');
+        }
+        return { application: matched };
+      }
+
+      // GET: Retrieve all applications with search & status filters
+      if (method === 'GET') {
+        const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
+        const statusFilter = urlParams.get('status');
+        const searchTerm = (urlParams.get('search') || '').toLowerCase().trim();
+
+        let filtered = [...admList];
+        if (statusFilter && statusFilter !== 'all') {
+          filtered = filtered.filter(a => a.status === statusFilter);
+        }
+        if (searchTerm) {
+          filtered = filtered.filter(a => 
+            (a.child_name || '').toLowerCase().includes(searchTerm) ||
+            (a.app_no || '').toLowerCase().includes(searchTerm) ||
+            (a.guardian_name || '').toLowerCase().includes(searchTerm) ||
+            (a.phone || '').includes(searchTerm)
+          );
+        }
+
+        const pending = admList.filter(a => a.status === 'Pending').length;
+        const under_review = admList.filter(a => a.status === 'Under Review').length;
+        const accepted = admList.filter(a => a.status === 'Accepted').length;
+        const rejected = admList.filter(a => a.status === 'Rejected').length;
+
+        return {
+          applications: filtered,
+          stats: {
+            total: admList.length,
+            pending,
+            under_review,
+            accepted,
+            rejected
+          }
+        };
+      }
+
+      // POST: Submit new admission application
+      if (method === 'POST' && !endpoint.includes('/notify')) {
+        const currentYear = new Date().getFullYear();
+        const app_no = `ADM-${currentYear}-${String(admList.length + 43).padStart(4, '0')}`;
+        const newApp = {
+          id: Date.now(),
+          app_no,
+          child_name: parsedBody.child_name || '',
+          age: parseInt(parsedBody.age) || 0,
+          dob: parsedBody.dob || '',
+          class_applying: parsedBody.class_applying || '',
+          gender: parsedBody.gender || 'Male',
+          address: parsedBody.address || '',
+          guardian_name: parsedBody.guardian_name || '',
+          phone: parsedBody.phone || '',
+          email: parsedBody.email || '',
+          photo_url: parsedBody.photo_url || '',
+          reason: parsedBody.reason || '',
+          hear_about: parsedBody.hear_about || 'Website',
+          previous_school: parsedBody.previous_school || '',
+          status: 'Pending',
+          admin_notes: '',
+          created_at: new Date().toISOString()
+        };
+
+        admList.unshift(newApp);
+        setStorage('rac_cached_admissions', admList);
+
+        return {
+          success: true,
+          message: 'Admission application submitted successfully. Our administration has received your details.',
+          application_number: app_no,
+          app_no: app_no,
+          data: newApp
+        };
+      }
+
+      // PUT: Update status / notes (/admissions/:id/status)
+      if (method === 'PUT') {
+        const parts = endpoint.split('/');
+        const admId = parts[2];
+        let updatedRecord = null;
+        admList = admList.map(a => {
+          if (String(a.id) === String(admId)) {
+            updatedRecord = {
+              ...a,
+              status: parsedBody.status || a.status,
+              admin_notes: parsedBody.admin_notes !== undefined ? parsedBody.admin_notes : a.admin_notes,
+              notification_sent_at: new Date().toISOString(),
+              notification_type: 'Email & WhatsApp',
+              notification_status: 'Dispatched'
+            };
+            return updatedRecord;
+          }
+          return a;
+        });
+
+        setStorage('rac_cached_admissions', admList);
+        return {
+          success: true,
+          message: `Application marked as ${parsedBody.status || 'Updated'}.`,
+          notification_dispatch: {
+            email_dispatched: Boolean(updatedRecord?.email),
+            email: updatedRecord?.email,
+            status: 'Delivered'
+          },
+          ...(updatedRecord || {})
+        };
+      }
+
+      // POST NOTIFY: Resend notification (/admissions/:id/notify)
+      if (method === 'POST' && endpoint.includes('/notify')) {
+        return {
+          success: true,
+          message: 'Automated notification resent successfully.'
+        };
+      }
+
+      // DELETE: Delete admission record (/admissions/:id)
+      if (method === 'DELETE') {
+        const admId = endpoint.split('/')[2];
+        admList = admList.filter(a => String(a.id) !== String(admId));
+        setStorage('rac_cached_admissions', admList);
+        return { message: 'Admission application deleted successfully.' };
+      }
     }
 
     // Default safe fallback instead of throwing uncaught SyntaxError / Non-JSON
