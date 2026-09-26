@@ -1,11 +1,11 @@
 {
   "short_name": "Rise A Child",
   "name": "RISE A CHILD CHILDREN HOME",
-  "description": "A safe, caring, and supportive residential home founded by BRO .NELSON providing quality education, balanced nutrition, and loving shelter for students and youths.",
+  "description": "A safe, caring, and supportive residential home founded by BRO.NELSON A providing quality education, balanced nutrition, and loving shelter for students and youths.",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "type": "image/svg+xml",
+      "src": "/logo.png",
+      "type": "image/png",
       "sizes": "512x512"
     }
   ],

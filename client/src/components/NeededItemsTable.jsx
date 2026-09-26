@@ -29,7 +29,34 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
         )}
       </div>
 
-      {/* MOBILE VIEW: Clean Responsive Cards (Fits 100% of mobile width) */}
+      {(!Array.isArray(neededItems) || neededItems.length === 0) ? (
+        <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs space-y-4 max-w-2xl mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+            <Gift className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold font-serif text-slate-900">
+              Basic Hostel Needs Are Currently Met
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
+              All essential learning and living supplies for our resident children are currently supported by management and patrons. Specific new requirements will be posted here as they arise. You can still support our children through direct general donations above.
+            </p>
+          </div>
+          {adminUser && (
+            <div className="pt-2">
+              <button
+                onClick={onAddNeed}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm inline-flex items-center space-x-2 shadow-md transition"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add First Needed Item</span>
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* MOBILE VIEW: Clean Responsive Cards (Fits 100% of mobile width) */}
       <div className="md:hidden space-y-3.5">
         {(Array.isArray(neededItems) ? neededItems : []).map((item, index) => {
           const isFulfilled = item.quantity_received >= item.quantity_needed || item.is_fulfilled;
@@ -59,7 +86,7 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
                     </span>
                   ) : (
                     <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                      item.urgency === 'High' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                      item.urgency === 'High' ? 'bg-rose-100 text-rose-800' : 'bg-teal-100 text-teal-800'
                     }`}>
                       {item.urgency || 'Needed'}
                     </span>
@@ -171,7 +198,7 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
                         </span>
                       ) : (
                         <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                          item.urgency === 'High' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                          item.urgency === 'High' ? 'bg-rose-100 text-rose-800' : 'bg-teal-100 text-teal-800'
                         }`}>
                           {item.urgency || 'Needed'}
                         </span>
@@ -211,6 +238,8 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
           </table>
         </div>
       </div>
+        </>
+      )}
     </section>
   );
 }

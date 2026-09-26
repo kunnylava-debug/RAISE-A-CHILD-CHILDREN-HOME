@@ -396,6 +396,71 @@ async function request(endpoint, options = {}) {
       }
     }
 
+    // 6.5 NEEDED ITEMS OPERATIONS
+    if (endpoint.startsWith('/needed')) {
+      let neededList = getStorage('rac_cached_needed', defaultNeededAndSupporters.needed_items || []);
+      if (method === 'GET') return neededList;
+      if (method === 'POST') {
+        const newItem = {
+          id: Date.now(),
+          item_name: parsedBody.item_name || '',
+          category: parsedBody.category || 'General',
+          quantity_needed: Number(parsedBody.quantity_needed || 1),
+          quantity_received: Number(parsedBody.quantity_received || 0),
+          estimated_price: Number(parsedBody.estimated_price || 0),
+          urgency: parsedBody.urgency || 'Needed',
+          description: parsedBody.description || ''
+        };
+        neededList.push(newItem);
+        setStorage('rac_cached_needed', neededList);
+        return newItem;
+      }
+      if (method === 'PUT') {
+        const itemId = endpoint.split('/')[2];
+        neededList = neededList.map(it => String(it.id) === String(itemId) ? { ...it, ...parsedBody, id: it.id } : it);
+        setStorage('rac_cached_needed', neededList);
+        return { ...parsedBody, id: itemId };
+      }
+      if (method === 'DELETE') {
+        const itemId = endpoint.split('/')[2];
+        neededList = neededList.filter(it => String(it.id) !== String(itemId));
+        setStorage('rac_cached_needed', neededList);
+        return { message: 'Needed item removed successfully.' };
+      }
+    }
+
+    // 6.6 SUPPORTERS OPERATIONS
+    if (endpoint.startsWith('/supporters')) {
+      let suppList = getStorage('rac_cached_supporters', defaultNeededAndSupporters.supporters || []);
+      if (method === 'GET') return suppList;
+      if (method === 'POST') {
+        const newSupp = {
+          id: Date.now(),
+          name: parsedBody.name || '',
+          occupation: parsedBody.occupation || '',
+          support_type: parsedBody.support_type || '',
+          photo_url: parsedBody.photo_url || '',
+          message: parsedBody.message || '',
+          date_supported: parsedBody.date_supported || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+        };
+        suppList.push(newSupp);
+        setStorage('rac_cached_supporters', suppList);
+        return newSupp;
+      }
+      if (method === 'PUT') {
+        const suppId = endpoint.split('/')[2];
+        suppList = suppList.map(s => String(s.id) === String(suppId) ? { ...s, ...parsedBody, id: s.id } : s);
+        setStorage('rac_cached_supporters', suppList);
+        return { ...parsedBody, id: suppId };
+      }
+      if (method === 'DELETE') {
+        const suppId = endpoint.split('/')[2];
+        suppList = suppList.filter(s => String(s.id) !== String(suppId));
+        setStorage('rac_cached_supporters', suppList);
+        return { message: 'Supporter removed successfully.' };
+      }
+    }
+
     // 7. SETTINGS OPERATIONS
     if (endpoint === '/settings') {
       const cur = getStorage('rac_cached_settings', defaultSettings);
@@ -445,8 +510,8 @@ async function request(endpoint, options = {}) {
     // Other read operations
     if (method === 'GET') {
       if (endpoint === '/menu') return defaultTimetableAndMenu.menu || [];
-      if (endpoint === '/needed') return defaultNeededAndSupporters.needed_items || [];
-      if (endpoint === '/supporters') return defaultNeededAndSupporters.supporters || [];
+      if (endpoint === '/needed') return getStorage('rac_cached_needed', defaultNeededAndSupporters.needed_items || []);
+      if (endpoint === '/supporters') return getStorage('rac_cached_supporters', defaultNeededAndSupporters.supporters || []);
       if (endpoint === '/licence') {
         return {
           licence_no: 'JJ-ACT-2015-CERT-AP-2024-889',

@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://riseachildchildrenhome.org/</loc>
+    <loc>https://raise-a-child-children-home.vercel.app/</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -13,49 +13,49 @@
     </image:image>
   </url>
   <url>
-    <loc>https://riseachildchildrenhome.org/#admissions</loc>
+    <loc>https://raise-a-child-children-home.vercel.app/#admissions</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://riseachildchildrenhome.org/#needed</loc>
+    <loc>https://raise-a-child-children-home.vercel.app/#needed</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://riseachildchildrenhome.org/#children</loc>
+    <loc>https://raise-a-child-children-home.vercel.app/#children</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://riseachildchildrenhome.org/#views</loc>
+    <loc>https://raise-a-child-children-home.vercel.app/#views</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://riseachildchildrenhome.org/#staff</loc>
+    <loc>https://raise-a-child-children-home.vercel.app/#staff</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://riseachildchildrenhome.org/#licence</loc>
+    <loc>https://raise-a-child-children-home.vercel.app/#licence</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://riseachildchildrenhome.org/#timetable</loc>
+    <loc>https://raise-a-child-children-home.vercel.app/#timetable</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://riseachildchildrenhome.org/#menu</loc>
+    <loc>https://raise-a-child-children-home.vercel.app/#menu</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>

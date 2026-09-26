@@ -97,7 +97,7 @@ We are delighted to inform you that the admission application for *${child}* (Cl
 3. Campus Address: Mannar Polur, Sullurpeta Mandal, Tirupati District, AP - 524121.
 ${notes ? `\n*Official Remarks:* "${notes}"\n` : ''}
 With blessings & warm regards,
-*BRO .NELSON*
+*BRO.NELSON A*
 Founder & Managing Trustee
 RISE A CHILD CHILDREN HOME`;
     } else if (status === 'Rejected') {
@@ -112,7 +112,7 @@ ${notes ? `\n*Official Remarks:* "${notes}"\n` : ''}
 We pray for ${child}'s bright future and educational success.
 
 Warm regards,
-*BRO .NELSON*
+*BRO.NELSON A*
 Founder & Managing Trustee
 RISE A CHILD CHILDREN HOME
 Phone: +91 90594 91777`;
@@ -128,7 +128,7 @@ ${notes ? `\n*Remarks:* "${notes}"\n` : ''}
 Our hostel representative may contact you on this number shortly for document verification.
 
 Warm regards,
-*BRO .NELSON*
+*BRO.NELSON A*
 Founder & Managing Trustee
 RISE A CHILD CHILDREN HOME`;
     }
@@ -257,7 +257,7 @@ RISE A CHILD CHILDREN HOME`;
           <div class="signature-box">
             <div class="seal-box">Official<br/>Hostel<br/>Seal</div>
             <div class="signature-line">
-              <strong>BRO .NELSON</strong><br/>
+              <strong>BRO.NELSON A</strong><br/>
               Founder & Managing Trustee<br/>
               RISE A CHILD CHILDREN HOME
             </div>

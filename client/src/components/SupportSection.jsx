@@ -128,7 +128,7 @@ export default function SupportSection({ settings, onOpenDonationModal, onCopy }
             <div className="pt-2">
               <button
                 onClick={() => onOpenDonationModal()}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 px-6 rounded-xl text-sm shadow-xl flex items-center justify-center space-x-2 transition"
+                className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-6 rounded-xl text-sm shadow-xl shadow-blue-950/50 flex items-center justify-center space-x-2 transition"
               >
                 <Send className="w-4 h-4" />
                 <span>Already Donated? Register Contribution To Receive Official Receipt</span>

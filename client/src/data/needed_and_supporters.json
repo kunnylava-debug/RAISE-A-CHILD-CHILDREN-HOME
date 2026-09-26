@@ -1,46 +1,4 @@
 {
-  "needed_items": [
-    { "item_name": "Ergonomic School Backpacks (Set of 30)", "category": "Education", "quantity_needed": 30, "quantity_received": 12, "estimated_price": 18000, "urgency": "High", "description": "Durable waterproof school bags for newly enrolled primary and middle school students." },
-    { "item_name": "Bunk Beds with Coir Mattresses", "category": "Furniture", "quantity_needed": 10, "quantity_received": 4, "estimated_price": 95000, "urgency": "High", "description": "Heavy-duty steel double-decker bunk beds with fire-retardant mattresses for dormitory wing." },
-    { "item_name": "Annual Exercise Notebooks & Stationery Bundles", "category": "Education", "quantity_needed": 120, "quantity_received": 45, "estimated_price": 36000, "urgency": "High", "description": "Annual supply of ruled notebooks, geometry boxes, pencils, and pens for all 120 children." },
-    { "item_name": "Commercial Grade RO+UV Water Purifier (100 LPH)", "category": "Health & Hygiene", "quantity_needed": 1, "quantity_received": 0, "estimated_price": 42000, "urgency": "High", "description": "To upgrade drinking water purification capacity for the primary dining hall and health dispensary." },
-    { "item_name": "Refurbished Core i5 Desktop PCs for Computer Lab", "category": "Technology", "quantity_needed": 8, "quantity_received": 3, "estimated_price": 120000, "urgency": "Medium", "description": "To expand coding and digital literacy training workstations for secondary school students." },
-    { "item_name": "Warm Winter Blankets & Thermal Inners", "category": "Clothing", "quantity_needed": 60, "quantity_received": 25, "estimated_price": 45000, "urgency": "Medium", "description": "Heavy woolen blankets and thermal inner sets for the upcoming winter season." },
-    { "item_name": "Cricket, Football & Badminton Sports Kits", "category": "Recreation", "quantity_needed": 4, "quantity_received": 2, "estimated_price": 22000, "urgency": "Medium", "description": "Cricket balls, bats, helmets, footballs, badminton rackets and shuttlecock boxes." },
-    { "item_name": "Encyclopedia & Story Book Sets for Library", "category": "Library", "quantity_needed": 150, "quantity_received": 60, "estimated_price": 28000, "urgency": "Low", "description": "Illustrated educational encyclopedias, bilingual dictionaries, and moral storybooks." }
-  ],
-  "supporters": [
-    {
-      "name": "Sourav Gangopadhyay",
-      "occupation": "Software Architect & Philanthropist",
-      "support_type": "Sponsored Computer Lab & 15 Desktop Workstations",
-      "photo_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
-      "message": "Seeing these bright children master digital tools and computer coding fills my heart with joy. RISE A CHILD CHILDREN HOME is truly shaping future leaders.",
-      "date_supported": "January 2025"
-    },
-    {
-      "name": "Dr. Meenakshi Roychoudhury",
-      "occupation": "Senior Pediatrician, Kolkata",
-      "support_type": "Monthly Free Medical Dispensary & Medicines",
-      "photo_url": "https://images.unsplash.com/photo-1594824813637-43c2999e7c61?auto=format&fit=crop&w=400&q=80",
-      "message": "The cleanliness, nutritional balance, and loving attention given to every single child here is exemplary. A privilege to support their health.",
-      "date_supported": "March 2024"
-    },
-    {
-      "name": "Debashis & Sharmila Mukherjee",
-      "occupation": "Business Owners & Social Patrons",
-      "support_type": "Full Educational Scholarship for 15 Girls",
-      "photo_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
-      "message": "Every rupee given to RISE A CHILD CHILDREN HOME is accounted for with complete transparency. We urge everyone in society to lend a helping hand.",
-      "date_supported": "October 2024"
-    },
-    {
-      "name": "Pravin K. Agarwal",
-      "occupation": "Industrialist & Food Grain Merchant",
-      "support_type": "Annual Grain, Pulse & Mustard Oil Endowment",
-      "photo_url": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80",
-      "message": "Nutritious food is the foundation of growth. Supporting RISE A CHILD CHILDREN HOME kitchen ensures 120+ children receive wholesome meals.",
-      "date_supported": "August 2024"
-    }
-  ]
+  "needed_items": [],
+  "supporters": []
 }

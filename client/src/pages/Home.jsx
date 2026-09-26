@@ -73,15 +73,11 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
             <div className="inline-flex flex-wrap items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-2 sm:pr-5 rounded-2xl sm:rounded-full shadow-2xl">
               {/* Prominent Emblem / Logo */}
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-full bg-white p-1 shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-amber-400">
-                {settings?.logo_url ? (
-                  <img
-                    src={settings.logo_url}
-                    alt={settings?.hostel_name || "Official Hostel Logo"}
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <Shield className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
-                )}
+                <img
+                  src={settings?.logo_url || "/logo.png"}
+                  alt={settings?.hostel_name || "Official Hostel Logo"}
+                  className="w-full h-full object-contain"
+                />
               </div>
 
               <div className="text-left">
@@ -310,7 +306,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
 
                   <div className="text-center sm:text-left">
                     <h3 className="text-xl font-bold text-slate-900 font-serif">
-                      {settings?.founder_name || "BRO .NELSON"}
+                      {settings?.founder_name || "BRO.NELSON A"}
                     </h3>
                     <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mt-0.5">
                       {settings?.founder_role || "Founder & Managing Trustee"}
@@ -325,7 +321,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
                 <div className="space-y-3.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
                   <p>
                     {settings?.founder_bio || 
-                      "BRO .NELSON dedicated over 20 years to child welfare, youth development, and educational reform. Having witnessed the struggles of disadvantaged students deprived of schooling and stable care, he established RISE A CHILD CHILDREN HOME with a heartfelt mission to ensure every child receives loving shelter, education, and moral guidance."}
+                      "BRO.NELSON A dedicated over 20 years to child welfare, youth development, and educational reform. Having witnessed the struggles of disadvantaged students deprived of schooling and stable care, he established RISE A CHILD CHILDREN HOME with a heartfelt mission to ensure every child receives loving shelter, education, and moral guidance."}
                   </p>
                   
                   {/* Founder Vision */}

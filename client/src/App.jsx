@@ -22,7 +22,7 @@ import { api } from './services/api';
 const SEO_CONFIG = {
   home: {
     title: "RISE A CHILD CHILDREN HOME | Loving Haven, Education & Care | Sullurpeta",
-    description: "Official website of RISE A CHILD CHILDREN HOME, founded by BRO .NELSON in Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh. Providing safe residential care, wholesome nutrition, and quality schooling for children and youths."
+    description: "Official website of RISE A CHILD CHILDREN HOME, founded by BRO.NELSON A in Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh. Providing safe residential care, wholesome nutrition, and quality schooling for children and youths."
   },
   staff: {
     title: "Staff & Resident Guardians | RISE A CHILD CHILDREN HOME",

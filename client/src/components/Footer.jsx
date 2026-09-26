@@ -1,15 +1,17 @@
 import React from 'react';
 import { 
-  MapPin, Phone, Mail, ExternalLink, Navigation, Compass, ShieldCheck 
+  MapPin, Phone, Mail, ExternalLink, Navigation, Compass, ShieldCheck, Lock, UserCheck 
 } from 'lucide-react';
+import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function Footer({ setActiveTab, settings }) {
+  const { adminUser, setLoginModalOpen, logout } = useAdminAuth();
   const googleMapsUrl = "https://goo.gl/maps/rVLiCyNsMd157RUC8";
   const address = settings?.contact_address || 'Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121';
   const phone = settings?.contact_phone || '+91 90594 91777';
   const email = settings?.contact_email || 'pn9059491777@gmail.com';
   const hostelName = settings?.hostel_name || "RISE A CHILD CHILDREN HOME";
-  const founderName = settings?.founder_name || "BRO .NELSON";
+  const founderName = settings?.founder_name || "BRO.NELSON A";
 
   const facebookUrl = settings?.social_facebook || "https://facebook.com/riseachild";
   const instagramUrl = settings?.social_instagram || "https://instagram.com/riseachild";
@@ -21,16 +23,20 @@ export default function Footer({ setActiveTab, settings }) {
         
         {/* Row 1: Brand & Contact Info */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-800/60">
-          {/* Identity */}
+          {/* Official Identity & Logo */}
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-              RC
+            <div className="w-12 h-12 rounded-xl bg-white p-1 shadow-md border border-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <img 
+                src={settings?.logo_url || "/logo.png"} 
+                alt={hostelName} 
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <span className="text-sm font-bold text-white tracking-wide block">
                 {hostelName}
               </span>
-              <span className="text-[11px] text-amber-400 font-medium">
+              <span className="text-[11px] text-blue-300 font-semibold block">
                 Founder: {founderName}
               </span>
             </div>
@@ -59,7 +65,7 @@ export default function Footer({ setActiveTab, settings }) {
         {/* Row 2: Follow Us on Social Media (Clean Public Links - Management in Admin Dashboard) */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3 px-4 bg-slate-900/90 rounded-xl border border-slate-800/90 shadow-sm">
           <div className="flex items-center space-x-2 text-slate-200">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Follow Us:</span>
+            <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">Follow Us:</span>
             <span className="text-[11px] text-slate-300">Stay connected with our hostel life, celebrations & activities</span>
           </div>
 
@@ -102,7 +108,7 @@ export default function Footer({ setActiveTab, settings }) {
         {/* Row 3: Address Followed By Campus Location Google Maps Link */}
         <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-800/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
           <div className="flex items-start sm:items-center space-x-2 text-slate-300 leading-relaxed">
-            <MapPin className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5 sm:mt-0" />
+            <MapPin className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5 sm:mt-0" />
             <span>
               <strong className="text-white">Address:</strong> {address}
             </span>
@@ -118,6 +124,46 @@ export default function Footer({ setActiveTab, settings }) {
             <span>Our Campus Location (Google Maps)</span>
             <ExternalLink className="w-3 h-3 opacity-75" />
           </a>
+        </div>
+
+        {/* Row 4: Dedicated Staff & Admin Portal (Accessible in footer only) */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 pb-2 border-t border-slate-800/80 bg-slate-900/40 p-3 rounded-xl border border-slate-800/60">
+          <div className="flex items-center space-x-2 text-xs text-slate-400">
+            <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0" />
+            <span>Authorized Management & Staff Operations Portal</span>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            {adminUser ? (
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 shadow-sm transition cursor-pointer"
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span>Admin Dashboard ({adminUser.username})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="text-xs text-slate-400 hover:text-rose-400 underline transition cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setLoginModalOpen(true)}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold px-3.5 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 border border-slate-700 transition shadow-xs cursor-pointer"
+                title="Staff and Administrator sign-in"
+              >
+                <Lock className="w-3.5 h-3.5 text-blue-400" />
+                <span>Staff / Admin Login</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Row 4: Minimal Inline Navigation & Copyright */}
@@ -174,7 +220,7 @@ export default function Footer({ setActiveTab, settings }) {
             <span>•</span>
             <button 
               onClick={() => { setActiveTab('needed'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="hover:text-amber-300 text-amber-400/90 font-medium transition"
+              className="hover:text-emerald-300 text-emerald-400 font-medium transition"
             >
               Support / Needs
             </button>

@@ -29,7 +29,33 @@ export default function SupportersWall({ supporters, adminUser, onAddSupporter, 
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {(!Array.isArray(supporters) || supporters.length === 0) ? (
+        <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs space-y-4 max-w-2xl mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+            <Heart className="w-8 h-8 fill-emerald-600/20" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold font-serif text-slate-900">
+              Wall of Gratitude
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
+              Our benefactor and patron directory is being updated with verified supporters. We honor and thank every kind soul whose generous hands bring security, education, and joy to our children.
+            </p>
+          </div>
+          {adminUser && (
+            <div className="pt-2">
+              <button
+                onClick={onAddSupporter}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm inline-flex items-center space-x-2 shadow-md transition"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add First Supporter Profile</span>
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {(Array.isArray(supporters) ? supporters : []).map((sup) => (
           <div
             key={sup.id}
@@ -107,7 +133,8 @@ export default function SupportersWall({ supporters, adminUser, onAddSupporter, 
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </section>
   );
 }

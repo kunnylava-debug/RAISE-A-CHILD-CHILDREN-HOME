@@ -1,6 +1,6 @@
 # RISE A CHILD CHILDREN HOME - Official Management & Information Portal
 
-A modern, professional, responsive Hostel Management and Information Website for **RISE A CHILD CHILDREN HOME**, founded by **BRO .NELSON**. Built according to strict institutional requirements, with complete database persistence, administrative dashboard, child privacy shielding, automated admission notifications, and public status tracking.
+A modern, professional, responsive Hostel Management and Information Website for **RISE A CHILD CHILDREN HOME**, founded by **BRO.NELSON A**. Built according to strict institutional requirements, with complete database persistence, administrative dashboard, child privacy shielding, automated admission notifications, and public status tracking.
 
 ---
 
@@ -16,8 +16,8 @@ A modern, professional, responsive Hostel Management and Information Website for
      - **Admissions**
      - **Needed**
      - **Time Table** & **Food Menu** (accessible via Schedules menu or direct tabs)
-     - **Staff / Admin Login**
    - Responsive mobile sliding drawer with overlay.
+   - Dedicated Staff / Admin Operations Portal located securely in the **Footer**.
 
 2. **Home Page**:
    - **Hero Section**: Prominent hostel logo, welcoming background photograph with dark readable overlay, welcoming headline, introduction, and "Explore Our Hostel" CTA button.
