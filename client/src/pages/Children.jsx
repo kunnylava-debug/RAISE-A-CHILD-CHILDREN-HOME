@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, User, Upload, Shield, ShieldCheck, Lock, Unlock, Search, 
+  Users, User, Upload, Shield, ShieldCheck, Unlock, Search, 
   Filter, Plus, Edit3, Trash2, X, ChevronLeft, ChevronRight, 
   Eye, EyeOff, LayoutGrid, Table as TableIcon, Sparkles,
   FileSpreadsheet, ExternalLink, Download, RefreshCw, Copy, 
@@ -41,7 +41,7 @@ export default function Children({ onShowToast }) {
   const [webhookInput, setWebhookInput] = useState('');
   const [savingWebhook, setSavingWebhook] = useState(false);
 
-  const { adminUser, setLoginModalOpen } = useAdminAuth();
+  const { adminUser } = useAdminAuth();
 
   const fetchChildren = (currentPage = page) => {
     setLoading(true);
@@ -375,13 +375,9 @@ function doPost(e) {
               <span>Staff Mode Unlocked (Full Dossiers Accessible)</span>
             </div>
           ) : (
-            <button
-              onClick={() => setLoginModalOpen(true)}
-              className="text-xs font-bold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow-sm transition"
-            >
-              <Lock className="w-3.5 h-3.5 text-slate-500" />
-              <span>Staff Login for Full Access</span>
-            </button>
+            <span className="text-[11px] text-slate-400 italic">
+              Child Protection & Privacy Safeguards Active
+            </span>
           )}
         </div>
       </div>

@@ -1,11 +1,11 @@
 import React from 'react';
 import { 
-  MapPin, Phone, Mail, ExternalLink, Navigation, Compass, ShieldCheck, Lock, UserCheck 
+  MapPin, Phone, Mail, ExternalLink, Navigation, Compass 
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function Footer({ setActiveTab, settings }) {
-  const { adminUser, setLoginModalOpen, logout } = useAdminAuth();
+  const { adminUser, setLoginModalOpen } = useAdminAuth();
   const googleMapsUrl = "https://goo.gl/maps/rVLiCyNsMd157RUC8";
   const address = settings?.contact_address || 'Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121';
   const phone = settings?.contact_phone || '+91 90594 91777';
@@ -126,48 +126,8 @@ export default function Footer({ setActiveTab, settings }) {
           </a>
         </div>
 
-        {/* Row 4: Dedicated Staff & Admin Portal (Accessible in footer only) */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 pb-2 border-t border-slate-800/80 bg-slate-900/40 p-3 rounded-xl border border-slate-800/60">
-          <div className="flex items-center space-x-2 text-xs text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0" />
-            <span>Authorized Management & Staff Operations Portal</span>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            {adminUser ? (
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() => { setActiveTab('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 shadow-sm transition cursor-pointer"
-                >
-                  <UserCheck className="w-3.5 h-3.5" />
-                  <span>Admin Dashboard ({adminUser.username})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="text-xs text-slate-400 hover:text-rose-400 underline transition cursor-pointer"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setLoginModalOpen(true)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold px-3.5 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 border border-slate-700 transition shadow-xs cursor-pointer"
-                title="Staff and Administrator sign-in"
-              >
-                <Lock className="w-3.5 h-3.5 text-blue-400" />
-                <span>Staff / Admin Login</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Row 4: Minimal Inline Navigation & Copyright */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-[11px] text-slate-400">
+        {/* Minimal Inline Navigation & Copyright */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
             <button 
               onClick={() => { setActiveTab('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
@@ -233,10 +193,19 @@ export default function Footer({ setActiveTab, settings }) {
             </button>
             <span>•</span>
             <button 
-              onClick={() => { setActiveTab('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="hover:text-slate-300 text-slate-500 transition"
+              type="button"
+              onClick={() => { 
+                if (adminUser) {
+                  setActiveTab('admin');
+                } else {
+                  setLoginModalOpen(true);
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' }); 
+              }}
+              className="hover:text-slate-300 text-slate-500 transition cursor-pointer"
+              title="Administrator Sign-in"
             >
-              Admin
+              Admin{adminUser ? ` (${adminUser.username})` : ''}
             </button>
           </div>
 

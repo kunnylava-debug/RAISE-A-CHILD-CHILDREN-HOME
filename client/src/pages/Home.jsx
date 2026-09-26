@@ -42,17 +42,15 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
     <div className="space-y-16 sm:space-y-24 pb-16">
       {/* 1. HERO SECTION (Clean, Prestigious Navy/Royal Blue/Amber palette with prominent Logo at top) */}
       <section className="relative overflow-hidden bg-slate-950 text-white min-h-[600px] sm:min-h-[660px] flex items-center">
-        {/* Realistic Hostel Background Image with rich navy/slate gradient overlays */}
+        {/* Realistic Hostel Background Image - Natural daylight, unblurred, zero black gradient cover */}
         <div className="absolute inset-0 z-0">
           <img
             src={settings?.hero_image || "/hero_group_hd.jpg"}
             alt="Children, Founder and Staff of RISE A CHILD CHILDREN HOME"
-            className="w-full h-full object-cover object-[center_35%]"
+            className="w-full h-full object-cover object-[center_28%]"
           />
-          {/* Subtle balanced overlays so children and founder are fully visible while text is crystal clear */}
-          <div className="absolute inset-0 bg-slate-950/35" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/50 to-slate-950/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50" />
+          {/* Subtle top & bottom soft vignettes only to frame header and stats smoothly, leaving the entire middle photo 100% visible and bright */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-transparent to-slate-950/70 pointer-events-none" />
         </div>
 
         {/* Quick Admin Shortcut to change Background Photo & Inspect Photo */}
@@ -80,10 +78,10 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-          <div className="max-w-4xl space-y-7 bg-slate-950/35 sm:bg-slate-950/25 backdrop-blur-xs p-5 sm:p-7 rounded-3xl border border-white/10 shadow-2xl">
+          <div className="max-w-3xl space-y-6 sm:space-y-7">
             
             {/* Prominent Official Logo & Accreditation Badge at the very top of Hero */}
-            <div className="inline-flex flex-wrap items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-2 sm:pr-5 rounded-2xl sm:rounded-full shadow-2xl">
+            <div className="inline-flex flex-wrap items-center gap-3 bg-slate-950/75 backdrop-blur-md border border-white/20 p-2 sm:pr-5 rounded-2xl sm:rounded-full shadow-2xl">
               {/* Prominent Emblem / Logo */}
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-full bg-white p-1 shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-amber-400">
                 <img
@@ -95,7 +93,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
 
               <div className="text-left">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
+                  <span className="text-xs sm:text-sm font-bold tracking-wide text-white drop-shadow-sm">
                     {settings?.hostel_name || "RISE A CHILD CHILDREN HOME"}
                   </span>
                   <span className="hidden sm:inline-block text-[10px] uppercase font-extrabold bg-amber-500/30 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full">
@@ -110,18 +108,18 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
             </div>
 
             {/* Welcoming Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-serif tracking-tight text-white leading-tight drop-shadow-md">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-serif tracking-tight text-white leading-tight drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)]">
               {settings?.hostel_headline || "Welcome to RISE A CHILD CHILDREN HOME"}
             </h1>
 
             {/* Sub-headline: Explicitly for ALL students */}
-            <div className="flex items-center space-x-2 text-amber-300 text-sm sm:text-base font-semibold">
+            <div className="flex items-center space-x-2 text-amber-300 text-sm sm:text-base font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
               <School className="w-5 h-5 text-amber-400 flex-shrink-0" />
               <span>Inclusive Residential Campus: Primary • Secondary • Higher Secondary (11-12) • College & Vocational</span>
             </div>
 
             {/* Introduction */}
-            <p className="text-base sm:text-xl text-slate-200 leading-relaxed font-normal max-w-3xl">
+            <p className="text-base sm:text-xl text-white leading-relaxed font-normal max-w-2xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
               {settings?.hostel_intro || 
                 "A safe, caring, and supportive residential home for students and youths of all ages to learn, grow, and build their future. Providing quality accommodation, wholesome nutrition, disciplined study coaching, and warmth for every educational stage."}
             </p>
@@ -141,7 +139,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
 
               <button
                 onClick={() => setActiveTab('admissions')}
-                className="bg-white/15 hover:bg-white/25 text-white backdrop-blur-md border border-white/30 font-semibold px-6 py-3.5 rounded-xl transition-all flex items-center space-x-2 shadow-sm"
+                className="bg-slate-900/80 hover:bg-slate-900 text-white backdrop-blur-md border border-white/30 font-semibold px-6 py-3.5 rounded-xl transition-all flex items-center space-x-2 shadow-md"
               >
                 <span>Admissions 2026 (All Classes)</span>
                 <ArrowRight className="w-4 h-4" />
@@ -157,22 +155,22 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
             </div>
 
             {/* Quick Metrics Bar - Prominently Displaying Total, Boys, and Girls on Mobile & Desktop */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-white/15">
-              <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-white/10 sm:border-0 text-left">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-white/20">
+              <div className="bg-slate-950/70 p-3 rounded-xl border border-white/15 text-left shadow-lg">
                 <span className="block text-2xl sm:text-3xl font-extrabold text-blue-300">{childrenStats.total}</span>
-                <span className="text-[11px] sm:text-xs text-slate-300 font-medium">Total Resident Children</span>
+                <span className="text-[11px] sm:text-xs text-slate-200 font-medium">Total Resident Children</span>
               </div>
-              <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-white/10 sm:border-0 text-left">
+              <div className="bg-slate-950/70 p-3 rounded-xl border border-white/15 text-left shadow-lg">
                 <span className="block text-2xl sm:text-3xl font-extrabold text-emerald-300">{childrenStats.boys}</span>
-                <span className="text-[11px] sm:text-xs text-slate-300 font-medium">👦 Boys Wing</span>
+                <span className="text-[11px] sm:text-xs text-slate-200 font-medium">👦 Boys Wing</span>
               </div>
-              <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-white/10 sm:border-0 text-left">
+              <div className="bg-slate-950/70 p-3 rounded-xl border border-white/15 text-left shadow-lg">
                 <span className="block text-2xl sm:text-3xl font-extrabold text-pink-300">{childrenStats.girls}</span>
-                <span className="text-[11px] sm:text-xs text-slate-300 font-medium">👧 Girls Wing</span>
+                <span className="text-[11px] sm:text-xs text-slate-200 font-medium">👧 Girls Wing</span>
               </div>
-              <div className="bg-white/5 sm:bg-transparent p-2.5 sm:p-0 rounded-xl border border-white/10 sm:border-0 text-left">
+              <div className="bg-slate-950/70 p-3 rounded-xl border border-white/15 text-left shadow-lg">
                 <span className="block text-2xl sm:text-3xl font-extrabold text-amber-300">100%</span>
-                <span className="text-[11px] sm:text-xs text-slate-300 font-medium">🎓 School & College</span>
+                <span className="text-[11px] sm:text-xs text-slate-200 font-medium">🎓 School & College</span>
               </div>
             </div>
 

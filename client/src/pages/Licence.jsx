@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, Award, FileText, Calendar, Building2, 
   CheckCircle2, Download, ExternalLink, Edit3, X, ZoomIn, 
-  AlertCircle, ArrowRight, Lock, KeyRound, Upload
+  AlertCircle, ArrowRight, Lock, Upload
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -15,7 +15,7 @@ export default function Licence({ onShowToast, setActiveTab }) {
   const [editForm, setEditForm] = useState(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const { adminUser, setLoginModalOpen } = useAdminAuth();
+  const { adminUser } = useAdminAuth();
 
   const fetchLicence = () => {
     setLoading(true);
@@ -322,9 +322,9 @@ export default function Licence({ onShowToast, setActiveTab }) {
             </div>
           </div>
 
-          {/* Action for Admin or Visitors */}
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-            {adminUser ? (
+          {/* Action for Admin */}
+          {adminUser && (
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={() => {
                   if (setActiveTab) {
@@ -339,16 +339,8 @@ export default function Licence({ onShowToast, setActiveTab }) {
                 <span>Provide Official Licence in Admin Portal</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-            ) : (
-              <button
-                onClick={() => setLoginModalOpen?.(true)}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-2xl text-xs sm:text-sm flex items-center space-x-2 shadow-md transition"
-              >
-                <KeyRound className="w-4 h-4 text-amber-400" />
-                <span>Admin Login to Enter Licence Details</span>
-              </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 

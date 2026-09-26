@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { 
   Menu, X, Phone, Mail, ShieldCheck, Heart, 
-  Clock, Utensils, Lock, UserCheck, ChevronDown, ExternalLink 
+  Clock, Utensils, ChevronDown 
 } from 'lucide-react';
-import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function Navbar({ activeTab, setActiveTab, settings }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
-  const { adminUser, setLoginModalOpen, logout } = useAdminAuth();
 
   const navItems = [
     { id: 'home', label: 'Home' },
