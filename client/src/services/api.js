@@ -46,6 +46,38 @@ function setStorage(key, val) {
   }
 }
 
+export const DUMMY_EVENT_TITLES = new Set([
+  "Annual Sports & Athletic Meet 2026",
+  "79th Independence Day Flag Ceremony",
+  "Science & Robotics Exhibition",
+  "Community Tree Plantation & Eco Day",
+  "Diwali Festival of Lights & Feast",
+  "Yoga Day & Wellness Morning"
+]);
+
+export function isDummyEvent(ev) {
+  if (!ev) return false;
+  if (DUMMY_EVENT_TITLES.has(ev.title)) return true;
+  if (typeof ev.image_url === 'string' && ev.image_url.includes('images.unsplash.com/photo-1461896836934-ffe607ba8211')) return true;
+  return false;
+}
+
+// Proactively purge any legacy dummy events from localStorage on load
+if (typeof window !== 'undefined') {
+  try {
+    const rawEvents = localStorage.getItem('rac_cached_events');
+    if (rawEvents) {
+      const parsed = JSON.parse(rawEvents);
+      if (Array.isArray(parsed)) {
+        const cleaned = parsed.filter(e => !isDummyEvent(e));
+        if (cleaned.length !== parsed.length) {
+          localStorage.setItem('rac_cached_events', JSON.stringify(cleaned));
+        }
+      }
+    }
+  } catch (e) {}
+}
+
 async function request(endpoint, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
   const token = getAuthToken();
@@ -91,7 +123,8 @@ async function request(endpoint, options = {}) {
       } else if (endpoint === '/alumni') {
         setStorage('rac_cached_alumni', Array.isArray(data) ? data : []);
       } else if (endpoint === '/events') {
-        setStorage('rac_cached_events', Array.isArray(data) ? data : []);
+        const cleaned = (Array.isArray(data) ? data : []).filter(e => !isDummyEvent(e));
+        setStorage('rac_cached_events', cleaned);
       } else if (endpoint === '/timetable') {
         setStorage('rac_cached_timetable', Array.isArray(data) ? data : []);
       } else if (endpoint === '/settings') {
@@ -377,7 +410,8 @@ async function request(endpoint, options = {}) {
 
     // 6. EVENTS OPERATIONS
     if (endpoint.startsWith('/events')) {
-      let eventList = getStorage('rac_cached_events', defaultEvents || []);
+      let eventList = getStorage('rac_cached_events', []);
+      eventList = (Array.isArray(eventList) ? eventList : []).filter(e => !isDummyEvent(e));
       if (method === 'GET') return eventList;
       if (method === 'POST') {
         const newEv = { id: Date.now(), ...parsedBody };
@@ -921,7 +955,15 @@ export const api = {
   deletePhoto: (id) => request(`/views/photos/${id}`, { method: 'DELETE' }),
 
   // Events
-  getEvents: () => request('/events'),
+  getEvents: async () => {
+    try {
+      const data = await request('/events');
+      return (Array.isArray(data) ? data : []).filter(e => !isDummyEvent(e));
+    } catch (e) {
+      const cached = getStorage('rac_cached_events', []);
+      return (Array.isArray(cached) ? cached : []).filter(e => !isDummyEvent(e));
+    }
+  },
   createEvent: (data) => request('/events', { method: 'POST', body: data }),
   updateEvent: (id, data) => request(`/events/${id}`, { method: 'PUT', body: data }),
   deleteEvent: (id) => request(`/events/${id}`, { method: 'DELETE' }),

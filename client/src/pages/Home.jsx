@@ -296,95 +296,264 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
         </div>
       </section>
 
-      {/* 3. FOUNDER & EVENTS SECTION (Refined Navy & Royal Blue styling) */}
+      {/* 3. FOUNDER & EVENTS SECTION (Conditionally renders events only when real events exist) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-10">
           <h2 className="text-2xl sm:text-3xl font-bold font-serif text-slate-900">
-            Leadership & Campus Life
+            {events && events.length > 0 ? "Leadership & Campus Life" : "Leadership & Vision"}
           </h2>
           <p className="text-sm text-slate-600 mt-2">
-            Meet the driving vision behind our foundation and witness the joyful milestones of our students.
+            {events && events.length > 0 
+              ? "Meet the driving vision behind our foundation and witness the joyful milestones of our students."
+              : "Meet the driving vision behind our foundation dedicated to child welfare, loving shelter, and youth empowerment."}
           </p>
         </div>
 
-        {/* 2-Column Equal Height Balanced Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          {/* Left Column: Founder Section */}
-          <div className="lg:col-span-5 flex flex-col">
-            <div className="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between h-full border border-slate-200 shadow-sm hover:shadow-xl transition-all">
-              <div>
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-                  <span className="text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
-                    About The Founder
-                  </span>
-                  <Award className="w-5 h-5 text-blue-600" />
-                </div>
+        {events && events.length > 0 ? (
+          /* 2-Column Equal Height Balanced Layout when Events exist */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            {/* Left Column: Founder Section */}
+            <div className="lg:col-span-5 flex flex-col">
+              <div className="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between h-full border border-slate-200 shadow-sm hover:shadow-xl transition-all">
+                <div>
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
+                      About The Founder
+                    </span>
+                    <Award className="w-5 h-5 text-blue-600" />
+                  </div>
 
-                {/* Founder Photo */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-6">
-                  <div className="relative group flex-shrink-0">
-                    <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full p-1 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-xl">
-                      <img
-                        src={settings?.founder_photo || "/founder_square.jpg"}
-                        alt={settings?.founder_name || "BRO.NELSON A - Founder"}
-                        onError={(e) => {
-                          e.currentTarget.src = "/founder_square.jpg";
-                        }}
-                        className="w-full h-full object-cover rounded-full"
-                      />
+                  {/* Founder Photo */}
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-6">
+                    <div className="relative group flex-shrink-0">
+                      <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full p-1 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-xl">
+                        <img
+                          src={settings?.founder_photo || "/founder_square.jpg"}
+                          alt={settings?.founder_name || "BRO.NELSON A - Founder"}
+                          onError={(e) => {
+                            e.currentTarget.src = "/founder_square.jpg";
+                          }}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      </div>
+                      <span className="absolute bottom-1 right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-md">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </span>
                     </div>
-                    <span className="absolute bottom-1 right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-md">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    </span>
+
+                    <div className="text-center sm:text-left">
+                      <h3 className="text-xl font-bold text-slate-900 font-serif">
+                        {settings?.founder_name || "BRO.NELSON A"}
+                      </h3>
+                      <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mt-0.5">
+                        {settings?.founder_role || "Founder & Managing Trustee"}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-2 italic">
+                        "20+ years dedicated to child welfare, education, and youth empowerment."
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="text-center sm:text-left">
-                    <h3 className="text-xl font-bold text-slate-900 font-serif">
-                      {settings?.founder_name || "BRO.NELSON A"}
-                    </h3>
-                    <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mt-0.5">
-                      {settings?.founder_role || "Founder & Managing Trustee"}
+                  {/* Biography */}
+                  <div className="space-y-3.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    <p>
+                      {settings?.founder_bio || 
+                        "BRO.NELSON A dedicated over 20 years to child welfare, youth development, and educational reform. Having witnessed the struggles of disadvantaged students deprived of schooling and stable care, he established RISE A CHILD CHILDREN HOME with a heartfelt mission to ensure every child receives loving shelter, education, and moral guidance."}
                     </p>
-                    <p className="text-xs text-slate-500 mt-2 italic">
-                      "20+ years dedicated to child welfare, education, and youth empowerment."
-                    </p>
+                    
+                    {/* Founder Vision */}
+                    <div className="bg-blue-50/80 border-l-4 border-blue-600 p-3.5 rounded-r-xl">
+                      <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">
+                        Founder's Philosophy
+                      </h4>
+                      <p className="text-xs text-blue-800 italic">
+                        "{settings?.founder_vision || "Every learner possesses boundless potential. When provided with a secure shelter, balanced food, books, and genuine affection, they flourish into confident leaders."}"
+                      </p>
+                    </div>
+
+                    {/* Message */}
+                    <div className="bg-slate-50/90 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-700 shadow-xs">
+                      <span className="font-bold text-slate-900 block mb-1">
+                        Message to Students, Parents & Supporters:
+                      </span>
+                      <p className="text-slate-600 leading-relaxed">
+                        "{settings?.founder_message || "To our students: this home is your family. Dream without fear. To our revered guardians: trust us with your hope. And to our generous supporters: your kindness is the light that illuminates their path."}"
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Biography */}
-                <div className="space-y-3.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  <p>
-                    {settings?.founder_bio || 
-                      "BRO.NELSON A dedicated over 20 years to child welfare, youth development, and educational reform. Having witnessed the struggles of disadvantaged students deprived of schooling and stable care, he established RISE A CHILD CHILDREN HOME with a heartfelt mission to ensure every child receives loving shelter, education, and moral guidance."}
-                  </p>
-                  
-                  {/* Founder Vision */}
-                  <div className="bg-blue-50/80 border-l-4 border-blue-600 p-3.5 rounded-r-xl">
-                    <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">
-                      Founder's Philosophy
-                    </h4>
-                    <p className="text-xs text-blue-800 italic">
-                      "{settings?.founder_vision || "Every learner possesses boundless potential. When provided with a secure shelter, balanced food, books, and genuine affection, they flourish into confident leaders."}"
-                    </p>
+                <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <span className="font-medium text-slate-700">RISE A CHILD CHILDREN HOME Trust</span>
+                  <button 
+                    onClick={() => setActiveTab('staff')}
+                    className="text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1"
+                  >
+                    <span>Meet Our Complete Staff</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Events / Gallery Section */}
+            <div className="lg:col-span-7 flex flex-col">
+              <div className="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between h-full border border-slate-200 shadow-sm hover:shadow-xl transition-all">
+                <div>
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                      <span className="text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
+                        Events & Gallery
+                      </span>
+                      <h3 className="text-lg font-bold text-slate-900 mt-1 font-serif">
+                        Life & Celebrations at Hostel
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('views')}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1"
+                    >
+                      <span>View All Facilities</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
-                  {/* Message */}
-                  <div className="bg-slate-50/90 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-700 shadow-xs">
-                    <span className="font-bold text-slate-900 block mb-1">
-                      Message to Students, Parents & Supporters:
+                  {/* Gallery Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                    {events.slice(0, 6).map((item, idx) => (
+                      <div
+                        key={item.id}
+                        onClick={() => openLightbox(idx)}
+                        className="group relative h-36 sm:h-40 rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md border border-slate-200 transition-transform duration-200 hover:-translate-y-0.5"
+                      >
+                        <img
+                          src={item.image_url}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
+                        <div className="absolute bottom-2 left-2 right-2 text-white">
+                          <span className="inline-block text-[10px] font-bold bg-blue-600/90 px-1.5 py-0.5 rounded text-white mb-0.5">
+                            {item.category || 'Event'}
+                          </span>
+                          <h4 className="text-xs font-semibold leading-tight line-clamp-2">
+                            {item.title}
+                          </h4>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Dynamic Event Highlights snippet */}
+                  <div className="mt-4 bg-blue-50/70 rounded-xl p-3.5 border border-blue-100 flex items-center justify-between text-xs">
+                    <div className="flex items-center space-x-2 text-slate-700 truncate pr-2">
+                      <Calendar className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <span className="truncate">Recent: {events.slice(0, 3).map(e => e.title).join(', ')}</span>
+                    </div>
+                    <span className="text-blue-600 font-semibold cursor-pointer hover:underline flex-shrink-0" onClick={() => openLightbox(0)}>
+                      Click image to expand
                     </span>
-                    <p className="text-slate-600 leading-relaxed">
-                      "{settings?.founder_message || "To our students: this home is your family. Dream without fear. To our revered guardians: trust us with your hope. And to our generous supporters: your kindness is the light that illuminates their path."}"
-                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <span>{events.length} Recorded Milestone {events.length === 1 ? 'Celebration' : 'Celebrations'}</span>
+                  <button
+                    onClick={() => setActiveTab('views')}
+                    className="bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-semibold transition"
+                  >
+                    Explore Campus Galleries
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Centered Elegant Founder Card when No Events Published Yet */
+          <div className="max-w-4xl mx-auto w-full">
+            <div className="glass-card rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-sm hover:shadow-xl transition-all">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <span className="text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-3.5 py-1.5 rounded-full">
+                  About The Founder & Managing Trustee
+                </span>
+                <Award className="w-5 h-5 text-blue-600" />
+              </div>
+
+              {/* Founder Photo & Info */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
+                <div className="relative group flex-shrink-0">
+                  <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full p-1.5 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-xl">
+                    <img
+                      src={settings?.founder_photo || "/founder_square.jpg"}
+                      alt={settings?.founder_name || "BRO.NELSON A - Founder"}
+                      onError={(e) => {
+                        e.currentTarget.src = "/founder_square.jpg";
+                      }}
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
+                  <span className="absolute bottom-1 right-1 bg-blue-600 text-white p-2 rounded-full shadow-md">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </span>
+                </div>
+
+                <div className="text-center sm:text-left flex-1">
+                  <h3 className="text-2xl font-bold text-slate-900 font-serif">
+                    {settings?.founder_name || "BRO.NELSON A"}
+                  </h3>
+                  <p className="text-sm font-semibold text-blue-700 uppercase tracking-wide mt-1">
+                    {settings?.founder_role || "Founder & Managing Trustee"}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-2 italic">
+                    "20+ years dedicated to child welfare, education, and youth empowerment."
+                  </p>
+                  <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                      Child Rights Advocate
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                      Educational Visionary
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                      Community Leader
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span className="font-medium text-slate-700">RISE A CHILD CHILDREN HOME Trust</span>
+              {/* Biography */}
+              <div className="space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed mb-6">
+                <p>
+                  {settings?.founder_bio || 
+                    "BRO.NELSON A dedicated over 20 years to child welfare, youth development, and educational reform. Having witnessed the struggles of disadvantaged students deprived of schooling and stable care, he established RISE A CHILD CHILDREN HOME with a heartfelt mission to ensure every child receives loving shelter, education, and moral guidance."}
+                </p>
+                
+                {/* Founder Vision */}
+                <div className="bg-blue-50/80 border-l-4 border-blue-600 p-4 rounded-r-xl">
+                  <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">
+                    Founder's Philosophy
+                  </h4>
+                  <p className="text-xs sm:text-sm text-blue-800 italic">
+                    "{settings?.founder_vision || "Every learner possesses boundless potential. When provided with a secure shelter, balanced food, books, and genuine affection, they flourish into confident leaders."}"
+                  </p>
+                </div>
+
+                {/* Message */}
+                <div className="bg-slate-50/90 border border-slate-200 rounded-xl p-4 text-xs sm:text-sm text-slate-700 shadow-xs">
+                  <span className="font-bold text-slate-900 block mb-1">
+                    Message to Students, Parents & Supporters:
+                  </span>
+                  <p className="text-slate-600 leading-relaxed">
+                    "{settings?.founder_message || "To our students: this home is your family. Dream without fear. To our revered guardians: trust us with your hope. And to our generous supporters: your kindness is the light that illuminates their path."}"
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                <span className="font-medium text-slate-700">RISE A CHILD CHILDREN HOME Trust • Mannar Polur, Sullurpeta</span>
                 <button 
                   onClick={() => setActiveTab('staff')}
-                  className="text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1"
+                  className="text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1.5 bg-blue-50 hover:bg-blue-100 px-3.5 py-1.5 rounded-lg transition"
                 >
                   <span>Meet Our Complete Staff</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -392,79 +561,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
               </div>
             </div>
           </div>
-
-          {/* Right Column: Events / Gallery Section */}
-          <div className="lg:col-span-7 flex flex-col">
-            <div className="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between h-full border border-slate-200 shadow-sm hover:shadow-xl transition-all">
-              <div>
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-                  <div>
-                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
-                      Events & Gallery
-                    </span>
-                    <h3 className="text-lg font-bold text-slate-900 mt-1 font-serif">
-                      Life & Celebrations at Hostel
-                    </h3>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab('views')}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1"
-                  >
-                    <span>View All Facilities</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* Gallery Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                  {(Array.isArray(events) ? events : []).slice(0, 6).map((item, idx) => (
-                    <div
-                      key={item.id}
-                      onClick={() => openLightbox(idx)}
-                      className="group relative h-36 sm:h-40 rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md border border-slate-200 transition-transform duration-200 hover:-translate-y-0.5"
-                    >
-                      <img
-                        src={item.image_url}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
-                      <div className="absolute bottom-2 left-2 right-2 text-white">
-                        <span className="inline-block text-[10px] font-bold bg-blue-600/90 px-1.5 py-0.5 rounded text-white mb-0.5">
-                          {item.category || 'Event'}
-                        </span>
-                        <h4 className="text-xs font-semibold leading-tight line-clamp-2">
-                          {item.title}
-                        </h4>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Event Highlights snippet */}
-                <div className="mt-4 bg-blue-50/70 rounded-xl p-3.5 border border-blue-100 flex items-center justify-between text-xs">
-                  <div className="flex items-center space-x-2 text-slate-700">
-                    <Calendar className="w-4 h-4 text-blue-600" />
-                    <span>Recent: Annual Sports, Independence Day, Science Exhibition & Cultural Fest</span>
-                  </div>
-                  <span className="text-blue-600 font-semibold cursor-pointer hover:underline" onClick={() => openLightbox(0)}>
-                    Click image to expand
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>{events.length} Recorded Milestone Celebrations</span>
-                <button
-                  onClick={() => setActiveTab('views')}
-                  className="bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-semibold transition"
-                >
-                  Explore Campus Galleries
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </section>
 
       {/* 4. VIDEO SECTION (REQUIREMENT 1: Positioned UPPER than the students who have left / Alumni) */}
