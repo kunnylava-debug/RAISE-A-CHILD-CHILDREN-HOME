@@ -13,6 +13,14 @@ Allow: /#needed
 Allow: /#timetable
 Allow: /#menu
 Allow: /uploads/
+Allow: /favicon.ico
+Allow: /favicon*
+Allow: /logo.png
+Allow: /apple-touch-icon.png
+
+# Dedicated Favicon Crawler for Google Search Results
+User-agent: Google-Favicons
+Allow: /
 
 # Major Search Engine Crawlers
 User-agent: Googlebot

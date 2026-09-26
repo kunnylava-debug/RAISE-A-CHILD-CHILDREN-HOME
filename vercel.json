@@ -36,11 +36,33 @@
           "value": "public, max-age=3600"
         }
       ]
+    },
+    {
+      "source": "/favicon.ico",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "image/x-icon"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/(favicon.*|apple-touch-icon.*|logo.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
     }
   ],
   "rewrites": [
     {
-      "source": "/((?!api/|robots.txt|sitemap.xml|assets/|manifest.json).*)",
+      "source": "/((?!api/|robots.txt|sitemap.xml|favicon|apple-touch-icon|logo|assets/|manifest.json).*)",
       "destination": "/index.html"
     }
   ]
