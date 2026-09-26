@@ -25,7 +25,7 @@
   "contact_address": "Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121",
   "upi_id": "riseachild@sbi",
   "upi_name": "RISE A CHILD Welfare Trust",
-  "payment_qr": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi%3A%2F%2Fpay%3Fpa%3Driseachild%40sbi%26pn%3DRISE%2520A%2520CHILD%2520CHILDREN%2520HOME%26cu%3DINR",
+  "payment_qr": "/payment_qr.png",
   "bank_name": "State Bank of India",
   "bank_account_no": "38491029384",
   "bank_ifsc": "SBIN0001423",

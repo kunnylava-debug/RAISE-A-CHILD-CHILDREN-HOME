@@ -27,10 +27,13 @@ export default function SupportSection({ settings, onOpenDonationModal, onCopy }
               Scan with any UPI App
             </span>
             
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 inline-block shadow-inner">
+            <div className="p-3 bg-white rounded-2xl border border-slate-200 inline-block shadow-md">
               <img
-                src={settings?.payment_qr || "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi%3A%2F%2Fpay%3Fpa%3Dnelson%40upi%26pn%3DRISE%2520A%2520CHILD%2520Hostel%26cu%3DINR"}
+                src={settings?.payment_qr || "/payment_qr.png"}
                 alt="UPI Payment QR Code"
+                onError={(e) => {
+                  e.currentTarget.src = "/payment_qr.png";
+                }}
                 className="w-52 h-52 sm:w-60 sm:h-60 mx-auto object-contain"
               />
             </div>

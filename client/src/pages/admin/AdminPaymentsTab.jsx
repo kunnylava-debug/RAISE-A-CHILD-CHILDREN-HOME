@@ -27,7 +27,7 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
     ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`upi://pay?pa=${form.upi_id.trim()}&pn=${encodeURIComponent(form.upi_name || "Hostel Trust")}&cu=INR`)}`
     : '';
 
-  const activeQrCode = form.payment_qr || dynamicQrUrl;
+  const activeQrCode = form.payment_qr || '/payment_qr.png';
 
   const handleGenerateDefaultQr = () => {
     if (!form.upi_id) {
@@ -222,20 +222,30 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
                 <label className="font-semibold text-slate-700 text-xs sm:text-sm">
                   QR Code Image URL (Custom or Auto-Generated)
                 </label>
-                <button
-                  type="button"
-                  onClick={handleGenerateDefaultQr}
-                  className="text-xs text-emerald-700 hover:text-emerald-800 font-bold flex items-center space-x-1"
-                >
-                  <Sparkles className="w-3 h-3 text-amber-500" />
-                  <span>Auto-Generate from UPI ID</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => handleChange('payment_qr', '/payment_qr.png')}
+                    className="text-xs text-blue-700 hover:text-blue-800 font-bold flex items-center space-x-1"
+                  >
+                    <RefreshCw className="w-3 h-3 text-blue-500" />
+                    <span>Official Scanner</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleGenerateDefaultQr}
+                    className="text-xs text-emerald-700 hover:text-emerald-800 font-bold flex items-center space-x-1"
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-500" />
+                    <span>Auto-Generate</span>
+                  </button>
+                </div>
               </div>
               <input
                 type="text"
                 value={form.payment_qr}
                 onChange={e => handleChange('payment_qr', e.target.value)}
-                placeholder="https://... (Leave blank to use auto-generated QR code)"
+                placeholder="/payment_qr.png (Default official scanner)"
                 className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono text-xs"
               />
             </div>
@@ -251,7 +261,7 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
                 src={activeQrCode}
                 alt="UPI QR Code Preview"
                 className="w-36 h-36 sm:w-40 sm:h-40 object-contain mx-auto"
-                onError={e => { e.target.src = dynamicQrUrl; }}
+                onError={e => { e.target.src = '/payment_qr.png'; }}
               />
             </div>
             <div className="text-xs">
