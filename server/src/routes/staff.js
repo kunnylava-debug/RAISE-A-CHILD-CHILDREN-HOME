@@ -1,6 +1,7 @@
 import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
+import * as XLSX from 'xlsx';
 
 const router = express.Router();
 
@@ -8,6 +9,70 @@ const router = express.Router();
 router.get('/', (req, res) => {
   const staff = db.prepare('SELECT * FROM staff ORDER BY order_num ASC, id ASC').all();
   res.json(staff);
+});
+
+// GET /api/staff/export/excel - Direct Excel download (.xlsx)
+router.get('/export/excel', (req, res) => {
+  try {
+    const staff = db.prepare('SELECT * FROM staff ORDER BY order_num ASC, id ASC').all();
+    const headers = [
+      'S.No', 'Full Name', 'Role / Designation', 'Mobile Number', 'Email Address', 
+      'Qualification', 'Experience', 'Responsibilities / Description', 'Display Order'
+    ];
+    const dataRows = staff.map((s, idx) => [
+      idx + 1,
+      s.name || '',
+      s.role || '',
+      s.mobile || '',
+      s.email || '',
+      s.qualification || '',
+      s.experience || '',
+      s.description || '',
+      s.order_num || (idx + 1)
+    ]);
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+    worksheet['!cols'] = [
+      { wch: 6 }, { wch: 25 }, { wch: 22 }, { wch: 18 }, 
+      { wch: 28 }, { wch: 24 }, { wch: 20 }, { wch: 40 }, { wch: 14 }
+    ];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Staff Directory');
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Staff_Directory.xlsx"');
+    res.send(buffer);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to generate staff Excel file: ' + err.message });
+  }
+});
+
+// GET /api/staff/export/csv - Direct CSV download (.csv)
+router.get('/export/csv', (req, res) => {
+  try {
+    const staff = db.prepare('SELECT * FROM staff ORDER BY order_num ASC, id ASC').all();
+    const headers = [
+      'S.No', 'Full Name', 'Role / Designation', 'Mobile Number', 'Email Address', 
+      'Qualification', 'Experience', 'Responsibilities / Description', 'Display Order'
+    ];
+    const dataRows = staff.map((s, idx) => [
+      idx + 1,
+      s.name || '',
+      s.role || '',
+      s.mobile || '',
+      s.email || '',
+      s.qualification || '',
+      s.experience || '',
+      s.description || '',
+      s.order_num || (idx + 1)
+    ]);
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+    const csvData = XLSX.utils.sheet_to_csv(worksheet);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Staff_Directory.csv"');
+    res.send('\uFEFF' + csvData);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to generate staff CSV file: ' + err.message });
+  }
 });
 
 // GET single staff

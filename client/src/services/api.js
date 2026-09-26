@@ -5,6 +5,12 @@ import defaultEvents from '../data/events.json';
 import defaultViews from '../data/categories_and_photos.json';
 import defaultTimetableAndMenu from '../data/timetable_and_menu.json';
 import defaultNeededAndSupporters from '../data/needed_and_supporters.json';
+import { 
+  exportChildrenToExcel, 
+  exportChildrenToCsv, 
+  exportStaffToExcel, 
+  exportStaffToCsv 
+} from '../utils/exportUtils';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -512,43 +518,145 @@ export const api = {
     const token = getAuthToken();
     return `${API_BASE}/children/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`;
   },
-  downloadChildrenExcel: async () => {
-    const token = getAuthToken();
-    const res = await fetch(`${API_BASE}/children/export/excel${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Failed to download Excel file');
+  downloadChildrenExcel: async (explicitChildrenList) => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE}/children/export/excel${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `RISE_A_CHILD_Children_Records_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 100);
+        return { success: true };
+      }
+    } catch (e) {
+      console.warn('Server Excel export unavailable, generating live in browser:', e.message);
     }
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'RISE_A_CHILD_Children_Records.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+
+    // Direct Browser Client Fallback (100% Reliable, works on Vercel and offline)
+    let list = explicitChildrenList;
+    if (!list || !Array.isArray(list) || list.length === 0) {
+      const data = await api.getChildren({ limit: 1000 }).catch(() => null);
+      list = data?.children || getStorage('rac_cached_children', []);
+    }
+    return exportChildrenToExcel(list, true);
   },
-  downloadChildrenCsv: async () => {
-    const token = getAuthToken();
-    const res = await fetch(`${API_BASE}/children/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Failed to download CSV file');
+
+  downloadChildrenCsv: async (explicitChildrenList) => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE}/children/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `RISE_A_CHILD_Children_Records_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 100);
+        return { success: true };
+      }
+    } catch (e) {
+      console.warn('Server CSV export unavailable, generating live in browser:', e.message);
     }
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'RISE_A_CHILD_Children_Records.csv';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+
+    // Direct Browser Client Fallback
+    let list = explicitChildrenList;
+    if (!list || !Array.isArray(list) || list.length === 0) {
+      const data = await api.getChildren({ limit: 1000 }).catch(() => null);
+      list = data?.children || getStorage('rac_cached_children', []);
+    }
+    return exportChildrenToCsv(list, true);
+  },
+
+  // Staff Export methods
+  getStaffExportExcelUrl: () => {
+    const token = getAuthToken();
+    return `${API_BASE}/staff/export/excel${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+  },
+  getStaffExportCsvUrl: () => {
+    const token = getAuthToken();
+    return `${API_BASE}/staff/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+  },
+  downloadStaffExcel: async (explicitStaffList) => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE}/staff/export/excel${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `RISE_A_CHILD_Staff_Directory_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 100);
+        return { success: true };
+      }
+    } catch (e) {
+      console.warn('Server staff Excel export unavailable, generating in browser:', e.message);
+    }
+
+    let list = explicitStaffList;
+    if (!list || !Array.isArray(list) || list.length === 0) {
+      list = await api.getStaff().catch(() => getStorage('rac_cached_staff', []));
+    }
+    return exportStaffToExcel(list);
+  },
+
+  downloadStaffCsv: async (explicitStaffList) => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE}/staff/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `RISE_A_CHILD_Staff_Directory_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 100);
+        return { success: true };
+      }
+    } catch (e) {
+      console.warn('Server staff CSV export unavailable, generating in browser:', e.message);
+    }
+
+    let list = explicitStaffList;
+    if (!list || !Array.isArray(list) || list.length === 0) {
+      list = await api.getStaff().catch(() => getStorage('rac_cached_staff', []));
+    }
+    return exportStaffToCsv(list);
   },
 
   // Views / Facilities

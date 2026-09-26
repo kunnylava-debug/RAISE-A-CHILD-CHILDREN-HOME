@@ -3,13 +3,15 @@ import {
   Heart, Shield, BookOpen, Award, Users, User, ChevronRight, 
   Sparkles, Calendar, ArrowRight, Play, Quote, CheckCircle2,
   MapPin, Navigation, GraduationCap, Briefcase, ExternalLink, Phone, ShieldCheck,
-  School, Compass
+  School, Compass, Camera
 } from 'lucide-react';
 import VideoPlayer from '../components/VideoPlayer';
 import LightboxModal from '../components/LightboxModal';
 import { api } from '../services/api';
+import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function Home({ setActiveTab, settings, onShowToast }) {
+  const { adminUser } = useAdminAuth();
   const [events, setEvents] = useState([]);
   const [alumni, setAlumni] = useState([]);
   const [childrenStats, setChildrenStats] = useState({ total: 0, boys: 0, girls: 0 });
@@ -50,6 +52,19 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-blue-950/50" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
         </div>
+
+        {/* Quick Admin Shortcut to change Background Photo */}
+        {adminUser && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('admin')}
+            className="absolute top-4 right-4 z-20 bg-slate-900/80 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center space-x-1.5 backdrop-blur-md border border-white/20 transition shadow-lg cursor-pointer"
+            title="Open Admin Settings to edit hero photo or logo"
+          >
+            <Camera className="w-3.5 h-3.5 text-amber-400" />
+            <span>Edit Background Photo</span>
+          </button>
+        )}
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="max-w-4xl space-y-7">

@@ -3,7 +3,8 @@ import {
   LayoutDashboard, Settings, UserCheck, Users, 
   FileText, ShieldCheck, Image, Clock, Utensils, 
   Heart, CreditCard, LogOut, ArrowRight, ExternalLink, 
-  Sparkles, CheckCircle2, Calendar, PackageCheck, GraduationCap, KeyRound, Lock, Share2 
+  Sparkles, CheckCircle2, Calendar, PackageCheck, GraduationCap, KeyRound, Lock, Share2,
+  Download, FileSpreadsheet
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import AdminSettingsTab from './AdminSettingsTab';
@@ -267,6 +268,132 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
                     <span>Manage Needs & Donors</span>
                     <ArrowRight className="w-3 h-3 ml-1" />
                   </span>
+                </div>
+              </div>
+
+              {/* One-Click Instant Data Exports (Active Hostel Records) */}
+              <div className="glass-card rounded-3xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/50 via-white to-teal-50/40 p-6 sm:p-8 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-100 pb-3">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+                      <h3 className="text-lg font-bold font-serif text-slate-900">
+                        Live Data Exports (Children & Staff)
+                      </h3>
+                      <span className="text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                        Excel & CSV
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Exports exact live records consistent with present students ({stats.total_children}) and staff ({stats.total_staff}) in the hostel.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm">
+                  {/* Children Excel */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await api.downloadChildrenExcel();
+                        onShowToast?.({
+                          type: 'success',
+                          message: `Exported ${stats.total_children} active children records to Excel (.xlsx)`
+                        });
+                      } catch (err) {
+                        onShowToast?.({ type: 'error', message: 'Children Excel export failed: ' + err.message });
+                      }
+                    }}
+                    className="p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold transition flex items-center justify-between shadow-sm shadow-emerald-200 cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <FileSpreadsheet className="w-4 h-4 flex-shrink-0" />
+                      <div className="text-left">
+                        <span className="block leading-tight">Children (.xlsx)</span>
+                        <span className="text-[10px] text-emerald-100 font-normal">{stats.total_children} Students</span>
+                      </div>
+                    </div>
+                    <Download className="w-4 h-4" />
+                  </button>
+
+                  {/* Children CSV */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await api.downloadChildrenCsv();
+                        onShowToast?.({
+                          type: 'success',
+                          message: `Exported ${stats.total_children} active children records to CSV`
+                        });
+                      } catch (err) {
+                        onShowToast?.({ type: 'error', message: 'Children CSV export failed: ' + err.message });
+                      }
+                    }}
+                    className="p-3.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-2xl font-bold transition flex items-center justify-between shadow-xs cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Download className="w-4 h-4 flex-shrink-0 text-emerald-600" />
+                      <div className="text-left">
+                        <span className="block leading-tight">Children (CSV)</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Plain text</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono bg-emerald-100 px-1.5 py-0.5 rounded">.csv</span>
+                  </button>
+
+                  {/* Staff Excel */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await api.downloadStaffExcel();
+                        onShowToast?.({
+                          type: 'success',
+                          message: `Exported ${stats.total_staff} staff members to Excel (.xlsx)`
+                        });
+                      } catch (err) {
+                        onShowToast?.({ type: 'error', message: 'Staff Excel export failed: ' + err.message });
+                      }
+                    }}
+                    className="p-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition flex items-center justify-between shadow-sm shadow-blue-200 cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <FileSpreadsheet className="w-4 h-4 flex-shrink-0" />
+                      <div className="text-left">
+                        <span className="block leading-tight">Staff (.xlsx)</span>
+                        <span className="text-[10px] text-blue-100 font-normal">{stats.total_staff} Members</span>
+                      </div>
+                    </div>
+                    <Download className="w-4 h-4" />
+                  </button>
+
+                  {/* Staff CSV */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await api.downloadStaffCsv();
+                        onShowToast?.({
+                          type: 'success',
+                          message: `Exported ${stats.total_staff} staff members to CSV`
+                        });
+                      } catch (err) {
+                        onShowToast?.({ type: 'error', message: 'Staff CSV export failed: ' + err.message });
+                      }
+                    }}
+                    className="p-3.5 bg-white hover:bg-blue-50 text-blue-800 border border-blue-300 rounded-2xl font-bold transition flex items-center justify-between shadow-xs cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Download className="w-4 h-4 flex-shrink-0 text-blue-600" />
+                      <div className="text-left">
+                        <span className="block leading-tight">Staff (CSV)</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Plain text</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.5 rounded">.csv</span>
+                  </button>
                 </div>
               </div>
 

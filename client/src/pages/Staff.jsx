@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Phone, Mail, Award, Clock, User, Upload, Plus, 
-  Edit3, Trash2, X, Check, Shield, GraduationCap 
+  Edit3, Trash2, X, Check, Shield, GraduationCap,
+  Download, FileText
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -78,26 +79,62 @@ export default function Staff({ onShowToast }) {
         </div>
 
         {adminUser && (
-          <button
-            onClick={() => {
-              setCurrentEdit({
-                name: '',
-                role: '',
-                mobile: '',
-                email: '',
-                qualification: '',
-                experience: '',
-                description: '',
-                photo: '',
-                order_num: staffList.length + 1
-              });
-              setEditModalOpen(true);
-            }}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center space-x-2 self-start transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Staff Member</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2.5 self-start">
+            <button
+              onClick={() => {
+                setCurrentEdit({
+                  name: '',
+                  role: '',
+                  mobile: '',
+                  email: '',
+                  qualification: '',
+                  experience: '',
+                  description: '',
+                  photo: '',
+                  order_num: staffList.length + 1
+                });
+                setEditModalOpen(true);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center space-x-2 transition"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Staff Member</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await api.downloadStaffExcel(staffList);
+                  onShowToast?.({ type: 'success', message: `Staff Directory (.xlsx) downloaded successfully (${staffList.length} staff records)!` });
+                } catch (err) {
+                  onShowToast?.({ type: 'error', message: 'Failed to download staff Excel: ' + err.message });
+                }
+              }}
+              className="px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center space-x-1.5 shadow-sm border border-slate-700 cursor-pointer"
+              title="Download Staff Directory as Excel spreadsheet"
+            >
+              <Download className="w-4 h-4 text-emerald-400" />
+              <span>Download Excel (.xlsx)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await api.downloadStaffCsv(staffList);
+                  onShowToast?.({ type: 'success', message: `Staff Directory (.csv) downloaded successfully (${staffList.length} staff records)!` });
+                } catch (err) {
+                  onShowToast?.({ type: 'error', message: 'Failed to download staff CSV: ' + err.message });
+                }
+              }}
+              className="px-3.5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center space-x-1.5 border border-slate-300 shadow-sm cursor-pointer"
+              title="Download Staff Directory as CSV format"
+            >
+              <FileText className="w-4 h-4 text-slate-500" />
+              <span>CSV</span>
+            </button>
+          </div>
         )}
       </div>
 

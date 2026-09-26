@@ -291,9 +291,13 @@ function doPost(e) {
               type="button"
               onClick={async () => {
                 try {
-                  await api.downloadChildrenExcel();
+                  await api.downloadChildrenExcel(childrenData?.children);
+                  onShowToast?.({
+                    type: 'success',
+                    message: `Exported ${childrenData?.children?.length || 'all'} children records to Excel (.xlsx)`
+                  });
                 } catch (err) {
-                  window.open(api.getChildrenExportExcelUrl(), '_blank');
+                  onShowToast?.({ type: 'error', message: 'Export error: ' + err.message });
                 }
               }}
               className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-900/40 cursor-pointer"
@@ -307,9 +311,13 @@ function doPost(e) {
               type="button"
               onClick={async () => {
                 try {
-                  await api.downloadChildrenCsv();
+                  await api.downloadChildrenCsv(childrenData?.children);
+                  onShowToast?.({
+                    type: 'success',
+                    message: `Exported ${childrenData?.children?.length || 'all'} children records to CSV`
+                  });
                 } catch (err) {
-                  window.open(api.getChildrenExportCsvUrl(), '_blank');
+                  onShowToast?.({ type: 'error', message: 'Export error: ' + err.message });
                 }
               }}
               className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1 border border-slate-700 cursor-pointer"
@@ -1097,9 +1105,13 @@ function doPost(e) {
                   type="button"
                   onClick={async () => {
                     try {
-                      await api.downloadChildrenExcel();
+                      await api.downloadChildrenExcel(childrenData?.children);
+                      onShowToast?.({
+                        type: 'success',
+                        message: `Exported ${childrenData?.children?.length || 'all'} children records to Excel (.xlsx)`
+                      });
                     } catch (err) {
-                      window.open(api.getChildrenExportExcelUrl(), '_blank');
+                      onShowToast?.({ type: 'error', message: 'Export error: ' + err.message });
                     }
                   }}
                   className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg transition cursor-pointer"
