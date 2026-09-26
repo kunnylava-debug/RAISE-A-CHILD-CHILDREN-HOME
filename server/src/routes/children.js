@@ -281,10 +281,6 @@ router.post('/', authenticateToken, async (req, res) => {
   const nextNum = lastChild ? lastChild.id + 1 : 1;
   const serial_no = req.body.serial_no || `SN-CH-${String(nextNum).padStart(3, '0')}`;
 
-  const defaultPhoto = gender === 'Female'
-    ? 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80'
-    : 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80';
-
   const result = db.prepare(`
     INSERT INTO children (serial_no, name, age, class, gender, admission_date, photo, guardian_name, guardian_phone, guardian_address, medical_notes, hobbies)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -295,7 +291,7 @@ router.post('/', authenticateToken, async (req, res) => {
     childClass,
     gender,
     admission_date || new Date().toISOString().split('T')[0],
-    photo || defaultPhoto,
+    photo ? photo.trim() : '',
     guardian_name || '',
     guardian_phone || '',
     guardian_address || '',
@@ -337,7 +333,7 @@ router.put('/:id', authenticateToken, (req, res) => {
     childClass,
     gender,
     admission_date,
-    photo,
+    photo ? photo.trim() : '',
     guardian_name,
     guardian_phone,
     guardian_address,

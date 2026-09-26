@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Phone, Mail, Award, Clock, User, Plus, 
+  Phone, Mail, Award, Clock, User, Upload, Plus, 
   Edit3, Trash2, X, Check, Shield, GraduationCap 
 } from 'lucide-react';
 import { api } from '../services/api';
@@ -12,6 +12,7 @@ export default function Staff({ onShowToast }) {
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentEdit, setCurrentEdit] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const { adminUser } = useAdminAuth();
 
   const fetchStaff = () => {
@@ -148,15 +149,27 @@ export default function Staff({ onShowToast }) {
                 onClick={() => setSelectedStaff(member)}
                 className="relative h-56 bg-slate-100 overflow-hidden cursor-pointer"
               >
-                <img
-                  src={member.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80"}
-                  alt={member.name}
-                  onError={(e) => {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80";
-                  }}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                {member.photo ? (
+                  <img
+                    src={member.photo}
+                    alt={member.name}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      if (e.currentTarget.nextElementSibling) {
+                        e.currentTarget.nextElementSibling.style.display = 'flex';
+                      }
+                    }}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : null}
+                <div 
+                  style={{ display: member.photo ? 'none' : 'flex' }}
+                  className="w-full h-full flex-col items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200 text-slate-400 select-none"
+                >
+                  <User className="w-16 h-16 stroke-[1.25] text-slate-400" />
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">No Photo</span>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity pointer-events-none" />
                 
                 <span className="absolute top-3 right-3 bg-white/90 backdrop-blur-md text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm">
                   {member.experience ? `${member.experience}` : 'Verified Staff'}
@@ -257,14 +270,26 @@ export default function Staff({ onShowToast }) {
             </button>
 
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-6">
-              <img
-                src={selectedStaff.photo}
-                alt={selectedStaff.name}
-                onError={(e) => {
-                  e.currentTarget.src = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80";
-                }}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-lg border-2 border-emerald-100"
-              />
+              {selectedStaff.photo ? (
+                <img
+                  src={selectedStaff.photo}
+                  alt={selectedStaff.name}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextElementSibling) {
+                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                    }
+                  }}
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-lg border-2 border-emerald-100"
+                />
+              ) : null}
+              <div 
+                style={{ display: selectedStaff.photo ? 'none' : 'flex' }}
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 flex-col items-center justify-center text-slate-400 border-2 border-slate-200 shadow-sm flex-shrink-0"
+              >
+                <User className="w-10 h-10 stroke-[1.25] text-slate-400" />
+                <span className="text-[10px] font-semibold text-slate-400 mt-1">No Photo</span>
+              </div>
               <div className="text-center sm:text-left">
                 <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full uppercase">
                   {selectedStaff.role}
@@ -422,14 +447,56 @@ export default function Staff({ onShowToast }) {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Photograph Image URL</label>
-                <input
-                  type="text"
-                  value={currentEdit.photo}
-                  onChange={e => setCurrentEdit({ ...currentEdit, photo: e.target.value })}
-                  className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  placeholder="https://images.unsplash.com/..."
-                />
+                <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between text-xs sm:text-sm">
+                  <span>Photograph (Optional)</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Leave blank for clean avatar</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={currentEdit.photo}
+                    onChange={e => setCurrentEdit({ ...currentEdit, photo: e.target.value })}
+                    className="flex-1 p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
+                    placeholder="Direct Image URL or click Upload"
+                  />
+                  <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl border border-slate-300 font-semibold text-xs flex items-center space-x-1.5 transition whitespace-nowrap">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploadingPhoto ? 'Uploading...' : 'Upload'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingPhoto(true);
+                        try {
+                          const res = await api.uploadFile(file);
+                          setCurrentEdit({ ...currentEdit, photo: res.url });
+                          onShowToast?.({ type: 'success', message: 'Staff photo uploaded successfully!' });
+                        } catch (err) {
+                          onShowToast?.({ type: 'error', message: 'Failed to upload photo: ' + err.message });
+                        } finally {
+                          setUploadingPhoto(false);
+                        }
+                      }}
+                    />
+                  </label>
+                  {currentEdit.photo && (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentEdit({ ...currentEdit, photo: '' })}
+                      className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition"
+                      title="Clear photo to keep blank"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  If left blank, the staff card displays a clean placeholder avatar. No random or predefined stock photos are ever displayed.
+                </p>
               </div>
 
               <div>

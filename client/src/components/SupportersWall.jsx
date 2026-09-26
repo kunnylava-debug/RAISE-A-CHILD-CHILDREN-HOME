@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Plus, Edit3, Trash2 } from 'lucide-react';
+import { Heart, Plus, Edit3, Trash2, User } from 'lucide-react';
 
 export default function SupportersWall({ supporters, adminUser, onAddSupporter, onEditSupporter, onDeleteSupporter }) {
   return (
@@ -37,11 +37,27 @@ export default function SupportersWall({ supporters, adminUser, onAddSupporter, 
           >
             <div className="space-y-4">
               <div className="flex items-center space-x-3.5">
-                <img
-                  src={sup.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"}
-                  alt={sup.name}
-                  className="w-14 h-14 rounded-full object-cover shadow border-2 border-emerald-100 flex-shrink-0"
-                />
+                  <div className="w-14 h-14 rounded-full overflow-hidden shadow border-2 border-emerald-100 flex-shrink-0 flex items-center justify-center bg-slate-100">
+                    {sup.photo_url ? (
+                      <img
+                        src={sup.photo_url}
+                        alt={sup.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          if (e.currentTarget.nextElementSibling) {
+                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      style={{ display: sup.photo_url ? 'none' : 'flex' }}
+                      className="w-full h-full items-center justify-center text-slate-400 bg-slate-100"
+                    >
+                      <User className="w-7 h-7 text-emerald-600" />
+                    </div>
+                  </div>
                 <div>
                   <h3 className="font-bold text-slate-900 font-serif leading-tight">
                     {sup.name}

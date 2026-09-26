@@ -198,9 +198,7 @@ export async function syncFromGoogleSheet(sheetUrl) {
     const medicalNotes = row['Medical & Health Notes'] || row['Medical Notes'] || row['medical_notes'] || 'Normal routine checks.';
     const hobbies = row['Hobbies & Talents'] || row['Hobbies'] || row['hobbies'] || 'Reading, Sports';
 
-    const defaultPhoto = gender.toLowerCase() === 'female'
-      ? 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80'
-      : 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80';
+    const childPhoto = (row['Photo'] || row['Photo URL'] || row['photo'] || '').trim();
 
     // Avoid duplicates by serial or name
     if (serial && existingSerials.has(serial.toLowerCase())) continue;
@@ -217,7 +215,7 @@ export async function syncFromGoogleSheet(sheetUrl) {
       childClass,
       gender,
       admissionDate,
-      defaultPhoto,
+      childPhoto,
       guardianName,
       guardianPhone,
       guardianAddress,

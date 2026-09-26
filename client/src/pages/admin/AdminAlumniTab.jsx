@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  GraduationCap, Plus, Edit2, Trash2, Image, 
+  GraduationCap, Plus, Edit2, Trash2, Image, User, Upload,
   MapPin, Briefcase, Calendar, RefreshCw, X, Check, Quote 
 } from 'lucide-react';
 import { api } from '../../services/api';
@@ -11,6 +11,7 @@ export default function AdminAlumniTab({ onShowToast }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAlumni, setEditingAlumni] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const initialForm = {
     name: '',
@@ -156,15 +157,26 @@ export default function AdminAlumniTab({ onShowToast }) {
               <div className="space-y-4">
                 {/* Header with photo and name */}
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-200 flex-shrink-0 shadow-sm">
-                    <img 
-                      src={al.photo_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'} 
-                      alt={al.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80';
-                      }}
-                    />
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-200 flex-shrink-0 shadow-sm flex items-center justify-center bg-slate-100">
+                    {al.photo_url ? (
+                      <img 
+                        src={al.photo_url} 
+                        alt={al.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          if (e.currentTarget.nextElementSibling) {
+                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      style={{ display: al.photo_url ? 'none' : 'flex' }}
+                      className="w-full h-full items-center justify-center text-slate-400 bg-slate-100"
+                    >
+                      <User className="w-8 h-8 text-blue-400" />
+                    </div>
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
@@ -312,14 +324,56 @@ export default function AdminAlumniTab({ onShowToast }) {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Photo URL</label>
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/photo-..."
-                  value={form.photo_url}
-                  onChange={(e) => setForm({ ...form, photo_url: e.target.value })}
-                  className="w-full p-2.5 bg-white/90 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
+                <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between text-xs sm:text-sm">
+                  <span>Photograph (Optional)</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Leave blank for clean avatar</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    placeholder="Direct Image URL or click Upload"
+                    value={form.photo_url}
+                    onChange={(e) => setForm({ ...form, photo_url: e.target.value })}
+                    className="flex-1 p-2.5 bg-white/90 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs sm:text-sm"
+                  />
+                  <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl border border-slate-300 font-semibold text-xs flex items-center space-x-1.5 transition whitespace-nowrap">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploadingPhoto ? 'Uploading...' : 'Upload'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingPhoto(true);
+                        try {
+                          const res = await api.uploadFile(file);
+                          setForm({ ...form, photo_url: res.url });
+                          onShowToast?.({ type: 'success', message: 'Alumni photo uploaded successfully!' });
+                        } catch (err) {
+                          onShowToast?.({ type: 'error', message: 'Failed to upload photo: ' + err.message });
+                        } finally {
+                          setUploadingPhoto(false);
+                        }
+                      }}
+                    />
+                  </label>
+                  {form.photo_url && (
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, photo_url: '' })}
+                      className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition"
+                      title="Clear photo to keep blank"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  If left blank, the alumni card displays a clean placeholder avatar. No random or predefined stock photos are ever displayed.
+                </p>
               </div>
 
               <div>

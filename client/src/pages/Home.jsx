@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Heart, Shield, BookOpen, Award, Users, ChevronRight, 
+  Heart, Shield, BookOpen, Award, Users, User, ChevronRight, 
   Sparkles, Calendar, ArrowRight, Play, Quote, CheckCircle2,
   MapPin, Navigation, GraduationCap, Briefcase, ExternalLink, Phone, ShieldCheck,
   School, Compass
@@ -502,15 +502,26 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
               >
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-md flex-shrink-0 group-hover:scale-105 transition-transform">
-                      <img 
-                        src={al.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
-                        alt={al.name}
-                        className="w-full h-full object-cover rounded-[14px]"
-                        onError={(e) => {
-                          e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80";
-                        }}
-                      />
+                    <div className="w-16 h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-md flex-shrink-0 group-hover:scale-105 transition-transform flex items-center justify-center overflow-hidden">
+                      {al.photo_url ? (
+                        <img 
+                          src={al.photo_url}
+                          alt={al.name}
+                          className="w-full h-full object-cover rounded-[14px]"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            if (e.currentTarget.nextElementSibling) {
+                              e.currentTarget.nextElementSibling.style.display = 'flex';
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        style={{ display: al.photo_url ? 'none' : 'flex' }}
+                        className="w-full h-full bg-slate-100 rounded-[14px] flex items-center justify-center text-slate-400"
+                      >
+                        <User className="w-8 h-8 text-blue-500" />
+                      </div>
                     </div>
                     <div>
                       <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">

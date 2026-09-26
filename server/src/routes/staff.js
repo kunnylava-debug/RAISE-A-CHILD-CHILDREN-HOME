@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -35,7 +35,7 @@ router.post('/', authenticateToken, (req, res) => {
     qualification || '',
     experience || '',
     description || '',
-    photo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
+    photo ? photo.trim() : '',
     order_num || 0
   );
 
@@ -51,7 +51,7 @@ router.put('/:id', authenticateToken, (req, res) => {
     UPDATE staff 
     SET name = ?, role = ?, mobile = ?, email = ?, qualification = ?, experience = ?, description = ?, photo = ?, order_num = ?
     WHERE id = ?
-  `).run(name, role, mobile, email, qualification, experience, description, photo, order_num || 0, req.params.id);
+  `).run(name, role, mobile, email, qualification, experience, description, photo ? photo.trim() : '', order_num || 0, req.params.id);
 
   const updated = db.prepare('SELECT * FROM staff WHERE id = ?').get(req.params.id);
   res.json(updated);

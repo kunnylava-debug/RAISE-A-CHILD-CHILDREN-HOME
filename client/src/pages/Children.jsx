@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, Shield, ShieldCheck, Lock, Unlock, Search, 
+  Users, User, Upload, Shield, ShieldCheck, Lock, Unlock, Search, 
   Filter, Plus, Edit3, Trash2, X, ChevronLeft, ChevronRight, 
   Eye, EyeOff, LayoutGrid, Table as TableIcon, Sparkles,
   FileSpreadsheet, ExternalLink, Download, RefreshCw, Copy, 
@@ -29,6 +29,7 @@ export default function Children({ onShowToast }) {
   const [selectedChild, setSelectedChild] = useState(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editChild, setEditChild] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [staffPasskeyModalOpen, setStaffPasskeyModalOpen] = useState(false);
   const [passkeyInput, setPasskeyInput] = useState('');
   
@@ -547,17 +548,27 @@ function doPost(e) {
                 onClick={() => setSelectedChild(child)}
                 className="relative h-48 bg-slate-100 overflow-hidden cursor-pointer"
               >
-                <img
-                  src={child.photo}
-                  alt={child.name}
-                  onError={(e) => {
-                    e.currentTarget.src = child.gender === 'Female' 
-                      ? 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80' 
-                      : 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80';
-                  }}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                {child.photo ? (
+                  <img
+                    src={child.photo}
+                    alt={child.name}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      if (e.currentTarget.nextElementSibling) {
+                        e.currentTarget.nextElementSibling.style.display = 'flex';
+                      }
+                    }}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : null}
+                <div 
+                  style={{ display: child.photo ? 'none' : 'flex' }}
+                  className="w-full h-full flex-col items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200 text-slate-400 select-none"
+                >
+                  <User className="w-16 h-16 stroke-[1.25] text-slate-400" />
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">No Photo</span>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity pointer-events-none" />
 
                 {/* S.No Badge */}
                 <span className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm text-white font-mono text-[11px] font-bold px-2.5 py-1 rounded-md">
@@ -657,18 +668,26 @@ function doPost(e) {
                   <tr key={child.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3 px-3 sm:px-4 font-mono font-bold text-slate-900 whitespace-nowrap">{child.serial_no}</td>
                     <td className="py-3 px-3 sm:px-4">
-                      <img
-                        src={child.photo}
-                        alt={child.name}
-                        loading="lazy"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = child.gender === 'Female' 
-                            ? 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80'
-                            : 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80';
-                        }}
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-cover shadow-sm border border-slate-200"
-                      />
+                      {child.photo ? (
+                        <img
+                          src={child.photo}
+                          alt={child.name}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            if (e.currentTarget.nextElementSibling) {
+                              e.currentTarget.nextElementSibling.style.display = 'flex';
+                            }
+                          }}
+                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-cover shadow-sm border border-slate-200"
+                        />
+                      ) : null}
+                      <div 
+                        style={{ display: child.photo ? 'none' : 'flex' }}
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 items-center justify-center text-slate-400 border border-slate-200"
+                      >
+                        <User className="w-4 h-4 text-slate-400" />
+                      </div>
                     </td>
                     <td className="py-3 px-3 sm:px-4 font-bold text-slate-800 whitespace-nowrap">{child.name}</td>
                     <td className="py-3 px-3 sm:px-4 text-slate-600 whitespace-nowrap">{child.age} yrs</td>
@@ -740,16 +759,26 @@ function doPost(e) {
             </button>
 
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-6">
-              <img
-                src={selectedChild.photo}
-                alt={selectedChild.name}
-                onError={(e) => {
-                  e.currentTarget.src = selectedChild.gender === 'Female' 
-                    ? 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80' 
-                    : 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80';
-                }}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-lg border-2 border-emerald-100"
-              />
+              {selectedChild.photo ? (
+                <img
+                  src={selectedChild.photo}
+                  alt={selectedChild.name}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextElementSibling) {
+                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                    }
+                  }}
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-lg border-2 border-emerald-100"
+                />
+              ) : null}
+              <div 
+                style={{ display: selectedChild.photo ? 'none' : 'flex' }}
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 flex-col items-center justify-center text-slate-400 border-2 border-slate-200 shadow-sm flex-shrink-0"
+              >
+                <User className="w-10 h-10 stroke-[1.25] text-slate-400" />
+                <span className="text-[10px] font-semibold text-slate-400 mt-1">No Photo</span>
+              </div>
               <div className="text-center sm:text-left">
                 <span className="text-xs font-mono font-bold bg-slate-900 text-white px-2.5 py-1 rounded-md">
                   {selectedChild.serial_no}
@@ -913,14 +942,56 @@ function doPost(e) {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Photo Image URL</label>
-                <input
-                  type="text"
-                  value={editChild.photo}
-                  onChange={e => setEditChild({ ...editChild, photo: e.target.value })}
-                  className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  placeholder="https://images.unsplash.com/..."
-                />
+                <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between text-xs sm:text-sm">
+                  <span>Photograph (Optional)</span>
+                  <span className="text-[11px] text-slate-400 font-normal">Leave blank for clean avatar</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editChild.photo}
+                    onChange={e => setEditChild({ ...editChild, photo: e.target.value })}
+                    className="flex-1 p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
+                    placeholder="Direct Image URL or click Upload"
+                  />
+                  <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl border border-slate-300 font-semibold text-xs flex items-center space-x-1.5 transition whitespace-nowrap">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploadingPhoto ? 'Uploading...' : 'Upload'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingPhoto(true);
+                        try {
+                          const res = await api.uploadFile(file);
+                          setEditChild({ ...editChild, photo: res.url });
+                          onShowToast?.({ type: 'success', message: 'Photo uploaded successfully!' });
+                        } catch (err) {
+                          onShowToast?.({ type: 'error', message: 'Failed to upload photo: ' + err.message });
+                        } finally {
+                          setUploadingPhoto(false);
+                        }
+                      }}
+                    />
+                  </label>
+                  {editChild.photo && (
+                    <button
+                      type="button"
+                      onClick={() => setEditChild({ ...editChild, photo: '' })}
+                      className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition"
+                      title="Clear photo to keep blank"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  If left blank, the profile displays a clean silhouette avatar. No random or predefined photos are ever used.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

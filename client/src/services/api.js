@@ -145,9 +145,7 @@ async function request(endpoint, options = {}) {
           class: parsedBody.class || 'Class 5',
           gender: parsedBody.gender || 'Male',
           admission_date: parsedBody.admission_date || new Date().toISOString().split('T')[0],
-          photo: parsedBody.photo || (parsedBody.gender === 'Female' 
-            ? 'https://images.unsplash.com/photo-1595454223600-91fbdd77e58b?auto=format&fit=crop&w=300&q=80'
-            : 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80'),
+          photo: parsedBody.photo ? parsedBody.photo.trim() : '',
           guardian_name: parsedBody.guardian_name || '',
           guardian_phone: parsedBody.guardian_phone || '',
           guardian_address: parsedBody.guardian_address || '',
@@ -204,7 +202,7 @@ async function request(endpoint, options = {}) {
           qualification: parsedBody.qualification || '',
           experience: parsedBody.experience || '',
           description: parsedBody.description || '',
-          photo: parsedBody.photo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
+          photo: parsedBody.photo ? parsedBody.photo.trim() : '',
           order_num: staffList.length + 1
         };
         staffList.push(newStaff);
