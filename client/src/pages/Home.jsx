@@ -16,6 +16,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
   const [alumni, setAlumni] = useState([]);
   const [childrenStats, setChildrenStats] = useState({ total: 0, boys: 0, girls: 0 });
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [heroLightboxOpen, setHeroLightboxOpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
   useEffect(() => {
@@ -44,30 +45,42 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
         {/* Realistic Hostel Background Image with rich navy/slate gradient overlays */}
         <div className="absolute inset-0 z-0">
           <img
-            src={settings?.hero_image || "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1920&q=80"}
-            alt="Students at Hostel Campus"
-            className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-1000"
+            src={settings?.hero_image || "/hero_group_hd.jpg"}
+            alt="Children, Founder and Staff of RISE A CHILD CHILDREN HOME"
+            className="w-full h-full object-cover object-[center_35%]"
           />
-          {/* Deep slate navy and royal blue overlays for maximum readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-blue-950/50" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+          {/* Subtle balanced overlays so children and founder are fully visible while text is crystal clear */}
+          <div className="absolute inset-0 bg-slate-950/35" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/50 to-slate-950/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50" />
         </div>
 
-        {/* Quick Admin Shortcut to change Background Photo */}
-        {adminUser && (
+        {/* Quick Admin Shortcut to change Background Photo & Inspect Photo */}
+        <div className="absolute top-4 right-4 z-20 flex items-center space-x-2">
           <button
             type="button"
-            onClick={() => setActiveTab('admin')}
-            className="absolute top-4 right-4 z-20 bg-slate-900/80 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center space-x-1.5 backdrop-blur-md border border-white/20 transition shadow-lg cursor-pointer"
-            title="Open Admin Settings to edit hero photo or logo"
+            onClick={() => setHeroLightboxOpen(true)}
+            className="bg-slate-900/80 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-full flex items-center space-x-1.5 backdrop-blur-md border border-white/20 transition shadow-lg cursor-pointer"
+            title="Inspect full hostel family photo in Ultra HD"
           >
             <Camera className="w-3.5 h-3.5 text-amber-400" />
-            <span>Edit Background Photo</span>
+            <span className="hidden sm:inline">Inspect Family Photo (Ultra HD)</span>
+            <span className="sm:hidden">Inspect Photo</span>
           </button>
-        )}
+          {adminUser && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('admin')}
+              className="bg-slate-900/80 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center space-x-1.5 backdrop-blur-md border border-white/20 transition shadow-lg cursor-pointer"
+              title="Open Admin Settings to edit hero photo or logo"
+            >
+              <span>Edit Background</span>
+            </button>
+          )}
+        </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-          <div className="max-w-4xl space-y-7">
+          <div className="max-w-4xl space-y-7 bg-slate-950/35 sm:bg-slate-950/25 backdrop-blur-xs p-5 sm:p-7 rounded-3xl border border-white/10 shadow-2xl">
             
             {/* Prominent Official Logo & Accreditation Badge at the very top of Hero */}
             <div className="inline-flex flex-wrap items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 p-2 sm:pr-5 rounded-2xl sm:rounded-full shadow-2xl">
@@ -584,6 +597,18 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
         photos={events}
         currentIndex={selectedPhotoIndex}
         setCurrentIndex={setSelectedPhotoIndex}
+      />
+
+      {/* Lightbox for Full Hostel Family Group Photo */}
+      <LightboxModal
+        isOpen={heroLightboxOpen}
+        onClose={() => setHeroLightboxOpen(false)}
+        photos={[{
+          image_url: '/hero_group_panoramic.jpg',
+          title: 'RISE A CHILD CHILDREN HOME — Official Hostel Family',
+          description: 'Resident children, Founder BRO.NELSON A, and dedicated caregivers & staff in Mannar Polur, Sullurpeta.'
+        }]}
+        currentIndex={0}
       />
     </div>
   );

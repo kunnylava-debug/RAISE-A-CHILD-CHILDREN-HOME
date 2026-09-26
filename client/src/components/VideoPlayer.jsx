@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   Play, Pause, Volume2, VolumeX, Maximize, 
   RotateCcw, Film, ShieldAlert 
@@ -14,8 +14,13 @@ export default function VideoPlayer({ videoUrl, posterUrl, title }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const controlsTimeoutRef = useRef(null);
 
-  let controlsTimeout;
+  useEffect(() => {
+    return () => {
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    };
+  }, []);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -91,9 +96,9 @@ export default function VideoPlayer({ videoUrl, posterUrl, title }) {
 
   const handleMouseMove = () => {
     setShowControls(true);
-    clearTimeout(controlsTimeout);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     if (isPlaying) {
-      controlsTimeout = setTimeout(() => setShowControls(false), 2500);
+      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 2500);
     }
   };
 

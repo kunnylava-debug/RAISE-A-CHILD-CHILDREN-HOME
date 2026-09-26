@@ -229,7 +229,7 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
           {/* Background Photo Live Preview */}
           <div className="mt-3 relative h-28 rounded-xl overflow-hidden border border-slate-300 shadow-sm group">
             <img 
-              src={form.hero_image || "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1920&q=80"} 
+              src={form.hero_image || "/hero_group_hd.jpg"} 
               alt="Hero Background Preview" 
               className="w-full h-full object-cover" 
             />
