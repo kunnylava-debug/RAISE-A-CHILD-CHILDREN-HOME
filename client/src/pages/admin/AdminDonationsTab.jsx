@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   PackageCheck, Heart, RefreshCw, Plus, 
   CheckCircle2, AlertCircle, ArrowUpRight, Search, 
-  Filter, Calendar, ExternalLink 
+  Filter, Calendar, ExternalLink, Phone, MessageSquare, Trash2 
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -135,12 +135,14 @@ export default function AdminDonationsTab({ onShowToast }) {
         </div>
 
         <div className="glass-card rounded-2xl p-5 border border-emerald-100 bg-emerald-50/20">
-          <span className="text-xs font-bold uppercase text-emerald-700">Matched To Active Needs</span>
+          <span className="text-xs font-bold uppercase text-emerald-700">Ready To Call & Confirm</span>
           <div className="flex items-baseline space-x-2 mt-1">
-            <span className="text-2xl sm:text-3xl font-bold font-serif text-emerald-700">{matchedDonations.length}</span>
-            <span className="text-xs text-emerald-600 font-semibold">Auto-Synced</span>
+            <span className="text-2xl sm:text-3xl font-bold font-serif text-emerald-700">
+              {donations.filter(d => !!d.donor_phone).length}
+            </span>
+            <span className="text-xs text-emerald-600 font-semibold">With Phone</span>
           </div>
-          <p className="text-[11px] text-emerald-700/80 mt-1">Instantly updated quantity received</p>
+          <p className="text-[11px] text-emerald-700/80 mt-1">Tap "Call Donor" to confirm receipt</p>
         </div>
 
         <div className="glass-card rounded-2xl p-5 border border-amber-100 bg-amber-50/20">
@@ -216,23 +218,38 @@ export default function AdminDonationsTab({ onShowToast }) {
                     <th className="p-3 sm:p-4 whitespace-nowrap">Receipt / Donor</th>
                     <th className="p-3 sm:p-4 min-w-[140px]">Cross-Checked Need</th>
                     <th className="p-3 sm:p-4 whitespace-nowrap">Amount / Qty</th>
-                    <th className="p-3 sm:p-4 whitespace-nowrap">Method & Ref</th>
+                    <th className="p-3 sm:p-4 whitespace-nowrap">Method</th>
                     <th className="p-3 sm:p-4 whitespace-nowrap">Need Status</th>
                     <th className="p-3 sm:p-4 whitespace-nowrap">Date</th>
+                    <th className="p-3 sm:p-4 text-right whitespace-nowrap">Confirm & Call Donor</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                 {displayedDonations.map((d) => {
                   const isMatched = !!d.needed_item_id;
+                  const donorPhone = (d.donor_phone || '').trim();
                   return (
-                    <tr key={d.id} className="hover:bg-slate-50/50 transition">
+                    <tr key={d.id || d._cloud_id} className="hover:bg-slate-50/50 transition">
                       <td className="p-4">
-                        <div className="font-bold text-slate-900">{d.donor_name}</div>
-                        <div className="text-[11px] text-slate-500 font-mono">{d.receipt_no || `REC-${d.id}`}</div>
-                        {(d.donor_phone || d.donor_email) && (
-                          <div className="text-[11px] text-slate-400 mt-0.5">
-                            {d.donor_phone} {d.donor_email && `• ${d.donor_email}`}
+                        <div className="font-bold text-slate-900 text-sm">{d.donor_name}</div>
+                        <div className="text-[11px] text-blue-600 font-mono font-bold">{d.receipt_no || `REC-${d.id}`}</div>
+                        {donorPhone && (
+                          <div className="flex items-center space-x-1.5 text-xs text-emerald-700 font-bold mt-1">
+                            <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                            <a href={`tel:${donorPhone}`} className="hover:underline" title="Call Donor">
+                              {donorPhone}
+                            </a>
                           </div>
+                        )}
+                        {d.donor_email && (
+                          <div className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[200px]">
+                            {d.donor_email}
+                          </div>
+                        )}
+                        {d.notes && (
+                          <p className="text-[11px] text-slate-500 italic mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100 max-w-[240px]">
+                            "{d.notes}"
+                          </p>
                         )}
                       </td>
 
@@ -260,7 +277,6 @@ export default function AdminDonationsTab({ onShowToast }) {
 
                       <td className="p-4 text-slate-600">
                         <div className="font-medium text-slate-800">{d.payment_method || 'UPI'}</div>
-                        <div className="text-[11px] font-mono text-slate-400">{d.transaction_ref || 'N/A'}</div>
                       </td>
 
                       <td className="p-4">
@@ -290,6 +306,56 @@ export default function AdminDonationsTab({ onShowToast }) {
 
                       <td className="p-4 text-slate-500 text-xs font-mono">
                         {d.created_at ? d.created_at.split(' ')[0] : 'Today'}
+                      </td>
+
+                      <td className="p-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end space-x-2">
+                          {donorPhone ? (
+                            <>
+                              <a
+                                href={`tel:${donorPhone}`}
+                                className="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm transition hover:scale-105 active:scale-95"
+                                title={`Call ${d.donor_name} at ${donorPhone} to confirm and thank them`}
+                              >
+                                <Phone className="w-3.5 h-3.5" />
+                                <span>Call Donor</span>
+                              </a>
+
+                              <a
+                                href={`https://wa.me/${donorPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                  `Dear ${d.donor_name}, greetings from Brother Nelson (RISE A CHILD CHILDREN HOME). We received your generous donation of ₹${d.amount || 0}. Thank you so much for blessing our children!`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center space-x-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1.5 rounded-xl text-xs transition border border-emerald-200"
+                                title="Send WhatsApp Confirmation"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="hidden sm:inline">WhatsApp</span>
+                              </a>
+                            </>
+                          ) : (
+                            <span className="text-slate-400 text-xs italic">No phone logged</span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!window.confirm(`Delete donation record for ${d.donor_name} (Receipt: ${d.receipt_no || d.id})?`)) return;
+                              try {
+                                await api.deleteDonation(d.id || d._cloud_id);
+                                onShowToast?.({ type: 'success', message: 'Donation record deleted' });
+                                loadData();
+                              } catch (err) {
+                                onShowToast?.({ type: 'error', message: err.message });
+                              }
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                            title="Delete Record"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

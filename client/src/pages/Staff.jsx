@@ -78,6 +78,14 @@ export default function Staff({ onShowToast }) {
           </p>
         </div>
 
+        {/* Staff Privacy & Anti-Misuse Policy Notice */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-4 text-xs text-slate-600 flex items-start space-x-3 max-w-xl">
+          <Shield className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <p className="leading-relaxed text-[11px] sm:text-xs">
+            <strong className="text-slate-800">Communication & Privacy Policy:</strong> Staff personal phone numbers are strictly protected to prevent misuse. All inquiries regarding staff or children route exclusively to <strong className="text-slate-900">Founder Bro. Nelson A at <a href="tel:+919059491777" className="text-emerald-700 font-bold underline">+91 90594 91777</a></strong>.
+          </p>
+        </div>
+
         {adminUser && (
           <div className="flex flex-wrap items-center gap-2.5 self-start">
             <button
@@ -238,34 +246,14 @@ export default function Staff({ onShowToast }) {
                   )}
                 </div>
 
-                {/* Contact Actions (Direct Dialer & Email) */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <div className="flex items-center space-x-2 flex-1">
-                    <a
-                      href={`tel:${member.mobile}`}
-                      className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-3 py-2 rounded-xl text-xs font-bold text-center flex items-center justify-center space-x-1 transition"
-                      title="Direct phone call dialer"
-                    >
-                      <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Call</span>
-                    </a>
-
-                    {member.email && (
-                      <a
-                        href={`mailto:${member.email}`}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-xl text-xs transition"
-                        title="Send Email"
-                      >
-                        <Mail className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                  </div>
-
+                {/* Profile Action - Public Contact Strictly Restricted to Founder */}
+                <div className="pt-3 border-t border-slate-100">
                   <button
                     onClick={() => setSelectedStaff(member)}
-                    className="text-xs text-emerald-700 font-bold hover:underline px-1 py-2"
+                    className="w-full bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 border border-slate-200 hover:border-emerald-200"
                   >
-                    View Bio
+                    <User className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>View Profile & Bio</span>
                   </button>
                 </div>
 
@@ -347,20 +335,31 @@ export default function Staff({ onShowToast }) {
                   <span className="font-semibold text-slate-900">Qualification:</span>
                   <span>{selectedStaff.qualification || 'Certified Residential Caregiver'}</span>
                 </div>
-                <div className="flex items-center space-x-2 text-xs">
-                  <Phone className="w-4 h-4 text-emerald-600" />
-                  <span className="font-semibold text-slate-900">Contact Number:</span>
-                  <a href={`tel:${selectedStaff.mobile}`} className="text-emerald-700 font-bold hover:underline">
-                    {selectedStaff.mobile}
-                  </a>
-                </div>
-                {selectedStaff.email && (
-                  <div className="flex items-center space-x-2 text-xs">
-                    <Mail className="w-4 h-4 text-emerald-600" />
-                    <span className="font-semibold text-slate-900">Official Email:</span>
-                    <a href={`mailto:${selectedStaff.email}`} className="text-emerald-700 hover:underline">
-                      {selectedStaff.email}
-                    </a>
+                {/* Internal Admin View Only for Staff Phone & Email */}
+                {adminUser && (
+                  <div className="pt-2 border-t border-slate-200 space-y-1.5">
+                    <div className="flex items-center space-x-1.5 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
+                      <Shield className="w-3 h-3 text-amber-600" />
+                      <span>Confidential Admin Record (Not visible to public)</span>
+                    </div>
+                    {selectedStaff.mobile && (
+                      <div className="flex items-center space-x-2 text-xs">
+                        <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="font-semibold text-slate-800">Phone:</span>
+                        <a href={`tel:${selectedStaff.mobile}`} className="text-emerald-700 font-bold hover:underline">
+                          {selectedStaff.mobile}
+                        </a>
+                      </div>
+                    )}
+                    {selectedStaff.email && (
+                      <div className="flex items-center space-x-2 text-xs">
+                        <Mail className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="font-semibold text-slate-800">Email:</span>
+                        <a href={`mailto:${selectedStaff.email}`} className="text-emerald-700 hover:underline">
+                          {selectedStaff.email}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -373,26 +372,35 @@ export default function Staff({ onShowToast }) {
                   {selectedStaff.description || "Dedicated staff member providing daily mentoring, student welfare, discipline, and emotional encouragement for our children."}
                 </p>
               </div>
+
+              {/* Anti-Misuse Contact Policy Notice */}
+              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-xs space-y-1.5">
+                <div className="flex items-center space-x-1.5 text-amber-900 font-bold">
+                  <Shield className="w-3.5 h-3.5 text-amber-700 flex-shrink-0" />
+                  <span>Official Inquiry Policy</span>
+                </div>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  To protect resident staff privacy and prevent misuse, direct public contact with staff members is strictly restricted. For any inquiries regarding staff or children, please contact our Founder directly.
+                </p>
+              </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <a
-                href={`tel:${selectedStaff.mobile}`}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center space-x-2 shadow-sm transition"
+                href="tel:+919059491777"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-sm transition flex-1"
               >
                 <Phone className="w-4 h-4" />
-                <span>Call Directly</span>
+                <span>Contact Founder Bro. Nelson (+91 90594 91777)</span>
               </a>
 
-              {selectedStaff.email && (
-                <a
-                  href={`mailto:${selectedStaff.email}`}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center space-x-2 transition"
-                >
-                  <Mail className="w-4 h-4" />
-                  <span>Send Email</span>
-                </a>
-              )}
+              <button
+                type="button"
+                onClick={() => setSelectedStaff(null)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition text-center"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

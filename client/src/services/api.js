@@ -318,10 +318,177 @@ export async function dispatchAdmissionEmailNotification(app) {
   }
 }
 
+// -------------------------------------------------------------
+// GLOBAL MULTI-DEVICE DONATIONS CLOUD SYNCHRONIZATION ENGINE
+// -------------------------------------------------------------
+const DONATIONS_MASTER_INDEX_ID = 'ff808181a09d98f701a0e77e10f42e6d';
+
+// Fetch all recorded donations from shared cloud store
+export async function fetchCloudDonations() {
+  try {
+    const indexData = await cloudFetch(`/${DONATIONS_MASTER_INDEX_ID}`);
+    if (!indexData || !indexData.data) return null;
+
+    const itemIds = indexData.data.item_ids;
+    if (Array.isArray(itemIds) && itemIds.length > 0) {
+      const query = itemIds.slice(0, 40).map(id => `id=${encodeURIComponent(id)}`).join('&');
+      const items = await cloudFetch(`?${query}`);
+      if (Array.isArray(items)) {
+        return items
+          .filter(it => it && it.data)
+          .map(it => ({ ...it.data, _cloud_id: it.id }))
+          .sort((a, b) => {
+            const tA = new Date(a.created_at || 0).getTime() || (a.id || 0);
+            const tB = new Date(b.created_at || 0).getTime() || (b.id || 0);
+            return tB - tA;
+          });
+      }
+    }
+    return [];
+  } catch (e) {
+    return null;
+  }
+}
+
+// Create individual donation record in cloud store and register in Master Index
+export async function createCloudDonation(newDonation) {
+  try {
+    const created = await cloudFetch('', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'RAC_DONATION_RECORD',
+        data: newDonation
+      })
+    });
+    if (!created || !created.id) return false;
+
+    const newCloudId = created.id;
+    newDonation._cloud_id = newCloudId;
+
+    const indexData = await cloudFetch(`/${DONATIONS_MASTER_INDEX_ID}`);
+    let itemIds = [];
+    if (indexData?.data?.item_ids && Array.isArray(indexData.data.item_ids)) {
+      itemIds = indexData.data.item_ids;
+    }
+    const updatedIds = [newCloudId, ...itemIds.filter(id => id !== newCloudId)].slice(0, 40);
+    await cloudFetch(`/${DONATIONS_MASTER_INDEX_ID}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: 'RAC_DONATIONS_MASTER_INDEX',
+        data: { item_ids: updatedIds }
+      })
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Delete donation record in cloud store
+export async function deleteCloudDonation(donationId) {
+  try {
+    const list = await fetchCloudDonations();
+    if (!list) return false;
+    const target = list.find(d => String(d.id) === String(donationId) || String(d._cloud_id) === String(donationId));
+    if (!target || !target._cloud_id) return false;
+
+    await cloudFetch(`/${target._cloud_id}`, { method: 'DELETE' });
+
+    const indexData = await cloudFetch(`/${DONATIONS_MASTER_INDEX_ID}`);
+    if (indexData?.data?.item_ids && Array.isArray(indexData.data.item_ids)) {
+      const updatedIds = indexData.data.item_ids.filter(id => id !== target._cloud_id);
+      await cloudFetch(`/${DONATIONS_MASTER_INDEX_ID}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: 'RAC_DONATIONS_MASTER_INDEX',
+          data: { item_ids: updatedIds }
+        })
+      });
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Bidirectionally synchronize local device donations with shared cloud store
+export async function syncDonationsWithCloud() {
+  const localList = getStorage('rac_cached_donations', []);
+  const cloudList = await fetchCloudDonations();
+
+  if (!cloudList) {
+    return localList;
+  }
+
+  const map = new Map();
+  // 1. Index cloud items
+  for (const item of cloudList) {
+    const key = String(item.receipt_no || item.id || item._cloud_id).trim();
+    map.set(key, item);
+  }
+
+  // 2. Merge local items
+  const itemsToUpload = [];
+  for (const item of localList) {
+    const key = String(item.receipt_no || item.id || item._cloud_id).trim();
+    if (!map.has(key)) {
+      map.set(key, item);
+      itemsToUpload.push(item);
+    }
+  }
+
+  const merged = Array.from(map.values()).sort((a, b) => {
+    const tA = new Date(a.created_at || 0).getTime() || (a.id || 0);
+    const tB = new Date(b.created_at || 0).getTime() || (b.id || 0);
+    return tB - tA;
+  });
+
+  setStorage('rac_cached_donations', merged);
+
+  if (itemsToUpload.length > 0) {
+    (async () => {
+      for (const item of itemsToUpload) {
+        await createCloudDonation(item).catch(() => {});
+      }
+    })();
+  }
+
+  return merged;
+}
+
+// Dispatch automated email notification for newly recorded donation to pn9059491777@gmail.com
+export async function dispatchDonationEmailNotification(donation) {
+  try {
+    const payload = {
+      _subject: `New Online Donation Received: ₹${donation.amount} from ${donation.donor_name}`,
+      _replyto: donation.donor_email || 'pn9059491777@gmail.com',
+      'Donor Full Name': donation.donor_name,
+      'Donor Contact Phone': donation.donor_phone,
+      'Donor Email': donation.donor_email || 'Not provided',
+      'Donation Amount (INR)': `₹${donation.amount}`,
+      'Payment Method': donation.payment_method || 'UPI',
+      'Receipt Number': donation.receipt_no || `REC-${donation.id}`,
+      'Sponsored Need': donation.linked_need_title || 'General Student Care',
+      'Dedication / Notes': donation.notes || 'General Support',
+      'Date & Time': donation.created_at || new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+      'Action Required': `Please call donor at ${donation.donor_phone} to verify and convey heartfelt gratitude.`
+    };
+
+    await fetch('https://formsubmit.co/ajax/pn9059491777@gmail.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.warn('[EMAIL] Failed to dispatch donation alert:', err.message);
+  }
+}
+
 // Run initial background sync on script load
 if (typeof window !== 'undefined') {
   setTimeout(() => {
     syncAdmissionsWithCloud().catch(() => {});
+    syncDonationsWithCloud().catch(() => {});
   }, 300);
 }
 
@@ -843,9 +1010,84 @@ async function request(endpoint, options = {}) {
           if (typeof window !== 'undefined') localStorage.removeItem('rac_cached_licence');
           return null;
         }
-        return cached || null;
       }
-      if (endpoint === '/donations') return [];
+    }
+
+    // 6.7 DONATIONS OPERATIONS (GET, POST, DELETE)
+    if (endpoint.startsWith('/donations')) {
+      if (method === 'GET') {
+        return await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+      }
+
+      if (method === 'POST') {
+        let donList = await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+        const currentYear = new Date().getFullYear();
+        const highestNum = donList.reduce((max, d) => {
+          const match = String(d.receipt_no || '').match(/REC-\d{4}-(\d+)/);
+          return match ? Math.max(max, parseInt(match[1], 10)) : max;
+        }, 100);
+
+        const receipt_no = `REC-${currentYear}-${String(highestNum + 1).padStart(4, '0')}`;
+        
+        let linkedNeedTitle = null;
+        let updatedNeed = null;
+        if (parsedBody.needed_item_id) {
+          let neededList = getStorage('rac_cached_needed', defaultNeededAndSupporters.needed_items || []);
+          const matchedIdx = neededList.findIndex(n => String(n.id) === String(parsedBody.needed_item_id));
+          if (matchedIdx !== -1) {
+            const item = neededList[matchedIdx];
+            const addedQty = Number(parsedBody.quantity_donated) || 1;
+            item.quantity_received = (Number(item.quantity_received) || 0) + addedQty;
+            if (item.quantity_received >= item.quantity_needed) {
+              item.is_fulfilled = true;
+            }
+            neededList[matchedIdx] = item;
+            setStorage('rac_cached_needed', neededList);
+            linkedNeedTitle = item.item_name;
+            updatedNeed = item;
+          }
+        }
+
+        const newDonation = {
+          id: Date.now(),
+          receipt_no,
+          donor_name: (parsedBody.donor_name || 'Anonymous Well-Wisher').trim(),
+          donor_phone: (parsedBody.donor_phone || '').trim(),
+          donor_email: (parsedBody.donor_email || '').trim(),
+          amount: Number(parsedBody.amount) || 0,
+          payment_method: parsedBody.payment_method || 'UPI',
+          notes: parsedBody.notes || '',
+          needed_item_id: parsedBody.needed_item_id || null,
+          linked_need_title: linkedNeedTitle || parsedBody.linked_need_title || null,
+          quantity_donated: parsedBody.quantity_donated ? Number(parsedBody.quantity_donated) : null,
+          created_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+
+        donList.unshift(newDonation);
+        setStorage('rac_cached_donations', donList);
+
+        // Save to shared cloud store
+        createCloudDonation(newDonation).catch(() => {});
+
+        // Dispatch email notification to pn9059491777@gmail.com
+        dispatchDonationEmailNotification(newDonation).catch(() => {});
+
+        return {
+          success: true,
+          receipt: newDonation,
+          updated_need: updatedNeed,
+          message: 'Thank you! Your donation was recorded.'
+        };
+      }
+
+      if (method === 'DELETE') {
+        const donId = endpoint.split('/')[2];
+        let donList = getStorage('rac_cached_donations', []);
+        donList = donList.filter(d => String(d.id) !== String(donId) && String(d.receipt_no) !== String(donId) && String(d._cloud_id) !== String(donId));
+        setStorage('rac_cached_donations', donList);
+        deleteCloudDonation(donId).catch(() => {});
+        return { message: 'Donation record removed successfully.' };
+      }
     }
 
     // 7.4 LICENCE WRITE OPERATIONS (PUT, DELETE)
@@ -1317,6 +1559,8 @@ export const api = {
   recordDonation: (data) => request('/donations', { method: 'POST', body: data }),
   createDonation: (data) => request('/donations', { method: 'POST', body: data }),
   getDonations: () => request('/donations'),
+  deleteDonation: (id) => request(`/donations/${id}`, { method: 'DELETE' }),
+  syncDonations: () => syncDonationsWithCloud(),
 
   // File Upload with instant Base64 fallback for 100% reliable mobile uploads
   uploadFile: async (file) => {

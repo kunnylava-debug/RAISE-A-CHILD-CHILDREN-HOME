@@ -295,12 +295,22 @@ export default function Needed({ settings, onShowToast }) {
                     <span className="font-bold text-blue-600 font-mono">₹{donationReceipt.amount?.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
-                <div className="flex justify-center gap-3 pt-2">
+                <div className="flex flex-wrap justify-center gap-2.5 pt-2">
+                  <a
+                    href={`https://wa.me/919059491777?text=${encodeURIComponent(
+                      `Hello Bro. Nelson A, I have recorded a contribution of ₹${donationReceipt.amount} for RISE A CHILD CHILDREN HOME (Receipt No: ${donationReceipt.receipt_no}, Donor: ${donationReceipt.donor_name}).`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition shadow-sm"
+                  >
+                    <span>WhatsApp Founder (+91 90594 91777)</span>
+                  </a>
                   <button onClick={() => window.print()} className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition shadow-sm">
                     <Download className="w-3.5 h-3.5" />
                     <span>Print Receipt</span>
                   </button>
-                  <button onClick={() => { setDonationModalOpen(false); setDonationReceipt(null); }} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow-md">
+                  <button onClick={() => { setDonationModalOpen(false); setDonationReceipt(null); }} className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded-xl text-xs transition">
                     Close
                   </button>
                 </div>
@@ -320,17 +330,18 @@ export default function Needed({ settings, onShowToast }) {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Phone Number</label>
+                    <label className="block font-semibold text-slate-700 mb-1">Phone Number (For Confirmation Call) *</label>
                     <input
                       type="tel"
+                      required
                       value={donationForm.donor_phone}
                       onChange={e => setDonationForm({ ...donationForm, donor_phone: e.target.value })}
-                      placeholder="+91 98300 00000"
+                      placeholder="+91 90594 XXXXX"
                       className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Email</label>
+                    <label className="block font-semibold text-slate-700 mb-1">Email (Optional)</label>
                     <input
                       type="email"
                       value={donationForm.donor_email}
@@ -366,16 +377,6 @@ export default function Needed({ settings, onShowToast }) {
                       <option value="Cash / Cheque">Cash / Cheque</option>
                     </select>
                   </div>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Transaction Ref / UTR No (Optional)</label>
-                  <input
-                    type="text"
-                    value={donationForm.transaction_ref}
-                    onChange={e => setDonationForm({ ...donationForm, transaction_ref: e.target.value })}
-                    placeholder="e.g. UPI/40892341209"
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
-                  />
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Personal Message / Dedication</label>
