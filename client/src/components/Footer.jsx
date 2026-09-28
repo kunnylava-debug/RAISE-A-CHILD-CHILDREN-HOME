@@ -15,7 +15,10 @@ export default function Footer({ setActiveTab, settings }) {
 
   const facebookUrl = settings?.social_facebook || "https://facebook.com/riseachild";
   const instagramUrl = settings?.social_instagram || "https://instagram.com/riseachild";
-  const youtubeUrl = settings?.social_youtube || "https://youtube.com/@riseachild";
+  const rawYoutube = (settings?.social_youtube || '').trim();
+  const youtubeUrl = rawYoutube && !rawYoutube.includes('@riseachild')
+    ? rawYoutube
+    : 'https://www.youtube.com/results?search_query=RISE+A+CHILD+CHILDREN+HOME';
 
   return (
     <footer className="bg-slate-950 text-slate-300 border-t border-slate-800/80 py-6 sm:py-8 text-xs">

@@ -410,9 +410,10 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
               type="url"
               value={form.social_youtube || ''}
               onChange={e => handleChange('social_youtube', e.target.value)}
-              placeholder="https://youtube.com/@yourchannel"
+              placeholder="https://youtube.com/@your-official-channel"
               className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none text-xs"
             />
+            <span className="text-[10px] text-slate-400 mt-1 block">Leave empty to use official YouTube search for hostel</span>
           </div>
         </div>
       </div>

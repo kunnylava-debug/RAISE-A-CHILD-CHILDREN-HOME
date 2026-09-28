@@ -644,6 +644,10 @@ async function request(endpoint, options = {}) {
     // 7. SETTINGS OPERATIONS
     if (endpoint === '/settings') {
       const cur = getStorage('rac_cached_settings', defaultSettings);
+      if (cur && cur.social_youtube && cur.social_youtube.includes('@riseachild')) {
+        cur.social_youtube = 'https://www.youtube.com/results?search_query=RISE+A+CHILD+CHILDREN+HOME';
+        setStorage('rac_cached_settings', cur);
+      }
       if (method === 'GET') return cur;
       if (method === 'PUT') {
         const updated = { ...cur, ...parsedBody };

@@ -140,13 +140,17 @@ export default function AdminFounderVideoTab({ settings, onRefreshSettings, onSh
         </div>
 
         <div>
-          <label className="block font-semibold text-slate-700 mb-1">Video File / Stream URL (.mp4)</label>
+          <label className="block font-semibold text-slate-700 mb-1">Hostel Video URL (YouTube Video Link or Direct .mp4 File)</label>
           <input
             type="text"
             value={form.video_url || ''}
             onChange={e => handleChange('video_url', e.target.value)}
+            placeholder="e.g. https://www.youtube.com/watch?v=... or https://youtu.be/... or .mp4 link"
             className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono text-xs"
           />
+          <span className="text-[11px] text-slate-400 mt-1 block">
+            Supports YouTube video links (watch, embed, youtu.be, or shorts) and direct MP4/WebM video streams.
+          </span>
         </div>
 
         <div>

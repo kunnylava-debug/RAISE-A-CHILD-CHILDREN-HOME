@@ -1,10 +1,21 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { 
   Play, Pause, Volume2, VolumeX, Maximize, 
-  RotateCcw, Film, ShieldAlert 
+  RotateCcw, Film, ShieldAlert, ExternalLink 
 } from 'lucide-react';
 
+// Extract YouTube video ID from various YouTube URL formats (watch?v=, youtu.be/, embed/, shorts/)
+function extractYouTubeId(url) {
+  if (!url || typeof url !== 'string') return null;
+  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+  const match = url.match(regExp);
+  return match ? match[1] : null;
+}
+
 export default function VideoPlayer({ videoUrl, posterUrl, title }) {
+  const youtubeId = extractYouTubeId(videoUrl);
+  const [ytPlaying, setYtPlaying] = useState(false);
+
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -22,6 +33,72 @@ export default function VideoPlayer({ videoUrl, posterUrl, title }) {
     };
   }, []);
 
+  // YOUTUBE VIDEO EMBED MODE (100% resilient, no 404 / decode errors)
+  if (youtubeId) {
+    const ytThumbnail = posterUrl || `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+    const watchUrl = `https://www.youtube.com/watch?v=${youtubeId}`;
+
+    return (
+      <div 
+        ref={containerRef}
+        className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-950 border border-slate-800 group"
+      >
+        {!ytPlaying ? (
+          <div 
+            onClick={() => setYtPlaying(true)}
+            className="relative cursor-pointer aspect-video min-h-[300px] sm:min-h-[460px] bg-slate-900 flex items-center justify-center overflow-hidden"
+          >
+            <img 
+              src={ytThumbnail} 
+              alt={title || "Hostel Video"}
+              onError={(e) => {
+                // Fallback to standard quality YouTube thumbnail if maxres is 404
+                e.currentTarget.src = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+              }}
+              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
+            />
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex flex-col items-center justify-center transition-opacity">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform duration-200 border-4 border-white/80">
+                <Play className="w-10 h-10 sm:w-12 sm:h-12 fill-white ml-1.5" />
+              </div>
+              <div className="mt-4 px-4 py-1.5 rounded-full bg-slate-900/80 text-white text-xs sm:text-sm font-semibold border border-white/20 flex items-center space-x-2">
+                <span>Click to Watch: {title || "Hostel Documentary"}</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="aspect-video w-full min-h-[300px] sm:min-h-[460px] bg-black">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+              title={title || "YouTube video player"}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="w-full h-full border-0 block"
+            />
+          </div>
+        )}
+
+        {/* Quick Footer for YouTube mode */}
+        <div className="bg-slate-900 px-4 py-2.5 flex items-center justify-between border-t border-slate-800 text-xs text-slate-400">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            <span className="font-semibold text-white truncate max-w-[220px] sm:max-w-md">{title || "Official Documentary"}</span>
+          </div>
+          <a
+            href={watchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-1 text-red-400 hover:text-red-300 font-medium transition"
+          >
+            <span>Watch on YouTube</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // STANDARD DIRECT MP4 VIDEO PLAYER
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (isPlaying) {
