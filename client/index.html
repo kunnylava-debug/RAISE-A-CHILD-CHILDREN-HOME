@@ -230,28 +230,33 @@
   </head>
   <body class="bg-[#fcfbf9] text-slate-800 antialiased font-sans selection:bg-brand-500 selection:text-white">
     <div id="root">
-      <!-- Crawlable Static Fallback for Search Engine Bots (Googlebot, Bingbot, Slurp, DuckDuckBot, Baiduspider) -->
-      <header style="padding: 20px; background: #0f172a; color: #ffffff; text-align: center;">
-        <h1 style="font-size: 28px; margin: 0; font-family: serif;">RISE A CHILD CHILDREN HOME</h1>
-        <p style="margin: 8px 0 0 0; font-size: 14px; color: #94a3b8;">A Loving Haven of Care, Education &amp; Character Development | Mannar Polur, Sullurpeta</p>
-      </header>
-      <main style="max-width: 900px; margin: 30px auto; padding: 0 20px; font-family: sans-serif; line-height: 1.6; color: #334155;">
-        <h2>About RISE A CHILD CHILDREN HOME</h2>
-        <p>Official Portal: <a href="https://rise-a-child-children-home.vercel.app/">https://rise-a-child-children-home.vercel.app/</a></p>
-        <p>Founded by <strong>BRO.NELSON A</strong>, RISE A CHILD CHILDREN HOME is a registered Child Care Institution operating under statutory Juvenile Justice (JJ) Act compliance in Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh (PIN 524121). We provide full residential shelter, schooling tuition, nutritious daily meals, healthcare checkups, and moral guidance for underprivileged children and youths.</p>
-
-        <h2>Online Admissions &amp; Inquiries</h2>
-        <p>Parents, guardians, and social welfare workers can submit admission applications online through our Admissions Desk or by contacting our office:</p>
-        <ul>
-          <li><strong>Campus Address:</strong> Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121</li>
-          <li><strong>Admissions Contact Phone:</strong> <a href="tel:+919059491777">+91 90594 91777</a></li>
-          <li><strong>Official Email:</strong> <a href="mailto:pn9059491777@gmail.com">pn9059491777@gmail.com</a></li>
-        </ul>
-
-        <h2>Support &amp; Community Contributions</h2>
-        <p>Contributions directly provide food, clothing, education supplies, and medical care for our resident children. Support us via UPI ID: <strong>riseachild@sbi</strong> (RISE A CHILD Welfare Trust) or direct bank transfer.</p>
-      </main>
+      <!-- High-Performance Branded Preloader (Instantly visible while React loads) -->
+      <div id="app-preloader" style="position:fixed;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg, #0b1528 0%, #0f172a 50%, #1e293b 100%);color:#ffffff;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;z-index:99999;text-align:center;padding:20px;box-sizing:border-box;">
+        <div style="position:relative;margin-bottom:20px;">
+          <img src="/logo.png" alt="RISE A CHILD" style="width:80px;height:80px;border-radius:50%;object-fit:cover;box-shadow:0 10px 25px rgba(0,0,0,0.4);border:3px solid rgba(255,255,255,0.15);" onerror="this.style.display='none'">
+        </div>
+        <h1 style="font-size:20px;font-weight:700;letter-spacing:0.5px;margin:0 0 6px 0;font-family:serif;color:#ffffff;text-shadow:0 2px 4px rgba(0,0,0,0.5);">RISE A CHILD CHILDREN HOME</h1>
+        <p style="font-size:12px;color:#94a3b8;margin:0 0 24px 0;max-width:320px;line-height:1.5;letter-spacing:0.2px;">A Loving Haven of Care, Education &amp; Character Development</p>
+        <div style="width:130px;height:4px;background:rgba(255,255,255,0.12);border-radius:9999px;overflow:hidden;position:relative;">
+          <div style="width:45%;height:100%;background:linear-gradient(90deg, #3b82f6, #60a5fa);border-radius:9999px;position:absolute;animation:racPulseBar 1.2s infinite ease-in-out;"></div>
+        </div>
+        <style>
+          @keyframes racPulseBar {
+            0% { left: -45%; }
+            50% { left: 40%; }
+            100% { left: 100%; }
+          }
+        </style>
+      </div>
     </div>
+    <noscript>
+      <div style="max-width:800px;margin:40px auto;padding:20px;font-family:sans-serif;line-height:1.6;color:#334155;text-align:center;">
+        <h1 style="color:#0f172a;">RISE A CHILD CHILDREN HOME</h1>
+        <p>Please enable JavaScript in your browser to view the complete interactive portal.</p>
+        <p><strong>Campus Address:</strong> Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh - 524121</p>
+        <p><strong>Admissions Phone:</strong> +91 90594 91777 | <strong>Email:</strong> pn9059491777@gmail.com</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
