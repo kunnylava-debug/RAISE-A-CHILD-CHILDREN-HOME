@@ -280,28 +280,55 @@ export default function AdminDonationsTab({ onShowToast }) {
                       </td>
 
                       <td className="p-4">
-                        {isMatched ? (
-                          (d.linked_need_fulfilled || d.is_fulfilled) ? (
+                        {(() => {
+                          const needName = (d.linked_need_title || (d.notes && d.notes.match(/of:\s*([^\(\n]+)/i)?.[1]) || '').toLowerCase().trim();
+                          const matchedNeed = (Array.isArray(neededItems) ? neededItems : []).find(n => 
+                            (d.needed_item_id && String(n.id) === String(d.needed_item_id)) || 
+                            (n.item_name && needName && n.item_name.toLowerCase().trim() === needName)
+                          );
+
+                          // Sum all donations recorded for this specific need item
+                          const allDonationsForNeed = donations.filter(x => {
+                            const xName = (x.linked_need_title || (x.notes && x.notes.match(/of:\s*([^\(\n]+)/i)?.[1]) || '').toLowerCase().trim();
+                            return (x.needed_item_id && d.needed_item_id && String(x.needed_item_id) === String(d.needed_item_id)) ||
+                                   (needName && xName && needName === xName);
+                          });
+                          const sumDonatedUnits = allDonationsForNeed.reduce((acc, curr) => acc + (Number(curr.quantity_donated) || 0), 0);
+
+                          const totalRequired = Number(matchedNeed?.quantity_needed || d.linked_need_total) || Math.max(sumDonatedUnits, 10);
+                          const currentReceived = Math.max(Number(matchedNeed?.quantity_received) || 0, sumDonatedUnits, Number(d.linked_need_current) || 0);
+                          const remainingNeeded = Math.max(0, totalRequired - currentReceived);
+                          const isFulfilled = currentReceived >= totalRequired || matchedNeed?.is_fulfilled || d.linked_need_fulfilled || d.is_fulfilled;
+                          const percent = Math.min(100, Math.round((currentReceived / (totalRequired || 1)) * 100));
+
+                          if (!isMatched && !needName) {
+                            return <span className="text-slate-400 text-xs">N/A</span>;
+                          }
+
+                          return isFulfilled ? (
                             <span className="inline-flex items-center space-x-1 text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>Fulfilled</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Fulfilled ({currentReceived}/{totalRequired})</span>
                             </span>
                           ) : (
                             <div className="space-y-1">
-                              <span className="inline-flex items-center space-x-1 text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-[11px] font-semibold">
-                                <span>{(d.linked_need_current ?? d.quantity_received) || 0} / {(d.linked_need_total ?? d.quantity_needed) || 0} received</span>
-                              </span>
-                              <div className="w-20 bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                              <div className="flex items-center space-x-1.5">
+                                <span className="inline-flex items-center space-x-1 text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-[11px] font-bold border border-emerald-200">
+                                  <span>{currentReceived} / {totalRequired} received</span>
+                                </span>
+                                <span className="text-[10px] text-amber-700 font-semibold font-sans">
+                                  ({remainingNeeded} left)
+                                </span>
+                              </div>
+                              <div className="w-24 bg-slate-200 h-1.5 rounded-full overflow-hidden">
                                 <div 
-                                  className="bg-emerald-500 h-full rounded-full" 
-                                  style={{ width: `${Math.min(100, Math.round((((d.linked_need_current ?? d.quantity_received) || 0) / ((d.linked_need_total ?? d.quantity_needed) || 1)) * 100))}%` }}
+                                  className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+                                  style={{ width: `${percent}%` }}
                                 />
                               </div>
                             </div>
-                          )
-                        ) : (
-                          <span className="text-slate-400 text-xs">N/A</span>
-                        )}
+                          );
+                        })()}
                       </td>
 
                       <td className="p-4 text-slate-500 text-xs font-mono">

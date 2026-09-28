@@ -1029,23 +1029,38 @@ async function request(endpoint, options = {}) {
 
         const receipt_no = `REC-${currentYear}-${String(highestNum + 1).padStart(4, '0')}`;
         
-        let linkedNeedTitle = null;
+        let linkedNeedTitle = parsedBody.linked_need_title || null;
+        let linkedNeedTotal = null;
+        let linkedNeedCurrent = null;
         let updatedNeed = null;
+
+        let neededList = getStorage('rac_cached_needed', defaultNeededAndSupporters.needed_items || []);
+        let matchedIdx = -1;
         if (parsedBody.needed_item_id) {
-          let neededList = getStorage('rac_cached_needed', defaultNeededAndSupporters.needed_items || []);
-          const matchedIdx = neededList.findIndex(n => String(n.id) === String(parsedBody.needed_item_id));
-          if (matchedIdx !== -1) {
-            const item = neededList[matchedIdx];
-            const addedQty = Number(parsedBody.quantity_donated) || 1;
-            item.quantity_received = (Number(item.quantity_received) || 0) + addedQty;
-            if (item.quantity_received >= item.quantity_needed) {
-              item.is_fulfilled = true;
-            }
-            neededList[matchedIdx] = item;
-            setStorage('rac_cached_needed', neededList);
-            linkedNeedTitle = item.item_name;
-            updatedNeed = item;
+          matchedIdx = neededList.findIndex(n => String(n.id) === String(parsedBody.needed_item_id));
+        }
+        if (matchedIdx === -1 && parsedBody.notes) {
+          const match = String(parsedBody.notes).match(/of:\s*([^\(\n]+)/i);
+          if (match) {
+            const needName = match[1].trim().toLowerCase();
+            matchedIdx = neededList.findIndex(n => n.item_name && n.item_name.toLowerCase().trim() === needName);
+            if (matchedIdx !== -1) linkedNeedTitle = neededList[matchedIdx].item_name;
           }
+        }
+
+        if (matchedIdx !== -1) {
+          const item = neededList[matchedIdx];
+          const addedQty = Number(parsedBody.quantity_donated) || 1;
+          item.quantity_received = (Number(item.quantity_received) || 0) + addedQty;
+          if (item.quantity_received >= item.quantity_needed) {
+            item.is_fulfilled = true;
+          }
+          neededList[matchedIdx] = item;
+          setStorage('rac_cached_needed', neededList);
+          linkedNeedTitle = item.item_name;
+          linkedNeedTotal = item.quantity_needed;
+          linkedNeedCurrent = item.quantity_received;
+          updatedNeed = item;
         }
 
         const newDonation = {
@@ -1059,6 +1074,8 @@ async function request(endpoint, options = {}) {
           notes: parsedBody.notes || '',
           needed_item_id: parsedBody.needed_item_id || null,
           linked_need_title: linkedNeedTitle || parsedBody.linked_need_title || null,
+          linked_need_total: linkedNeedTotal || 10,
+          linked_need_current: linkedNeedCurrent || (Number(parsedBody.quantity_donated) || 1),
           quantity_donated: parsedBody.quantity_donated ? Number(parsedBody.quantity_donated) : null,
           created_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
         };
