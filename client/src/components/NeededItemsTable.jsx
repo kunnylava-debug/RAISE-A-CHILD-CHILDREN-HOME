@@ -94,19 +94,37 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl text-xs border border-slate-100">
-                <div>
-                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Quantity</span>
-                  <span className="font-bold text-slate-800">{item.quantity_needed} needed</span>
-                  <span className="text-[11px] text-slate-500 block">({item.quantity_received} received)</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Estimated Cost</span>
-                  <span className="font-extrabold text-emerald-800 font-mono text-sm block">
-                    ₹{item.estimated_price?.toLocaleString('en-IN')}
-                  </span>
-                </div>
-              </div>
+              {(() => {
+                const remainingNeeded = Math.max(0, item.quantity_needed - (item.quantity_received || 0));
+                return (
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl text-xs border border-slate-100">
+                    <div>
+                      <span className="text-slate-500 block text-[10px] uppercase font-semibold">Requirement</span>
+                      {isFulfilled ? (
+                        <span className="font-bold text-emerald-700 text-xs flex items-center mt-0.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                          0 Remaining (Fulfilled)
+                        </span>
+                      ) : (
+                        <div className="mt-0.5">
+                          <span className="font-extrabold text-amber-700 text-sm block">
+                            {remainingNeeded} still needed
+                          </span>
+                          <span className="text-[10px] text-slate-500 block">
+                            ({item.quantity_received || 0} of {item.quantity_needed} received)
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px] uppercase font-semibold">Estimated Cost</span>
+                      <span className="font-extrabold text-emerald-800 font-mono text-sm block">
+                        ₹{item.estimated_price?.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="flex items-center justify-between pt-1">
                 {adminUser && (
@@ -149,7 +167,7 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
                 <th className="py-4 px-6 w-16">S.No</th>
                 <th className="py-4 px-6">Needed Item</th>
                 <th className="py-4 px-6">Category</th>
-                <th className="py-4 px-6">Quantity</th>
+                <th className="py-4 px-6">Still Needed / Progress</th>
                 <th className="py-4 px-6">Estimated Price</th>
                 <th className="py-4 px-6">Urgency</th>
                 <th className="py-4 px-6 text-right">Action</th>
@@ -158,6 +176,8 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
             <tbody className="divide-y divide-slate-100">
               {(Array.isArray(neededItems) ? neededItems : []).map((item, index) => {
                 const isFulfilled = item.quantity_received >= item.quantity_needed || item.is_fulfilled;
+                const remainingNeeded = Math.max(0, item.quantity_needed - (item.quantity_received || 0));
+                const percentFulfilled = Math.min(100, Math.round(((item.quantity_received || 0) / (item.quantity_needed || 1)) * 100));
                 return (
                   <tr 
                     key={item.id}
@@ -181,11 +201,40 @@ export default function NeededItemsTable({ neededItems, adminUser, onPledge, onA
                         {item.category}
                       </span>
                     </td>
-                    <td className="py-4 px-6 font-mono text-slate-800">
-                      <span className="font-bold">{item.quantity_needed}</span>{' '}
-                      <span className="text-xs text-slate-500">
-                        ({item.quantity_received} received)
-                      </span>
+                    <td className="py-4 px-6 font-mono">
+                      {isFulfilled ? (
+                        <div className="space-y-1">
+                          <span className="font-bold text-emerald-700 text-sm flex items-center">
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600 flex-shrink-0" />
+                            0 Remaining
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-sans block">
+                            All {item.quantity_needed} received
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <div className="flex items-baseline space-x-1.5">
+                            <span className="font-extrabold text-amber-700 text-base">
+                              {remainingNeeded}
+                            </span>
+                            <span className="font-bold text-slate-700 text-xs">
+                              still needed
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-20 bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
+                              <div 
+                                className="bg-emerald-500 h-full rounded-full transition-all duration-300"
+                                style={{ width: `${percentFulfilled}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-sans">
+                              {item.quantity_received || 0}/{item.quantity_needed}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </td>
                     <td className="py-4 px-6 font-bold text-emerald-800 font-mono text-sm">
                       ₹{item.estimated_price?.toLocaleString('en-IN')}
