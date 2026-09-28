@@ -10,7 +10,9 @@ import {
   exportChildrenToExcel, 
   exportChildrenToCsv, 
   exportStaffToExcel, 
-  exportStaffToCsv 
+  exportStaffToCsv,
+  sortChildrenAscending,
+  sortStaffAscending
 } from '../utils/exportUtils';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -360,9 +362,9 @@ async function request(endpoint, options = {}) {
     // Keep localStorage in sync with successful server read/write operations
     if (method === 'GET') {
       if (endpoint.startsWith('/children')) {
-        setStorage('rac_cached_children', data.children || []);
+        setStorage('rac_cached_children', sortChildrenAscending(data.children || []));
       } else if (endpoint === '/staff') {
-        setStorage('rac_cached_staff', Array.isArray(data) ? data : []);
+        setStorage('rac_cached_staff', sortStaffAscending(Array.isArray(data) ? data : []));
       } else if (endpoint === '/views') {
         setStorage('rac_cached_views', Array.isArray(data) ? data : []);
       } else if (endpoint === '/alumni') {
@@ -394,19 +396,43 @@ async function request(endpoint, options = {}) {
 
     // 1. CHILDREN OPERATIONS (GET, POST, PUT, DELETE)
     if (endpoint.startsWith('/children')) {
-      let childrenList = getStorage('rac_cached_children', []);
+      let childrenList = sortChildrenAscending(getStorage('rac_cached_children', []));
 
       if (method === 'GET' && !endpoint.includes('/export') && !endpoint.includes('/sheet-info')) {
+        const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
+        const page = parseInt(urlParams.get('page')) || 1;
+        const limit = parseInt(urlParams.get('limit')) || 12;
+        const search = (urlParams.get('search') || '').toLowerCase().trim();
+        const classFilter = urlParams.get('class');
+        const genderFilter = urlParams.get('gender');
+
+        let filtered = childrenList;
+        if (search) {
+          filtered = filtered.filter(c => 
+            (c.name || '').toLowerCase().includes(search) || 
+            (c.serial_no || '').toLowerCase().includes(search)
+          );
+        }
+        if (classFilter && classFilter !== 'all') {
+          filtered = filtered.filter(c => c.class === classFilter);
+        }
+        if (genderFilter && genderFilter !== 'all') {
+          filtered = filtered.filter(c => c.gender === genderFilter);
+        }
+
+        const startIndex = (page - 1) * limit;
+        const pagedChildren = filtered.slice(startIndex, startIndex + limit);
+
         return {
           total_children: childrenList.length,
           boys_count: childrenList.filter(c => c.gender === 'Male').length,
           girls_count: childrenList.filter(c => c.gender === 'Female').length,
-          filtered_count: childrenList.length,
-          page: 1,
-          limit: 12,
-          total_pages: Math.max(1, Math.ceil(childrenList.length / 12)),
+          filtered_count: filtered.length,
+          page,
+          limit,
+          total_pages: Math.max(1, Math.ceil(filtered.length / limit)),
           is_authorized: Boolean(token),
-          children: childrenList
+          children: limit >= 1000 ? filtered : pagedChildren
         };
       }
 
@@ -423,7 +449,11 @@ async function request(endpoint, options = {}) {
 
       if (method === 'POST' && endpoint === '/children') {
         const nextId = Date.now();
-        const nextSerial = parsedBody.serial_no || `SN-CH-${String(childrenList.length + 1).padStart(3, '0')}`;
+        const highestSerialNum = childrenList.reduce((max, c) => {
+          const match = String(c.serial_no || '').match(/SN-CH-(\d+)/i);
+          return match ? Math.max(max, parseInt(match[1], 10)) : max;
+        }, 0);
+        const nextSerial = parsedBody.serial_no || `SN-CH-${String(highestSerialNum + 1).padStart(3, '0')}`;
         const newChild = {
           id: nextId,
           serial_no: nextSerial,
@@ -441,7 +471,9 @@ async function request(endpoint, options = {}) {
           is_active: 1
         };
 
-        childrenList.unshift(newChild);
+        // Add newly incoming child to the LAST (end of list), NOT at the top!
+        childrenList.push(newChild);
+        childrenList = sortChildrenAscending(childrenList);
         setStorage('rac_cached_children', childrenList);
 
         return {
@@ -459,6 +491,7 @@ async function request(endpoint, options = {}) {
           }
           return c;
         });
+        childrenList = sortChildrenAscending(childrenList);
         setStorage('rac_cached_children', childrenList);
         return { ...parsedBody, id: childId };
       }
@@ -473,13 +506,16 @@ async function request(endpoint, options = {}) {
 
     // 2. STAFF OPERATIONS (GET, POST, PUT, DELETE)
     if (endpoint.startsWith('/staff')) {
-      let staffList = getStorage('rac_cached_staff', []);
+      let staffList = sortStaffAscending(getStorage('rac_cached_staff', []));
 
       if (method === 'GET') {
         return staffList;
       }
 
       if (method === 'POST') {
+        const highestOrder = staffList.reduce((max, s) => {
+          return Math.max(max, Number(s.order_num) || 0);
+        }, 0);
         const newStaff = {
           id: Date.now(),
           name: parsedBody.name || '',
@@ -490,9 +526,11 @@ async function request(endpoint, options = {}) {
           experience: parsedBody.experience || '',
           description: parsedBody.description || '',
           photo: parsedBody.photo ? parsedBody.photo.trim() : '',
-          order_num: staffList.length + 1
+          order_num: highestOrder + 1
         };
+        // Add newly incoming staff member to the LAST (end of list), NOT at the top!
         staffList.push(newStaff);
+        staffList = sortStaffAscending(staffList);
         setStorage('rac_cached_staff', staffList);
         return newStaff;
       }
@@ -500,6 +538,7 @@ async function request(endpoint, options = {}) {
       if (method === 'PUT') {
         const staffId = endpoint.split('/')[2];
         staffList = staffList.map(s => String(s.id) === String(staffId) ? { ...s, ...parsedBody, id: s.id } : s);
+        staffList = sortStaffAscending(staffList);
         setStorage('rac_cached_staff', staffList);
         return { ...parsedBody, id: staffId };
       }
@@ -746,8 +785,8 @@ async function request(endpoint, options = {}) {
     // 7. SETTINGS OPERATIONS
     if (endpoint === '/settings') {
       const cur = getStorage('rac_cached_settings', defaultSettings);
-      if (cur && cur.social_youtube && cur.social_youtube.includes('@riseachild')) {
-        cur.social_youtube = 'https://www.youtube.com/results?search_query=RISE+A+CHILD+CHILDREN+HOME';
+      if (cur && (!cur.social_youtube || cur.social_youtube.includes('@riseachild') || cur.social_youtube.includes('search_query'))) {
+        cur.social_youtube = 'https://www.youtube.com/@nelsonministrys';
         setStorage('rac_cached_settings', cur);
       }
       if (method === 'GET') return cur;
@@ -1087,7 +1126,7 @@ export const api = {
 
     // Direct Browser Client Fallback (100% Reliable, works on Vercel and offline)
     let list = explicitChildrenList;
-    if (!list || !Array.isArray(list) || list.length === 0) {
+    if (!list || !Array.isArray(list) || list.length <= 12) {
       const data = await api.getChildren({ limit: 1000 }).catch(() => null);
       list = data?.children || getStorage('rac_cached_children', []);
     }
@@ -1136,7 +1175,7 @@ export const api = {
 
     // Direct Browser Client Fallback
     let list = explicitChildrenList;
-    if (!list || !Array.isArray(list) || list.length === 0) {
+    if (!list || !Array.isArray(list) || list.length <= 12) {
       const data = await api.getChildren({ limit: 1000 }).catch(() => null);
       list = data?.children || getStorage('rac_cached_children', []);
     }

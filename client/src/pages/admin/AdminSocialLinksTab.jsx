@@ -149,7 +149,7 @@ export default function AdminSocialLinksTab({ settings, onRefreshSettings, onSho
             </label>
             {youtube && (
               <a
-                href={youtube.includes('@riseachild') ? 'https://www.youtube.com/results?search_query=RISE+A+CHILD+CHILDREN+HOME' : youtube}
+                href={youtube.includes('@riseachild') ? 'https://www.youtube.com/@nelsonministrys' : youtube}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1 font-semibold"
@@ -163,11 +163,11 @@ export default function AdminSocialLinksTab({ settings, onRefreshSettings, onSho
             type="url"
             value={youtube}
             onChange={e => setYoutube(e.target.value)}
-            placeholder="https://youtube.com/@your-official-channel"
+            placeholder="https://youtube.com/@nelsonministrys"
             className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm transition"
           />
           <p className="text-[11px] text-slate-400">
-            Enter your official YouTube Channel URL. If unconfigured or left blank, the website safely links to YouTube search for &quot;RISE A CHILD CHILDREN HOME&quot; to prevent 404 errors.
+            Official YouTube Channel URL (e.g. https://youtube.com/@nelsonministrys).
           </p>
         </div>
 

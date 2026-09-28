@@ -36,9 +36,41 @@ function arrayToCsv(headers, rows) {
 }
 
 /**
- * Downloads live Children Records as Excel (.xlsx)
+ * Sorts children array naturally by serial number (SN-CH-001, SN-CH-002, etc.)
+ * or by ID ascending so newly incoming children always appear sequentially at the LAST.
+ */
+export function sortChildrenAscending(children = []) {
+  if (!Array.isArray(children)) return [];
+  return [...children].sort((a, b) => {
+    const matchA = String(a.serial_no || '').match(/\d+/);
+    const matchB = String(b.serial_no || '').match(/\d+/);
+    const numA = matchA ? parseInt(matchA[0], 10) : (Number(a.id) || 0);
+    const numB = matchB ? parseInt(matchB[0], 10) : (Number(b.id) || 0);
+    if (numA !== numB) return numA - numB;
+    return (Number(a.id) || 0) - (Number(b.id) || 0);
+  });
+}
+
+/**
+ * Sorts staff array naturally by display order (order_num) or ID ascending
+ * so newly incoming staff members always appear sequentially at the LAST.
+ */
+export function sortStaffAscending(staff = []) {
+  if (!Array.isArray(staff)) return [];
+  return [...staff].sort((a, b) => {
+    const oA = Number(a.order_num) || 0;
+    const oB = Number(b.order_num) || 0;
+    if (oA !== oB) return oA - oB;
+    return (Number(a.id) || 0) - (Number(b.id) || 0);
+  });
+}
+
+/**
+ * Downloads live Children Records as Excel (.xlsx) with clean 1..N order
  */
 export function exportChildrenToExcel(children = [], isAuthorized = true) {
+  const sortedChildren = sortChildrenAscending(children);
+
   const headers = [
     'S.No',
     'Serial ID',
@@ -55,7 +87,7 @@ export function exportChildrenToExcel(children = [], isAuthorized = true) {
     'Status'
   ];
 
-  const dataRows = (Array.isArray(children) ? children : []).map((c, idx) => [
+  const dataRows = sortedChildren.map((c, idx) => [
     idx + 1,
     c.serial_no || `SN-CH-${String(idx + 1).padStart(3, '0')}`,
     c.name || '',
@@ -106,9 +138,11 @@ export function exportChildrenToExcel(children = [], isAuthorized = true) {
 }
 
 /**
- * Downloads live Children Records as CSV (.csv)
+ * Downloads live Children Records as CSV (.csv) with clean 1..N order
  */
 export function exportChildrenToCsv(children = [], isAuthorized = true) {
+  const sortedChildren = sortChildrenAscending(children);
+
   const headers = [
     'S.No',
     'Serial ID',
@@ -125,7 +159,7 @@ export function exportChildrenToCsv(children = [], isAuthorized = true) {
     'Status'
   ];
 
-  const dataRows = (Array.isArray(children) ? children : []).map((c, idx) => [
+  const dataRows = sortedChildren.map((c, idx) => [
     idx + 1,
     c.serial_no || `SN-CH-${String(idx + 1).padStart(3, '0')}`,
     c.name || '',
@@ -152,9 +186,11 @@ export function exportChildrenToCsv(children = [], isAuthorized = true) {
 }
 
 /**
- * Downloads live Staff Directory as Excel (.xlsx)
+ * Downloads live Staff Directory as Excel (.xlsx) with clean 1..N order
  */
 export function exportStaffToExcel(staff = []) {
+  const sortedStaff = sortStaffAscending(staff);
+
   const headers = [
     'S.No',
     'Full Name',
@@ -167,7 +203,7 @@ export function exportStaffToExcel(staff = []) {
     'Display Order'
   ];
 
-  const dataRows = (Array.isArray(staff) ? staff : []).map((s, idx) => [
+  const dataRows = sortedStaff.map((s, idx) => [
     idx + 1,
     s.name || '',
     s.role || '',
@@ -210,9 +246,11 @@ export function exportStaffToExcel(staff = []) {
 }
 
 /**
- * Downloads live Staff Directory as CSV (.csv)
+ * Downloads live Staff Directory as CSV (.csv) with clean 1..N order
  */
 export function exportStaffToCsv(staff = []) {
+  const sortedStaff = sortStaffAscending(staff);
+
   const headers = [
     'S.No',
     'Full Name',
@@ -225,7 +263,7 @@ export function exportStaffToCsv(staff = []) {
     'Display Order'
   ];
 
-  const dataRows = (Array.isArray(staff) ? staff : []).map((s, idx) => [
+  const dataRows = sortedStaff.map((s, idx) => [
     idx + 1,
     s.name || '',
     s.role || '',

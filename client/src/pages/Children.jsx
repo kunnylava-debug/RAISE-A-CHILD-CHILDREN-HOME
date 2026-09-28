@@ -291,10 +291,10 @@ function doPost(e) {
               type="button"
               onClick={async () => {
                 try {
-                  await api.downloadChildrenExcel(childrenData?.children);
+                  const res = await api.downloadChildrenExcel();
                   onShowToast?.({
                     type: 'success',
-                    message: `Exported ${childrenData?.children?.length || 'all'} records to Excel (.xlsx) & routed archive to pn9059491777@gmail.com`
+                    message: `Exported all ${res?.count || childrenData?.total_children || ''} student records in sequential order to Excel (.xlsx) & routed archive to pn9059491777@gmail.com`
                   });
                 } catch (err) {
                   onShowToast?.({ type: 'error', message: 'Export error: ' + err.message });
@@ -334,10 +334,10 @@ function doPost(e) {
               type="button"
               onClick={async () => {
                 try {
-                  await api.downloadChildrenCsv(childrenData?.children);
+                  const res = await api.downloadChildrenCsv();
                   onShowToast?.({
                     type: 'success',
-                    message: `Exported ${childrenData?.children?.length || 'all'} children records to CSV`
+                    message: `Exported all ${res?.count || childrenData?.total_children || ''} children records in sequential order to CSV`
                   });
                 } catch (err) {
                   onShowToast?.({ type: 'error', message: 'Export error: ' + err.message });
@@ -1124,10 +1124,10 @@ function doPost(e) {
                   type="button"
                   onClick={async () => {
                     try {
-                      await api.downloadChildrenExcel(childrenData?.children);
+                      const res = await api.downloadChildrenExcel();
                       onShowToast?.({
                         type: 'success',
-                        message: `Exported ${childrenData?.children?.length || 'all'} children records to Excel (.xlsx)`
+                        message: `Exported all ${res?.count || childrenData?.total_children || ''} children records in sequential order to Excel (.xlsx)`
                       });
                     } catch (err) {
                       onShowToast?.({ type: 'error', message: 'Export error: ' + err.message });
