@@ -362,13 +362,33 @@ export default function Admissions({ settings, onShowToast }) {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+            <a
+              href={`mailto:pn9059491777@gmail.com?subject=${encodeURIComponent(`Admission Application: ${formData.child_name} (${submittedData.application_number || submittedData.app_no || 'ADM-2026-0043'})`)}&body=${encodeURIComponent(`RISE A CHILD CHILDREN HOME - Admission Desk Copy\n\nApplication No: ${submittedData.application_number || submittedData.app_no || 'ADM-2026-0043'}\nChild Name: ${formData.child_name}\nAge: ${formData.age} (${formData.dob || 'DOB not specified'})\nGender: ${formData.gender}\nClass Applying: ${formData.class_applying}\nGuardian: ${formData.guardian_name}\nPhone: ${formData.phone}\nEmail: ${formData.email || 'None'}\nAddress: ${formData.address}\nReason: ${formData.reason}\n\nSubmitted on: ${new Date().toLocaleString()}`)}`}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center space-x-2 transition shadow-sm"
+              title="Send a verified direct copy to pn9059491777@gmail.com"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Email to pn9059491777@gmail.com</span>
+            </a>
+
+            <a
+              href={`https://wa.me/919059491777?text=${encodeURIComponent(`*RISE A CHILD CHILDREN HOME - Admission Submission*\n\nApplication Ref: *${submittedData.application_number || submittedData.app_no || 'ADM-2026-0043'}*\nChild Name: *${formData.child_name}*\nClass: *${formData.class_applying}*\nGuardian: *${formData.guardian_name}*\nPhone: *${formData.phone}*\nAddress: ${formData.address}\n\nWe have submitted our admission form online.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center space-x-2 transition shadow-sm"
+              title="Send confirmation via WhatsApp to Brother Nelson"
+            >
+              <Send className="w-4 h-4" />
+              <span>WhatsApp Details</span>
+            </a>
+
             <button
               onClick={() => window.print()}
-              className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-2.5 rounded-xl text-xs flex items-center space-x-2 transition"
+              className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center space-x-2 transition"
             >
               <Printer className="w-4 h-4" />
-              <span>Print Acknowledgment Slip</span>
+              <span>Print Slip</span>
             </button>
 
             <button

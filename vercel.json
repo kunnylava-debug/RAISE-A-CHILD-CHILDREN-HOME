@@ -71,6 +71,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/admissions/:path*",
+      "destination": "/api/admissions.js"
+    },
+    {
+      "source": "/api/admissions",
+      "destination": "/api/admissions.js"
+    },
+    {
       "source": "/((?!api/|.*\\.(?:ico|png|jpg|jpeg|svg|webp|json|txt|xml|pdf|js|css|map|woff|woff2|ttf)$).*)",
       "destination": "/index.html"
     }

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, Filter, CheckCircle2, XCircle, Clock, Eye, 
   Trash2, X, Printer, User, MessageSquare, Mail, Send, 
-  Phone, AlertCircle, Share2, Check, FileText, ChevronRight
+  Phone, AlertCircle, Share2, Check, FileText, ChevronRight,
+  RefreshCw, Plus
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -10,26 +11,99 @@ export default function AdminAdmissionsTab({ onShowToast }) {
   const [admissions, setAdmissions] = useState([]);
   const [stats, setStats] = useState({ total: 0, pending: 0, under_review: 0, accepted: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
+  const [syncingCloud, setSyncingCloud] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedApp, setSelectedApp] = useState(null);
   const [statusNotes, setStatusNotes] = useState('');
   const [updating, setUpdating] = useState(false);
+  const [manualModalOpen, setManualModalOpen] = useState(false);
+  const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [manualForm, setManualForm] = useState({
+    child_name: '',
+    age: '',
+    dob: '',
+    class_applying: 'Class 1',
+    gender: 'Male',
+    address: '',
+    guardian_name: '',
+    phone: '',
+    email: '',
+    reason: '',
+    hear_about: 'Direct Admin Registration'
+  });
 
-  const fetchAdmissions = () => {
+  const fetchAdmissions = async (isManualSync = false) => {
     setLoading(true);
-    api.getAdmissions({ status: statusFilter, search })
-      .then(res => {
-        setAdmissions(res.applications || []);
-        setStats(res.stats || { total: 0, pending: 0, under_review: 0, accepted: 0, rejected: 0 });
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    if (isManualSync) setSyncingCloud(true);
+    try {
+      if (api.syncAdmissions) {
+        await api.syncAdmissions().catch(() => {});
+      }
+      const res = await api.getAdmissions({ status: statusFilter, search });
+      setAdmissions(res.applications || []);
+      setStats(res.stats || { total: 0, pending: 0, under_review: 0, accepted: 0, rejected: 0 });
+      if (isManualSync) {
+        onShowToast?.({
+          type: 'success',
+          title: 'Cloud Synchronized',
+          message: `Loaded ${res.applications?.length || 0} application records across all devices.`
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      if (isManualSync) {
+        onShowToast?.({
+          type: 'error',
+          title: 'Sync Notice',
+          message: 'Showing latest cached records: ' + (err.message || '')
+        });
+      }
+    } finally {
+      setLoading(false);
+      setSyncingCloud(false);
+    }
   };
 
   useEffect(() => {
     fetchAdmissions();
   }, [statusFilter, search]);
+
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+    if (!manualForm.child_name || !manualForm.guardian_name || !manualForm.phone) {
+      onShowToast?.({ type: 'error', message: 'Child name, guardian name, and phone are required.' });
+      return;
+    }
+    setManualSubmitting(true);
+    try {
+      const res = await api.submitAdmission(manualForm);
+      onShowToast?.({
+        type: 'success',
+        title: 'Application Registered',
+        message: `Saved ${res.app_no || res.application_number} to cloud across all devices.`
+      });
+      setManualModalOpen(false);
+      setManualForm({
+        child_name: '',
+        age: '',
+        dob: '',
+        class_applying: 'Class 1',
+        gender: 'Male',
+        address: '',
+        guardian_name: '',
+        phone: '',
+        email: '',
+        reason: '',
+        hear_about: 'Direct Admin Registration'
+      });
+      fetchAdmissions();
+    } catch (err) {
+      onShowToast?.({ type: 'error', message: err.message || 'Failed to register application.' });
+    } finally {
+      setManualSubmitting(false);
+    }
+  };
 
   const handleUpdateStatus = async (id, status) => {
     try {
@@ -319,6 +393,25 @@ RISE A CHILD CHILDREN HOME`;
               {st === 'all' ? 'All' : st}
             </button>
           ))}
+
+          <button
+            onClick={() => fetchAdmissions(true)}
+            disabled={syncingCloud}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 disabled:opacity-50"
+            title="Synchronize and fetch new admission requests from other devices"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncingCloud ? 'animate-spin' : ''}`} />
+            <span>{syncingCloud ? 'Syncing...' : 'Sync Cloud Records'}</span>
+          </button>
+
+          <button
+            onClick={() => setManualModalOpen(true)}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+            title="Register an admission application manually"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Application</span>
+          </button>
         </div>
       </div>
 
@@ -595,6 +688,155 @@ RISE A CHILD CHILDREN HOME`;
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Application Registration Modal */}
+      {manualModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white w-full max-w-xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-5 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold font-serif text-slate-900">Register Admission Application</h3>
+                  <p className="text-xs text-slate-500">Record a new student admission request across all devices</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setManualModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleManualSubmit} className="space-y-4 text-xs sm:text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Student Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Anand Kumar"
+                    value={manualForm.child_name}
+                    onChange={e => setManualForm({ ...manualForm, child_name: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Guardian / Parent Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Suresh Kumar"
+                    value={manualForm.guardian_name}
+                    onChange={e => setManualForm({ ...manualForm, guardian_name: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Age</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 10"
+                    value={manualForm.age}
+                    onChange={e => setManualForm({ ...manualForm, age: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Gender</label>
+                  <select
+                    value={manualForm.gender}
+                    onChange={e => setManualForm({ ...manualForm, gender: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Class Applying For</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Class 5"
+                    value={manualForm.class_applying}
+                    onChange={e => setManualForm({ ...manualForm, class_applying: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Contact Phone Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g. 9059491777"
+                    value={manualForm.phone}
+                    onChange={e => setManualForm({ ...manualForm, phone: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Email (Optional)</label>
+                  <input
+                    type="email"
+                    placeholder="e.g. guardian@example.com"
+                    value={manualForm.email}
+                    onChange={e => setManualForm({ ...manualForm, email: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Residential Address</label>
+                <input
+                  type="text"
+                  placeholder="Village / Town, Mandal, District"
+                  value={manualForm.address}
+                  onChange={e => setManualForm({ ...manualForm, address: e.target.value })}
+                  className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Reason for Admission</label>
+                <textarea
+                  rows="2"
+                  placeholder="Family background, need for schooling and residential shelter..."
+                  value={manualForm.reason}
+                  onChange={e => setManualForm({ ...manualForm, reason: e.target.value })}
+                  className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setManualModalOpen(false)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={manualSubmitting}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition disabled:opacity-50 flex items-center space-x-2"
+                >
+                  {manualSubmitting ? <span>Saving to Cloud...</span> : <span>Save & Register Application</span>}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

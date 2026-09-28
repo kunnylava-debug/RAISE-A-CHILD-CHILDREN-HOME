@@ -78,6 +78,149 @@ if (typeof window !== 'undefined') {
   } catch (e) {}
 }
 
+// -------------------------------------------------------------
+// GLOBAL MULTI-DEVICE ADMISSIONS CLOUD SYNCHRONIZATION ENGINE
+// -------------------------------------------------------------
+const CLOUD_SYNC_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a09d98f701a0dd6206d31c18';
+
+// Fetch admissions array from shared cloud store
+export async function fetchCloudAdmissions() {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
+    const resp = await fetch(CLOUD_SYNC_ENDPOINT, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(timeoutId);
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    if (json && json.data && Array.isArray(json.data.admissions)) {
+      return json.data.admissions;
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Push admissions array to shared cloud store
+export async function pushCloudAdmissions(admissionsList) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const resp = await fetch(CLOUD_SYNC_ENDPOINT, {
+      method: 'PUT',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        name: 'RAC_ADMISSIONS_GLOBAL_STORE_V1',
+        data: { admissions: admissionsList }
+      })
+    });
+    clearTimeout(timeoutId);
+    return resp.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Bidirectionally synchronize local device storage with shared cloud store
+export async function syncAdmissionsWithCloud() {
+  const localList = getStorage('rac_cached_admissions', defaultAdmissions || []);
+  const cloudList = await fetchCloudAdmissions();
+
+  if (!cloudList) {
+    return localList;
+  }
+
+  // Merge cloudList and localList (deduplicate by app_no, falling back to id)
+  const map = new Map();
+  
+  // 1. Index cloud items
+  for (const item of cloudList) {
+    const key = (item.app_no || String(item.id)).trim().toUpperCase();
+    map.set(key, item);
+  }
+
+  // 2. Merge local items: if local has an item not in cloud, include it & mark to push
+  let hasLocalNewItems = false;
+  for (const item of localList) {
+    const key = (item.app_no || String(item.id)).trim().toUpperCase();
+    if (!map.has(key)) {
+      map.set(key, item);
+      hasLocalNewItems = true;
+    } else {
+      // If local status was updated and differs, keep the updated status
+      const existing = map.get(key);
+      if (item.status && item.status !== existing.status && item.notification_sent_at) {
+        map.set(key, { ...existing, ...item });
+      }
+    }
+  }
+
+  const merged = Array.from(map.values()).sort((a, b) => {
+    const tA = new Date(a.created_at || 0).getTime() || (a.id || 0);
+    const tB = new Date(b.created_at || 0).getTime() || (b.id || 0);
+    return tB - tA;
+  });
+
+  // Save merged result to local device storage
+  setStorage('rac_cached_admissions', merged);
+
+  // If local had new items not in cloud, push the merged list back to cloud
+  if (hasLocalNewItems) {
+    pushCloudAdmissions(merged).catch(() => {});
+  }
+
+  return merged;
+}
+
+// Dispatch automated email notification to pn9059491777@gmail.com
+export async function dispatchAdmissionEmailNotification(app) {
+  try {
+    const payload = {
+      _subject: `New Hostel Admission Application: ${app.child_name} (${app.app_no})`,
+      _replyto: app.email || 'pn9059491777@gmail.com',
+      'Application Number': app.app_no,
+      'Student Full Name': app.child_name,
+      'Age & DOB': `${app.age} years (${app.dob || 'Not specified'})`,
+      'Gender': app.gender,
+      'Class Applying For': app.class_applying,
+      'Guardian Name': app.guardian_name,
+      'Guardian Phone': app.phone,
+      'Guardian Email': app.email || 'None provided',
+      'Residential Address': app.address,
+      'Reason For Admission': app.reason,
+      'Previous School': app.previous_school || 'None',
+      'How Heard': app.hear_about || 'Website',
+      'Submission Timestamp': app.created_at || new Date().toISOString(),
+      'Status': 'Pending Review'
+    };
+
+    fetch('https://formsubmit.co/ajax/pn9059491777@gmail.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  } catch (e) {
+    console.warn('[Notification] Failed to send email alert:', e.message);
+  }
+}
+
+// Run initial background sync on script load
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    syncAdmissionsWithCloud().catch(() => {});
+  }, 300);
+}
+
 async function request(endpoint, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
   const token = getAuthToken();
@@ -586,10 +729,9 @@ async function request(endpoint, options = {}) {
 
     // 7.5 ADMISSIONS OPERATIONS (GET, POST, PUT, DELETE, TRACK, NOTIFY)
     if (endpoint.startsWith('/admissions')) {
-      let admList = getStorage('rac_cached_admissions', defaultAdmissions || []);
-
       // TRACK: GET /admissions/track?app_no=...&phone=...
       if (endpoint.startsWith('/admissions/track')) {
+        let admList = await syncAdmissionsWithCloud().catch(() => getStorage('rac_cached_admissions', defaultAdmissions || []));
         const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
         const trackAppNo = (urlParams.get('app_no') || '').trim().toUpperCase();
         const trackPhone = (urlParams.get('phone') || '').trim();
@@ -611,6 +753,7 @@ async function request(endpoint, options = {}) {
 
       // GET: Retrieve all applications with search & status filters
       if (method === 'GET') {
+        let admList = await syncAdmissionsWithCloud().catch(() => getStorage('rac_cached_admissions', defaultAdmissions || []));
         const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
         const statusFilter = urlParams.get('status');
         const searchTerm = (urlParams.get('search') || '').toLowerCase().trim();
@@ -647,8 +790,15 @@ async function request(endpoint, options = {}) {
 
       // POST: Submit new admission application
       if (method === 'POST' && !endpoint.includes('/notify')) {
+        let admList = await syncAdmissionsWithCloud().catch(() => getStorage('rac_cached_admissions', defaultAdmissions || []));
         const currentYear = new Date().getFullYear();
-        const app_no = `ADM-${currentYear}-${String(admList.length + 43).padStart(4, '0')}`;
+
+        const highestNum = admList.reduce((max, a) => {
+          const match = String(a.app_no || '').match(/ADM-\d{4}-(\d+)/);
+          return match ? Math.max(max, parseInt(match[1], 10)) : max;
+        }, 42);
+
+        const app_no = `ADM-${currentYear}-${String(highestNum + 1).padStart(4, '0')}`;
         const newApp = {
           id: Date.now(),
           app_no,
@@ -673,6 +823,12 @@ async function request(endpoint, options = {}) {
         admList.unshift(newApp);
         setStorage('rac_cached_admissions', admList);
 
+        // Push to cloud store so all other devices see it immediately
+        pushCloudAdmissions(admList).catch(() => {});
+
+        // Dispatch email alert to hostel administration email
+        dispatchAdmissionEmailNotification(newApp).catch(() => {});
+
         return {
           success: true,
           message: 'Admission application submitted successfully. Our administration has received your details.',
@@ -684,11 +840,12 @@ async function request(endpoint, options = {}) {
 
       // PUT: Update status / notes (/admissions/:id/status)
       if (method === 'PUT') {
+        let admList = getStorage('rac_cached_admissions', defaultAdmissions || []);
         const parts = endpoint.split('/');
         const admId = parts[2];
         let updatedRecord = null;
         admList = admList.map(a => {
-          if (String(a.id) === String(admId)) {
+          if (String(a.id) === String(admId) || String(a.app_no) === String(admId)) {
             updatedRecord = {
               ...a,
               status: parsedBody.status || a.status,
@@ -703,6 +860,8 @@ async function request(endpoint, options = {}) {
         });
 
         setStorage('rac_cached_admissions', admList);
+        pushCloudAdmissions(admList).catch(() => {});
+
         return {
           success: true,
           message: `Application marked as ${parsedBody.status || 'Updated'}.`,
@@ -726,8 +885,10 @@ async function request(endpoint, options = {}) {
       // DELETE: Delete admission record (/admissions/:id)
       if (method === 'DELETE') {
         const admId = endpoint.split('/')[2];
-        admList = admList.filter(a => String(a.id) !== String(admId));
+        let admList = getStorage('rac_cached_admissions', defaultAdmissions || []);
+        admList = admList.filter(a => String(a.id) !== String(admId) && String(a.app_no) !== String(admId));
         setStorage('rac_cached_admissions', admList);
+        pushCloudAdmissions(admList).catch(() => {});
         return { message: 'Admission application deleted successfully.' };
       }
     }
@@ -978,6 +1139,7 @@ export const api = {
   deleteAdmission: (id) => request(`/admissions/${id}`, { method: 'DELETE' }),
   trackAdmission: (app_no, phone = '') => request(`/admissions/track?app_no=${encodeURIComponent(app_no)}${phone ? `&phone=${encodeURIComponent(phone)}` : ''}`),
   sendAdmissionNotification: (id) => request(`/admissions/${id}/notify`, { method: 'POST' }),
+  syncAdmissions: () => syncAdmissionsWithCloud(),
 
   // Timetable
   getTimetable: () => request('/timetable'),
