@@ -4,6 +4,24 @@
   "description": "A safe, caring, and supportive residential home founded by BRO.NELSON A providing quality education, balanced nutrition, and loving shelter for students and youths.",
   "icons": [
     {
+      "src": "/favicon-32x32.png",
+      "type": "image/png",
+      "sizes": "32x32",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-48x48.png",
+      "type": "image/png",
+      "sizes": "48x48",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-96x96.png",
+      "type": "image/png",
+      "sizes": "96x96",
+      "purpose": "any"
+    },
+    {
       "src": "/favicon-192x192.png",
       "type": "image/png",
       "sizes": "192x192",

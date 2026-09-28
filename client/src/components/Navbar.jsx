@@ -75,6 +75,7 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
                 src={settings?.logo_url || "/logo.png"} 
                 alt="RISE A CHILD Logo" 
                 className="w-full h-full object-contain" 
+                onError={(e) => { e.currentTarget.src = "/logo.png"; }}
               />
             </div>
             <div>

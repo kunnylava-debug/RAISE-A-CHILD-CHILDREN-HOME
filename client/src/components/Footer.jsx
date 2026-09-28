@@ -33,6 +33,7 @@ export default function Footer({ setActiveTab, settings }) {
                 src={settings?.logo_url || "/logo.png"} 
                 alt={hostelName} 
                 className="w-full h-full object-contain"
+                onError={(e) => { e.currentTarget.src = "/logo.png"; }}
               />
             </div>
             <div>
