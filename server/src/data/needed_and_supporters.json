@@ -1,4 +1,102 @@
 {
-  "needed_items": [],
-  "supporters": []
+  "needed_items": [
+    {
+      "id": 1,
+      "item_name": "Rice & Monthly Kitchen Provisions",
+      "category": "Groceries & Nutrition",
+      "quantity_needed": 25,
+      "quantity_received": 0,
+      "estimated_price": 35000,
+      "urgency": "High",
+      "description": "25 kg bags of premium rice, pulses, cooking oil, and nutritious lentils for resident children's daily meals."
+    },
+    {
+      "id": 2,
+      "item_name": "Dormitory Bunk Beds & Mattresses",
+      "category": "Dormitory & Living",
+      "quantity_needed": 10,
+      "quantity_received": 0,
+      "estimated_price": 45000,
+      "urgency": "High",
+      "description": "Sturdy steel double bunk beds with supportive high-density foam mattresses and clean bedsheets."
+    },
+    {
+      "id": 3,
+      "item_name": "School Uniforms & Study Shoes",
+      "category": "Education & Attire",
+      "quantity_needed": 35,
+      "quantity_received": 0,
+      "estimated_price": 28000,
+      "urgency": "Needed",
+      "description": "Complete sets of tailored school uniforms, white socks, and durable leather school shoes for students."
+    },
+    {
+      "id": 4,
+      "item_name": "Study Desks & Ergonomic Wooden Chairs",
+      "category": "Education",
+      "quantity_needed": 15,
+      "quantity_received": 0,
+      "estimated_price": 30000,
+      "urgency": "Needed",
+      "description": "Spacious wooden study desks and ergonomic study chairs for daily evening homework and tuition hours."
+    },
+    {
+      "id": 5,
+      "item_name": "First Aid & Healthcare Medical Kits",
+      "category": "Health & Medical",
+      "quantity_needed": 8,
+      "quantity_received": 0,
+      "estimated_price": 12000,
+      "urgency": "High",
+      "description": "Pediatric emergency medicines, digital thermometers, antiseptic lotions, bandages, and hygiene kits."
+    },
+    {
+      "id": 6,
+      "item_name": "Library Books & Science Activity Kits",
+      "category": "Education",
+      "quantity_needed": 20,
+      "quantity_received": 0,
+      "estimated_price": 15000,
+      "urgency": "Needed",
+      "description": "Children's illustrated encyclopedias, bilingual storybooks, dictionaries, and practical science learning kits."
+    }
+  ],
+  "supporters": [
+    {
+      "id": 1,
+      "name": "Dr. P. Sundaram, MBBS",
+      "occupation": "Senior Pediatrician",
+      "support_type": "Regular Medical Checkups & Child Nutrition",
+      "photo_url": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80",
+      "message": "It is a true blessing to monitor the health and wellbeing of these wonderful, energetic children at Rise a Child.",
+      "date_supported": "January 2026"
+    },
+    {
+      "id": 2,
+      "name": "K. Revathi Devi",
+      "occupation": "Software Architect",
+      "support_type": "Annual Education & Uniform Sponsorship",
+      "photo_url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80",
+      "message": "Supporting their education gives every child the wings to achieve their greatest dreams. Proud to stand with Bro. Nelson's mission.",
+      "date_supported": "February 2026"
+    },
+    {
+      "id": 3,
+      "name": "M. Samuel Raj",
+      "occupation": "Civil Engineer & Entrepreneur",
+      "support_type": "Dormitory Furniture & Living Infrastructure",
+      "photo_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+      "message": "Every child deserves a warm, safe, and dignified living space. Seeing their comfortable rooms brings immense joy.",
+      "date_supported": "March 2026"
+    },
+    {
+      "id": 4,
+      "name": "Grace V. David",
+      "occupation": "Senior High School Principal",
+      "support_type": "Evening Tutoring & Academic Mentorship",
+      "photo_url": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80",
+      "message": "The discipline and eagerness to learn in these children is truly inspiring. Education is the greatest gift we can offer.",
+      "date_supported": "March 2026"
+    }
+  ]
 }

@@ -456,22 +456,29 @@ export async function syncDonationsWithCloud() {
   return merged;
 }
 
-// Dispatch automated email notification for newly recorded donation to pn9059491777@gmail.com
+// Dispatch automated email notification for newly recorded donation or pledge to pn9059491777@gmail.com
 export async function dispatchDonationEmailNotification(donation) {
   try {
+    const isPledge = donation.entry_type === 'Pledge' || String(donation.status || '').toLowerCase().includes('pledge');
     const payload = {
-      _subject: `New Online Donation Received: ₹${donation.amount} from ${donation.donor_name}`,
+      _subject: isPledge 
+        ? `[PLEDGE COMMITMENT] New Pledge: ${donation.quantity_donated || 1} units of ${donation.linked_need_title || 'Materials'} from ${donation.donor_name}`
+        : `[DIRECT DONATION] New Online Donation: ₹${donation.amount} from ${donation.donor_name}`,
       _replyto: donation.donor_email || 'pn9059491777@gmail.com',
+      'Record Type': isPledge ? 'MATERIAL / FINANCIAL PLEDGE (PENDING ADMIN CALL)' : 'DIRECT DONATION (CONFIRMED)',
       'Donor Full Name': donation.donor_name,
       'Donor Contact Phone': donation.donor_phone,
       'Donor Email': donation.donor_email || 'Not provided',
-      'Donation Amount (INR)': `₹${donation.amount}`,
-      'Payment Method': donation.payment_method || 'UPI',
-      'Receipt Number': donation.receipt_no || `REC-${donation.id}`,
+      'Contribution Amount (INR)': donation.amount ? `₹${donation.amount}` : 'In-kind item pledge',
+      'Units Pledged/Donated': donation.quantity_donated || 1,
+      'Payment Method': donation.payment_method || (isPledge ? 'Pledge Commitment' : 'UPI'),
+      'Reference / Receipt Number': donation.receipt_no || (isPledge ? `PLG-${donation.id}` : `REC-${donation.id}`),
       'Sponsored Need': donation.linked_need_title || 'General Student Care',
       'Dedication / Notes': donation.notes || 'General Support',
-      'Date & Time': donation.created_at || new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-      'Action Required': `Please call donor at ${donation.donor_phone} to verify and convey heartfelt gratitude.`
+      'Submission Date & Time': donation.created_at || new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+      'Action Required': isPledge 
+        ? `Please call donor at ${donation.donor_phone} to verify and coordinate delivery/payment. Once received, click "Confirm Pledge" in the Admin portal to increment received inventory.`
+        : `Please call donor at ${donation.donor_phone} to verify and convey heartfelt gratitude.`
     };
 
     await fetch('https://formsubmit.co/ajax/pn9059491777@gmail.com', {
@@ -886,7 +893,11 @@ async function request(endpoint, options = {}) {
 
     // 6.5 NEEDED ITEMS OPERATIONS
     if (endpoint.startsWith('/needed')) {
-      let neededList = getStorage('rac_cached_needed', defaultNeededAndSupporters.needed_items || []);
+      let neededList = getStorage('rac_cached_needed', []);
+      if (!Array.isArray(neededList) || neededList.length === 0) {
+        neededList = [...(defaultNeededAndSupporters.needed_items || [])];
+        setStorage('rac_cached_needed', neededList);
+      }
       if (method === 'GET') return neededList;
       if (method === 'POST') {
         const newItem = {
@@ -1002,8 +1013,22 @@ async function request(endpoint, options = {}) {
     // Other read operations
     if (method === 'GET') {
       if (endpoint === '/menu') return defaultTimetableAndMenu.menu || [];
-      if (endpoint === '/needed') return getStorage('rac_cached_needed', defaultNeededAndSupporters.needed_items || []);
-      if (endpoint === '/supporters') return getStorage('rac_cached_supporters', defaultNeededAndSupporters.supporters || []);
+      if (endpoint === '/needed') {
+        let list = getStorage('rac_cached_needed', []);
+        if (!Array.isArray(list) || list.length === 0) {
+          list = [...(defaultNeededAndSupporters.needed_items || [])];
+          setStorage('rac_cached_needed', list);
+        }
+        return list;
+      }
+      if (endpoint === '/supporters') {
+        let supps = getStorage('rac_cached_supporters', []);
+        if (!Array.isArray(supps) || supps.length === 0) {
+          supps = [...(defaultNeededAndSupporters.supporters || [])];
+          setStorage('rac_cached_supporters', supps);
+        }
+        return supps;
+      }
       if (endpoint === '/licence') {
         const cached = getStorage('rac_cached_licence', null);
         if (cached && (cached.licence_no === 'JJ-ACT-2015-CERT-AP-2024-889' || cached.licence_no === 'WB-CW-2022/4190-R')) {
@@ -1013,28 +1038,163 @@ async function request(endpoint, options = {}) {
       }
     }
 
-    // 6.7 DONATIONS OPERATIONS (GET, POST, DELETE)
+    // 6.7 DONATIONS & PLEDGES OPERATIONS (GET, POST, PUT /confirm, PUT /cancel, DELETE)
     if (endpoint.startsWith('/donations')) {
       if (method === 'GET') {
         return await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
       }
 
+      // CONFIRM PLEDGE: PUT /donations/:id/confirm
+      if (method === 'PUT' && endpoint.endsWith('/confirm')) {
+        const donId = endpoint.split('/')[2];
+        let donList = await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+        let neededList = getStorage('rac_cached_needed', []);
+        if (!Array.isArray(neededList) || neededList.length === 0) {
+          neededList = [...(defaultNeededAndSupporters.needed_items || [])];
+        }
+
+        let updatedDonation = null;
+        let updatedNeed = null;
+
+        donList = donList.map(d => {
+          if (String(d.id) === String(donId) || String(d.receipt_no) === String(donId) || String(d._cloud_id) === String(donId)) {
+            const wasConfirmed = d.status === 'Confirmed';
+            updatedDonation = { 
+              ...d, 
+              status: 'Confirmed', 
+              confirmed_at: new Date().toISOString() 
+            };
+
+            // Only add to received if it was not already confirmed
+            if (!wasConfirmed) {
+              const qtyToAdd = Number(d.quantity_donated) || 1;
+              let nIdx = -1;
+              if (d.needed_item_id) {
+                nIdx = neededList.findIndex(n => String(n.id) === String(d.needed_item_id));
+              }
+              if (nIdx === -1 && d.linked_need_title) {
+                const titleLower = d.linked_need_title.toLowerCase().trim();
+                nIdx = neededList.findIndex(n => n.item_name && n.item_name.toLowerCase().trim() === titleLower);
+              }
+              if (nIdx !== -1) {
+                const item = neededList[nIdx];
+                item.quantity_received = (Number(item.quantity_received) || 0) + qtyToAdd;
+                if (item.quantity_received >= item.quantity_needed) {
+                  item.is_fulfilled = true;
+                }
+                neededList[nIdx] = item;
+                updatedNeed = item;
+              }
+            }
+            return updatedDonation;
+          }
+          return d;
+        });
+
+        setStorage('rac_cached_donations', donList);
+        setStorage('rac_cached_needed', neededList);
+
+        if (updatedDonation) {
+          createCloudDonation(updatedDonation).catch(() => {});
+        }
+
+        return {
+          success: true,
+          message: updatedNeed 
+            ? `Pledge confirmed! Added +${updatedDonation.quantity_donated || 1} units to "${updatedNeed.item_name}" (${updatedNeed.quantity_received}/${updatedNeed.quantity_needed} received).`
+            : 'Pledge marked as confirmed.',
+          donation: updatedDonation,
+          updated_need: updatedNeed
+        };
+      }
+
+      // CANCEL PLEDGE: PUT /donations/:id/cancel
+      if (method === 'PUT' && endpoint.endsWith('/cancel')) {
+        const donId = endpoint.split('/')[2];
+        let donList = await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+        let neededList = getStorage('rac_cached_needed', []);
+        if (!Array.isArray(neededList) || neededList.length === 0) {
+          neededList = [...(defaultNeededAndSupporters.needed_items || [])];
+        }
+
+        let updatedDonation = null;
+        let updatedNeed = null;
+
+        donList = donList.map(d => {
+          if (String(d.id) === String(donId) || String(d.receipt_no) === String(donId) || String(d._cloud_id) === String(donId)) {
+            const wasConfirmed = d.status === 'Confirmed';
+            updatedDonation = { 
+              ...d, 
+              status: 'Cancelled', 
+              cancelled_at: new Date().toISOString() 
+            };
+
+            // If it was previously confirmed, decrease/revert the received count
+            if (wasConfirmed) {
+              const qtyToSubtract = Number(d.quantity_donated) || 1;
+              let nIdx = -1;
+              if (d.needed_item_id) {
+                nIdx = neededList.findIndex(n => String(n.id) === String(d.needed_item_id));
+              }
+              if (nIdx === -1 && d.linked_need_title) {
+                const titleLower = d.linked_need_title.toLowerCase().trim();
+                nIdx = neededList.findIndex(n => n.item_name && n.item_name.toLowerCase().trim() === titleLower);
+              }
+              if (nIdx !== -1) {
+                const item = neededList[nIdx];
+                item.quantity_received = Math.max(0, (Number(item.quantity_received) || 0) - qtyToSubtract);
+                if (item.quantity_received < item.quantity_needed) {
+                  item.is_fulfilled = false;
+                }
+                neededList[nIdx] = item;
+                updatedNeed = item;
+              }
+            }
+            return updatedDonation;
+          }
+          return d;
+        });
+
+        setStorage('rac_cached_donations', donList);
+        setStorage('rac_cached_needed', neededList);
+
+        return {
+          success: true,
+          message: updatedNeed 
+            ? `Pledge cancelled. Received count on "${updatedNeed.item_name}" reduced to ${updatedNeed.quantity_received}/${updatedNeed.quantity_needed}.`
+            : 'Pledge cancelled.',
+          donation: updatedDonation,
+          updated_need: updatedNeed
+        };
+      }
+
+      // POST: Record new Donation or Pledge
       if (method === 'POST') {
         let donList = await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
         const currentYear = new Date().getFullYear();
         const highestNum = donList.reduce((max, d) => {
-          const match = String(d.receipt_no || '').match(/REC-\d{4}-(\d+)/);
+          const match = String(d.receipt_no || '').match(/(?:REC|PLG)-\d{4}-(\d+)/);
           return match ? Math.max(max, parseInt(match[1], 10)) : max;
         }, 100);
 
-        const receipt_no = `REC-${currentYear}-${String(highestNum + 1).padStart(4, '0')}`;
+        const isPledge = parsedBody.entry_type === 'Pledge' || String(parsedBody.status || '').toLowerCase().includes('pledge');
+        const entry_type = isPledge ? 'Pledge' : 'Direct Donation';
+        const status = isPledge ? 'Pledged (Pending Admin Confirmation)' : 'Confirmed';
+
+        const receipt_no = isPledge 
+          ? `PLG-${currentYear}-${String(highestNum + 1).padStart(4, '0')}`
+          : `REC-${currentYear}-${String(highestNum + 1).padStart(4, '0')}`;
         
         let linkedNeedTitle = parsedBody.linked_need_title || null;
         let linkedNeedTotal = null;
         let linkedNeedCurrent = null;
         let updatedNeed = null;
 
-        let neededList = getStorage('rac_cached_needed', defaultNeededAndSupporters.needed_items || []);
+        let neededList = getStorage('rac_cached_needed', []);
+        if (!Array.isArray(neededList) || neededList.length === 0) {
+          neededList = [...(defaultNeededAndSupporters.needed_items || [])];
+        }
+
         let matchedIdx = -1;
         if (parsedBody.needed_item_id) {
           matchedIdx = neededList.findIndex(n => String(n.id) === String(parsedBody.needed_item_id));
@@ -1044,39 +1204,47 @@ async function request(endpoint, options = {}) {
           if (match) {
             const needName = match[1].trim().toLowerCase();
             matchedIdx = neededList.findIndex(n => n.item_name && n.item_name.toLowerCase().trim() === needName);
-            if (matchedIdx !== -1) linkedNeedTitle = neededList[matchedIdx].item_name;
           }
         }
 
         if (matchedIdx !== -1) {
           const item = neededList[matchedIdx];
-          const addedQty = Number(parsedBody.quantity_donated) || 1;
-          item.quantity_received = (Number(item.quantity_received) || 0) + addedQty;
-          if (item.quantity_received >= item.quantity_needed) {
-            item.is_fulfilled = true;
-          }
-          neededList[matchedIdx] = item;
-          setStorage('rac_cached_needed', neededList);
           linkedNeedTitle = item.item_name;
           linkedNeedTotal = item.quantity_needed;
+
+          // CRITICAL USER REQUIREMENT:
+          // If pledge: DO NOT CHANGE RECEIVED.
+          // If direct donation: DIRECTLY CHANGE RECEIVED SECTION!
+          if (!isPledge) {
+            const addedQty = Number(parsedBody.quantity_donated) || 1;
+            item.quantity_received = (Number(item.quantity_received) || 0) + addedQty;
+            if (item.quantity_received >= item.quantity_needed) {
+              item.is_fulfilled = true;
+            }
+            neededList[matchedIdx] = item;
+            setStorage('rac_cached_needed', neededList);
+            updatedNeed = item;
+          }
+
           linkedNeedCurrent = item.quantity_received;
-          updatedNeed = item;
         }
 
         const newDonation = {
           id: Date.now(),
           receipt_no,
+          entry_type,
+          status,
           donor_name: (parsedBody.donor_name || 'Anonymous Well-Wisher').trim(),
           donor_phone: (parsedBody.donor_phone || '').trim(),
           donor_email: (parsedBody.donor_email || '').trim(),
           amount: Number(parsedBody.amount) || 0,
-          payment_method: parsedBody.payment_method || 'UPI',
+          payment_method: parsedBody.payment_method || (isPledge ? 'Pledge Commitment' : 'UPI'),
           notes: parsedBody.notes || '',
           needed_item_id: parsedBody.needed_item_id || null,
           linked_need_title: linkedNeedTitle || parsedBody.linked_need_title || null,
           linked_need_total: linkedNeedTotal || 10,
-          linked_need_current: linkedNeedCurrent || (Number(parsedBody.quantity_donated) || 1),
-          quantity_donated: parsedBody.quantity_donated ? Number(parsedBody.quantity_donated) : null,
+          linked_need_current: linkedNeedCurrent || 0,
+          quantity_donated: parsedBody.quantity_donated ? Number(parsedBody.quantity_donated) : 1,
           created_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
         };
 
@@ -1093,17 +1261,46 @@ async function request(endpoint, options = {}) {
           success: true,
           receipt: newDonation,
           updated_need: updatedNeed,
-          message: 'Thank you! Your donation was recorded.'
+          message: isPledge
+            ? 'Thank you! Your pledge commitment was registered. Our administrator will contact you soon.'
+            : (updatedNeed 
+                ? `Thank you! Your donation was matched to "${updatedNeed.item_name}" (${updatedNeed.quantity_received}/${updatedNeed.quantity_needed} received). Need automatically updated!`
+                : 'Thank you! Your donation was recorded.')
         };
       }
 
+      // DELETE: Delete donation record
       if (method === 'DELETE') {
         const donId = endpoint.split('/')[2];
         let donList = getStorage('rac_cached_donations', []);
+        let neededList = getStorage('rac_cached_needed', []);
+
+        const target = donList.find(d => String(d.id) === String(donId) || String(d.receipt_no) === String(donId) || String(d._cloud_id) === String(donId));
+        
+        // If deleting a confirmed record linked to a need item, decrease received count accordingly
+        if (target && target.status === 'Confirmed' && target.quantity_donated && Array.isArray(neededList)) {
+          const qtyToDeduct = Number(target.quantity_donated) || 1;
+          let nIdx = -1;
+          if (target.needed_item_id) {
+            nIdx = neededList.findIndex(n => String(n.id) === String(target.needed_item_id));
+          }
+          if (nIdx === -1 && target.linked_need_title) {
+            const titleLower = target.linked_need_title.toLowerCase().trim();
+            nIdx = neededList.findIndex(n => n.item_name && n.item_name.toLowerCase().trim() === titleLower);
+          }
+          if (nIdx !== -1) {
+            neededList[nIdx].quantity_received = Math.max(0, (Number(neededList[nIdx].quantity_received) || 0) - qtyToDeduct);
+            if (neededList[nIdx].quantity_received < neededList[nIdx].quantity_needed) {
+              neededList[nIdx].is_fulfilled = false;
+            }
+            setStorage('rac_cached_needed', neededList);
+          }
+        }
+
         donList = donList.filter(d => String(d.id) !== String(donId) && String(d.receipt_no) !== String(donId) && String(d._cloud_id) !== String(donId));
         setStorage('rac_cached_donations', donList);
         deleteCloudDonation(donId).catch(() => {});
-        return { message: 'Donation record removed successfully.' };
+        return { message: 'Record removed successfully.' };
       }
     }
 
@@ -1572,11 +1769,13 @@ export const api = {
   updateSupporter: (id, data) => request(`/supporters/${id}`, { method: 'PUT', body: data }),
   deleteSupporter: (id) => request(`/supporters/${id}`, { method: 'DELETE' }),
 
-  // Donations
+  // Donations & Pledges
   recordDonation: (data) => request('/donations', { method: 'POST', body: data }),
   createDonation: (data) => request('/donations', { method: 'POST', body: data }),
   getDonations: () => request('/donations'),
   deleteDonation: (id) => request(`/donations/${id}`, { method: 'DELETE' }),
+  confirmPledge: (id) => request(`/donations/${id}/confirm`, { method: 'PUT' }),
+  cancelPledge: (id) => request(`/donations/${id}/cancel`, { method: 'PUT' }),
   syncDonations: () => syncDonationsWithCloud(),
 
   // File Upload with instant Base64 fallback for 100% reliable mobile uploads
