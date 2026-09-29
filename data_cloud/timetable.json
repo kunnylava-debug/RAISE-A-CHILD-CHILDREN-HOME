@@ -1,0 +1,100 @@
+[
+  {
+    "time_slot": "05:30 AM",
+    "activity": "Wake Up & Morning Bells",
+    "location_or_notes": "Dormitories - Bed making & hygiene",
+    "icon_name": "Bell",
+    "order_num": 1
+  },
+  {
+    "time_slot": "06:00 AM - 06:45 AM",
+    "activity": "Morning Yoga & Physical Exercise",
+    "location_or_notes": "Open Sports Ground with Physical Trainer",
+    "icon_name": "Activity",
+    "order_num": 2
+  },
+  {
+    "time_slot": "06:45 AM - 07:30 AM",
+    "activity": "Bathing & Fresh Up",
+    "location_or_notes": "Hostel Washrooms (Solar hot water available)",
+    "icon_name": "Droplets",
+    "order_num": 3
+  },
+  {
+    "time_slot": "07:30 AM - 08:15 AM",
+    "activity": "Wholesome Nutritious Breakfast",
+    "location_or_notes": "Dining Hall - Milk, boiled eggs/sprouts, porridge",
+    "icon_name": "Coffee",
+    "order_num": 4
+  },
+  {
+    "time_slot": "08:15 AM - 08:30 AM",
+    "activity": "Assembly & School Departure",
+    "location_or_notes": "Escorted bus / walk to local school campus",
+    "icon_name": "Bus",
+    "order_num": 5
+  },
+  {
+    "time_slot": "09:00 AM - 02:00 PM",
+    "activity": "Formal Schooling & Classes",
+    "location_or_notes": "Partner Schools",
+    "icon_name": "BookOpen",
+    "order_num": 6
+  },
+  {
+    "time_slot": "02:15 PM - 03:00 PM",
+    "activity": "Return to Hostel & Hot Lunch",
+    "location_or_notes": "Dining Hall - Fresh rice, dal, sabzi, fish/curd",
+    "icon_name": "Utensils",
+    "order_num": 7
+  },
+  {
+    "time_slot": "03:00 PM - 03:45 PM",
+    "activity": "Rest & Quiet Reading Time",
+    "location_or_notes": "Hostel Dormitories / Library",
+    "icon_name": "Moon",
+    "order_num": 8
+  },
+  {
+    "time_slot": "03:45 PM - 05:00 PM",
+    "activity": "Remedial Tutoring & Homework Coaching",
+    "location_or_notes": "Study Hall with Resident Tutors",
+    "icon_name": "GraduationCap",
+    "order_num": 9
+  },
+  {
+    "time_slot": "05:00 PM - 06:15 PM",
+    "activity": "Sports, Playground Games & Refreshment",
+    "location_or_notes": "Outdoor Ground - Snacks, seasonal fruits & games",
+    "icon_name": "Smile",
+    "order_num": 10
+  },
+  {
+    "time_slot": "06:30 PM - 07:00 PM",
+    "activity": "Evening Prayer, Meditation & News",
+    "location_or_notes": "Central Hall - Bhajan, inspiring thoughts & reflection",
+    "icon_name": "Sun",
+    "order_num": 11
+  },
+  {
+    "time_slot": "07:00 PM - 08:30 PM",
+    "activity": "Self-Study & Academic Practice",
+    "location_or_notes": "Individual study desks in Study Hall",
+    "icon_name": "Edit",
+    "order_num": 12
+  },
+  {
+    "time_slot": "08:30 PM - 09:15 PM",
+    "activity": "Wholesome Dinner",
+    "location_or_notes": "Dining Hall - Roti, seasonal sabzi, dal, warm milk",
+    "icon_name": "Utensils",
+    "order_num": 13
+  },
+  {
+    "time_slot": "09:30 PM",
+    "activity": "Lights Out & Restful Sleep",
+    "location_or_notes": "Dormitories - Quiet restful sleep",
+    "icon_name": "Bed",
+    "order_num": 14
+  }
+]
