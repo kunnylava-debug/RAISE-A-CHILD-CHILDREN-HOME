@@ -99,6 +99,38 @@
       "destination": "/api/admissions.js"
     },
     {
+      "source": "/api/children/:path*",
+      "destination": "/api/children.js"
+    },
+    {
+      "source": "/api/children",
+      "destination": "/api/children.js"
+    },
+    {
+      "source": "/api/staff/:path*",
+      "destination": "/api/staff.js"
+    },
+    {
+      "source": "/api/staff",
+      "destination": "/api/staff.js"
+    },
+    {
+      "source": "/api/menu/:path*",
+      "destination": "/api/menu.js"
+    },
+    {
+      "source": "/api/menu",
+      "destination": "/api/menu.js"
+    },
+    {
+      "source": "/api/timetable/:path*",
+      "destination": "/api/timetable.js"
+    },
+    {
+      "source": "/api/timetable",
+      "destination": "/api/timetable.js"
+    },
+    {
       "source": "/((?!api/|.*\\.(?:ico|png|jpg|jpeg|svg|webp|json|txt|xml|pdf|js|css|map|woff|woff2|ttf)$).*)",
       "destination": "/index.html"
     }

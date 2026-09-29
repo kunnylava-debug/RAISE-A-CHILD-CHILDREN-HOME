@@ -51,20 +51,40 @@ export default function Children({ onShowToast }) {
 
   const { adminUser } = useAdminAuth();
 
-  // Multi-Device Real-Time Auto-Refresh
+  // Multi-Device Real-Time Auto-Refresh across Mobile & Desktop
   useEffect(() => {
     const unsubscribe = subscribeToRealtimeSync((event) => {
       if (event.type === 'CHILDREN_UPDATED') {
         console.log('[REAL-TIME AUTO-REFRESH] Children data updated, refreshing...');
-        fetchChildren(page);
+        fetchChildren(page, false);
         loadSheetInfo();
       }
     });
-    return unsubscribe;
+
+    // Active cross-device polling interval (every 4 seconds)
+    const interval = setInterval(() => {
+      fetchChildren(page, false);
+    }, 4000);
+
+    // Instant refresh when user switches tabs or unlocks their phone screen
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        fetchChildren(page, false);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   }, [page, search, classFilter, genderFilter]);
 
-  const fetchChildren = (currentPage = page) => {
-    setLoading(true);
+  const fetchChildren = (currentPage = page, showLoading = true) => {
+    if (showLoading) setLoading(true);
     api.getChildren({
       page: currentPage,
       limit: 12,
@@ -75,9 +95,13 @@ export default function Children({ onShowToast }) {
       .then(setChildrenData)
       .catch(err => {
         console.error(err);
-        onShowToast?.({ type: 'error', message: 'Failed to load children records' });
+        if (showLoading) {
+          onShowToast?.({ type: 'error', message: 'Failed to load children records' });
+        }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (showLoading) setLoading(false);
+      });
   };
 
   const loadSheetInfo = () => {

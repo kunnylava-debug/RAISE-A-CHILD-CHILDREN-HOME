@@ -16,25 +16,49 @@ export default function Staff({ onShowToast }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const { adminUser } = useAdminAuth();
 
-  const fetchStaff = () => {
-    setLoading(true);
+  const fetchStaff = (showLoading = true) => {
+    if (showLoading && staffList.length === 0) setLoading(true);
     api.getStaff()
       .then(setStaffList)
       .catch(err => {
         console.error(err);
-        onShowToast?.({ type: 'error', message: 'Failed to load staff list' });
+        if (showLoading) {
+          onShowToast?.({ type: 'error', message: 'Failed to load staff list' });
+        }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (showLoading) setLoading(false);
+      });
   };
 
   useEffect(() => {
-    fetchStaff();
+    fetchStaff(true);
     const unsubscribe = subscribeToRealtimeSync((event) => {
       if (event.type === 'STAFF_UPDATED') {
-        fetchStaff();
+        fetchStaff(false);
       }
     });
-    return unsubscribe;
+
+    // Active cross-device polling interval (every 4 seconds)
+    const interval = setInterval(() => {
+      fetchStaff(false);
+    }, 4000);
+
+    // Instant refresh when user switches tabs or unlocks phone screen
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        fetchStaff(false);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   }, []);
 
   const handleSaveStaff = async (e) => {
