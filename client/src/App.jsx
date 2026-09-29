@@ -165,7 +165,7 @@ export default function App() {
         : `#${tabId}`;
       window.history.pushState(null, '', newUrl);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleAcceptRestriction = () => {
@@ -178,7 +178,7 @@ export default function App() {
         window.history.pushState(null, '', `#${pendingTab}`);
       }
       setPendingTab(null);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'instant' });
     }
     setToast({
       type: 'success',

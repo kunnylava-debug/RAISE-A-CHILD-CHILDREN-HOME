@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Utensils, Coffee, Sun, Moon, Edit3, X, CheckCircle2, 
   Apple, Plus, Calendar, Sparkles, Clock, Trash2, 
@@ -8,8 +8,18 @@ import { api, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function Menu({ onShowToast }) {
-  const [weeklyMenu, setWeeklyMenu] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Instant cache hydration: Render immediately from localStorage if available (0ms lag)
+  const [weeklyMenu, setWeeklyMenu] = useState(() => {
+    try {
+      const cached = localStorage.getItem('rac_cached_menu');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
+  const [loading, setLoading] = useState(() => weeklyMenu.length === 0);
   const [selectedDayFilter, setSelectedDayFilter] = useState('all'); // 'all' | 'Monday' | 'Tuesday' | ...
   const [editingDay, setEditingDay] = useState(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -31,8 +41,9 @@ export default function Menu({ onShowToast }) {
 
   const standardDaysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  const fetchMenu = () => {
-    setLoading(true);
+  // Stale-While-Revalidate: Fetch latest menu without blocking UI
+  const fetchMenu = useCallback((showLoading = false) => {
+    if (showLoading && weeklyMenu.length === 0) setLoading(true);
     api.getMenu()
       .then((data) => {
         const list = Array.isArray(data) ? data : [];
@@ -46,20 +57,25 @@ export default function Menu({ onShowToast }) {
           return (a.id || 0) - (b.id || 0);
         });
         setWeeklyMenu(sorted);
+        try {
+          localStorage.setItem('rac_cached_menu', JSON.stringify(sorted));
+        } catch (e) {}
       })
       .catch((err) => {
         console.error(err);
-        onShowToast?.({ type: 'error', message: 'Failed to load food timetable: ' + err.message });
+        if (weeklyMenu.length === 0) {
+          onShowToast?.({ type: 'error', message: 'Failed to load food timetable: ' + err.message });
+        }
       })
       .finally(() => setLoading(false));
-  };
+  }, [weeklyMenu.length, onShowToast]);
 
   useEffect(() => {
-    fetchMenu();
+    fetchMenu(weeklyMenu.length === 0);
     const unsubscribe = subscribeToRealtimeSync((event) => {
       if (event.type === 'MENU_UPDATED') {
         console.log('[REAL-TIME SYNC] Food timetable updated, reloading...');
-        fetchMenu();
+        fetchMenu(false);
       }
     });
     return unsubscribe;
@@ -80,7 +96,7 @@ export default function Menu({ onShowToast }) {
         message: `${editingDay.day_of_week} menu schedule has been updated successfully.` 
       });
       setEditingDay(null);
-      fetchMenu();
+      fetchMenu(false);
     } catch (err) {
       onShowToast?.({ type: 'error', message: err.message || 'Failed to update day menu' });
     } finally {
@@ -109,7 +125,7 @@ export default function Menu({ onShowToast }) {
       });
       setAddModalOpen(false);
       setNewDayForm(initialNewDay);
-      fetchMenu();
+      fetchMenu(false);
     } catch (err) {
       onShowToast?.({ type: 'error', message: err.message || 'Failed to add day to food timetable' });
     } finally {
@@ -124,18 +140,21 @@ export default function Menu({ onShowToast }) {
         await api.deleteMenuDay(id);
       }
       onShowToast?.({ type: 'success', message: `${dayName} removed from food timetable.` });
-      fetchMenu();
+      fetchMenu(false);
     } catch (err) {
       onShowToast?.({ type: 'error', message: err.message || 'Failed to delete day' });
     }
   };
 
-  // Filter items according to selected day filter
-  const displayedMenu = selectedDayFilter === 'all'
-    ? weeklyMenu
-    : weeklyMenu.filter(m => m.day_of_week.toLowerCase() === selectedDayFilter.toLowerCase());
+  // Memoized filter items according to selected day filter
+  const displayedMenu = useMemo(() => {
+    if (selectedDayFilter === 'all') return weeklyMenu;
+    return weeklyMenu.filter(m => (m.day_of_week || '').toLowerCase() === selectedDayFilter.toLowerCase());
+  }, [weeklyMenu, selectedDayFilter]);
 
-  const todayMenu = weeklyMenu.find(m => m.day_of_week.toLowerCase() === todayName.toLowerCase());
+  const todayMenu = useMemo(() => {
+    return weeklyMenu.find(m => (m.day_of_week || '').toLowerCase() === todayName.toLowerCase());
+  }, [weeklyMenu, todayName]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">

@@ -1,16 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Clock, Plus, Edit3, Trash2, ArrowUp, ArrowDown, X, 
   Check, Bell, Activity, Droplets, Coffee, Bus, 
   BookOpen, Utensils, Moon, GraduationCap, Smile, 
   Sun, Edit, Bed, Sparkles, Save, RefreshCw
 } from 'lucide-react';
-import { api } from '../services/api';
+import { api, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function TimeTable({ onShowToast }) {
-  const [schedule, setSchedule] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Instant cache hydration: Render immediately from localStorage if available (0ms lag)
+  const [schedule, setSchedule] = useState(() => {
+    try {
+      const cached = localStorage.getItem('rac_cached_timetable');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
+  const [loading, setLoading] = useState(() => schedule.length === 0);
   const [filterMode, setFilterMode] = useState('all'); // 'all' | 'am' | 'pm'
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -43,21 +53,35 @@ export default function TimeTable({ onShowToast }) {
     return iconMap[name] || Clock;
   };
 
-  const fetchSchedule = async () => {
+  // Stale-While-Revalidate: fetch in background without flashing skeleton if data exists
+  const fetchSchedule = useCallback(async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading && schedule.length === 0) setLoading(true);
       const data = await api.getTimetable();
-      setSchedule(Array.isArray(data) ? data : []);
+      if (Array.isArray(data)) {
+        setSchedule(data);
+        try {
+          localStorage.setItem('rac_cached_timetable', JSON.stringify(data));
+        } catch (e) {}
+      }
     } catch (err) {
       console.error(err);
-      onShowToast?.({ type: 'error', message: 'Failed to load timetable: ' + err.message });
+      if (schedule.length === 0) {
+        onShowToast?.({ type: 'error', message: 'Failed to load timetable: ' + err.message });
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [schedule.length, onShowToast]);
 
   useEffect(() => {
-    fetchSchedule();
+    fetchSchedule(schedule.length === 0);
+    const unsubscribe = subscribeToRealtimeSync((event) => {
+      if (event.type === 'TIMETABLE_UPDATED') {
+        fetchSchedule(false);
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const handleOpenAdd = () => {
@@ -102,7 +126,7 @@ export default function TimeTable({ onShowToast }) {
       }
       setEditModalOpen(false);
       setCurrentRow(null);
-      fetchSchedule();
+      fetchSchedule(false);
     } catch (err) {
       onShowToast?.({ type: 'error', message: err.message });
     } finally {
@@ -112,17 +136,34 @@ export default function TimeTable({ onShowToast }) {
 
   const handleDeleteRow = async (id, activity) => {
     if (!window.confirm(`Remove "${activity || 'this activity'}" from the schedule?`)) return;
+    const previous = [...schedule];
+    const optimistic = schedule.filter(s => s.id !== id);
+    setSchedule(optimistic);
+    try {
+      localStorage.setItem('rac_cached_timetable', JSON.stringify(optimistic));
+    } catch (e) {}
+
     try {
       await api.deleteTimetableRow(id);
       onShowToast?.({ type: 'success', message: 'Schedule row deleted' });
-      fetchSchedule();
+      fetchSchedule(false);
     } catch (err) {
+      setSchedule(previous);
       onShowToast?.({ type: 'error', message: err.message });
     }
   };
 
+  // High performance index map for O(1) lookups
+  const idToIndexMap = useMemo(() => {
+    const map = new Map();
+    schedule.forEach((item, index) => {
+      map.set(item.id, index);
+    });
+    return map;
+  }, [schedule]);
+
   const handleMove = async (itemId, direction) => {
-    const fullIndex = schedule.findIndex(s => s.id === itemId);
+    const fullIndex = idToIndexMap.get(itemId) ?? schedule.findIndex(s => s.id === itemId);
     if (fullIndex === -1) return;
 
     const targetIndex = direction === 'up' ? fullIndex - 1 : fullIndex + 1;
@@ -135,21 +176,33 @@ export default function TimeTable({ onShowToast }) {
 
     const orderedIds = newSchedule.map(s => s.id);
     setSchedule(newSchedule);
+    try {
+      localStorage.setItem('rac_cached_timetable', JSON.stringify(newSchedule));
+    } catch (e) {}
 
     try {
       await api.reorderTimetable(orderedIds);
       onShowToast?.({ type: 'success', message: 'Schedule order adjusted' });
     } catch (err) {
       onShowToast?.({ type: 'error', message: 'Failed to adjust order: ' + err.message });
-      fetchSchedule();
+      fetchSchedule(false);
     }
   };
 
-  const filteredSchedule = schedule.filter(item => {
-    if (filterMode === 'am') return (item.time_slot || '').toUpperCase().includes('AM');
-    if (filterMode === 'pm') return (item.time_slot || '').toUpperCase().includes('PM');
-    return true;
-  });
+  // Memoized filter and counts to prevent recomputation on every render
+  const amCount = useMemo(() => {
+    return schedule.filter(s => (s.time_slot || '').toUpperCase().includes('AM')).length;
+  }, [schedule]);
+
+  const pmCount = useMemo(() => {
+    return schedule.filter(s => (s.time_slot || '').toUpperCase().includes('PM')).length;
+  }, [schedule]);
+
+  const filteredSchedule = useMemo(() => {
+    if (filterMode === 'am') return schedule.filter(item => (item.time_slot || '').toUpperCase().includes('AM'));
+    if (filterMode === 'pm') return schedule.filter(item => (item.time_slot || '').toUpperCase().includes('PM'));
+    return schedule;
+  }, [schedule, filterMode]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
@@ -200,7 +253,7 @@ export default function TimeTable({ onShowToast }) {
                 : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
             }`}
           >
-            Morning AM ({schedule.filter(s => (s.time_slot || '').toUpperCase().includes('AM')).length})
+            Morning AM ({amCount})
           </button>
           <button
             onClick={() => setFilterMode('pm')}
@@ -210,7 +263,7 @@ export default function TimeTable({ onShowToast }) {
                 : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
             }`}
           >
-            Evening PM ({schedule.filter(s => (s.time_slot || '').toUpperCase().includes('PM')).length})
+            Evening PM ({pmCount})
           </button>
         </div>
 
@@ -241,7 +294,7 @@ export default function TimeTable({ onShowToast }) {
           <div className="md:hidden space-y-3">
             {filteredSchedule.map((item, index) => {
               const Icon = getIconComponent(item.icon_name);
-              const fullIndex = schedule.findIndex(s => s.id === item.id);
+              const fullIndex = idToIndexMap.get(item.id) ?? index;
               const isFirst = fullIndex === 0;
               const isLast = fullIndex === schedule.length - 1;
 
@@ -342,7 +395,7 @@ export default function TimeTable({ onShowToast }) {
               <tbody className="divide-y divide-slate-100">
                 {filteredSchedule.map((item, index) => {
                   const Icon = getIconComponent(item.icon_name);
-                  const fullIndex = schedule.findIndex(s => s.id === item.id);
+                  const fullIndex = idToIndexMap.get(item.id) ?? index;
                   const isFirst = fullIndex === 0;
                   const isLast = fullIndex === schedule.length - 1;
 

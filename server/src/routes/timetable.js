@@ -1,6 +1,7 @@
 import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { broadcastSyncEvent } from '../services/syncService.js';
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ router.post('/', authenticateToken, (req, res) => {
   `).run(time_slot, activity, location_or_notes || '', icon_name || 'Clock', order_num || 0);
 
   const newRow = db.prepare('SELECT * FROM timetable WHERE id = ?').get(result.lastInsertRowid);
+  broadcastSyncEvent({ type: 'TIMETABLE_UPDATED', action: 'create', row: newRow });
   res.status(201).json(newRow);
 });
 
@@ -41,6 +43,7 @@ router.put('/reorder', authenticateToken, (req, res) => {
   });
 
   reorderTx(ordered_ids);
+  broadcastSyncEvent({ type: 'TIMETABLE_UPDATED', action: 'reorder', ordered_ids });
   res.json({ message: 'Timetable reordered successfully.' });
 });
 
@@ -54,12 +57,14 @@ router.put('/:id', authenticateToken, (req, res) => {
   `).run(time_slot, activity, location_or_notes || '', icon_name || 'Clock', order_num || 0, req.params.id);
 
   const updated = db.prepare('SELECT * FROM timetable WHERE id = ?').get(req.params.id);
+  broadcastSyncEvent({ type: 'TIMETABLE_UPDATED', action: 'update', id: req.params.id, row: updated });
   res.json(updated);
 });
 
 // DELETE row (Admin)
 router.delete('/:id', authenticateToken, (req, res) => {
   db.prepare('DELETE FROM timetable WHERE id = ?').run(req.params.id);
+  broadcastSyncEvent({ type: 'TIMETABLE_UPDATED', action: 'delete', id: req.params.id });
   res.json({ message: 'Timetable row deleted successfully.' });
 });
 
