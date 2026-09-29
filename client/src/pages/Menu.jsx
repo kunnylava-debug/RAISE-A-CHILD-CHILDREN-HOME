@@ -4,7 +4,7 @@ import {
   Apple, Plus, Calendar, Sparkles, Clock, Trash2, 
   Check, AlertCircle, ChevronRight, Eye
 } from 'lucide-react';
-import { api, subscribeToRealtimeSync } from '../services/api';
+import { api, subscribeToRealtimeSync, broadcastLocalSyncEvent } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function Menu({ onShowToast }) {
@@ -78,8 +78,28 @@ export default function Menu({ onShowToast }) {
         fetchMenu(false);
       }
     });
-    return unsubscribe;
-  }, []);
+
+    // Active cross-device polling interval (every 4 seconds) to eliminate any lag between devices
+    const interval = setInterval(() => {
+      fetchMenu(false);
+    }, 4000);
+
+    // Instant refresh when user switches tabs or unlocks mobile phone screen
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        fetchMenu(false);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
+  }, [fetchMenu, weeklyMenu.length]);
 
   const handleSaveEdit = async (e) => {
     e.preventDefault();
@@ -90,6 +110,7 @@ export default function Menu({ onShowToast }) {
     try {
       setSubmitting(true);
       await api.updateMenuDay(editingDay.id, editingDay);
+      broadcastLocalSyncEvent({ type: 'MENU_UPDATED', action: 'UPDATE' });
       onShowToast?.({ 
         type: 'success', 
         title: 'Food Time Table Updated',
@@ -118,6 +139,7 @@ export default function Menu({ onShowToast }) {
       } else {
         await api.updateMenuDay(Date.now(), newDayForm);
       }
+      broadcastLocalSyncEvent({ type: 'MENU_UPDATED', action: 'CREATE' });
       onShowToast?.({ 
         type: 'success', 
         title: 'Day Added to Food Time Table',
@@ -139,6 +161,7 @@ export default function Menu({ onShowToast }) {
       if (api.deleteMenuDay) {
         await api.deleteMenuDay(id);
       }
+      broadcastLocalSyncEvent({ type: 'MENU_UPDATED', action: 'DELETE' });
       onShowToast?.({ type: 'success', message: `${dayName} removed from food timetable.` });
       fetchMenu(false);
     } catch (err) {

@@ -39,8 +39,47 @@ async function notifyAdminNewDonation(donation) {
   }
 }
 
-// GET all donations (Admin only)
-router.get('/', authenticateToken, (req, res) => {
+function getMonthlyBreakdown(donations) {
+  const map = new Map();
+  for (const d of donations) {
+    if (d.status === 'Cancelled') continue;
+    const dateObj = new Date(d.created_at || Date.now());
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const monthKey = `${year}-${month}`;
+    const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+    if (!map.has(monthKey)) {
+      map.set(monthKey, {
+        month_key: monthKey,
+        month_label: monthLabel,
+        year,
+        month_num: dateObj.getMonth() + 1,
+        total_amount: 0,
+        direct_amount: 0,
+        pledge_amount: 0,
+        donors_count: 0,
+        donations: []
+      });
+    }
+
+    const group = map.get(monthKey);
+    const amt = Number(d.amount) || 0;
+    group.total_amount += amt;
+    if (d.entry_type === 'Pledge') {
+      group.pledge_amount += amt;
+    } else {
+      group.direct_amount += amt;
+    }
+    group.donors_count += 1;
+    group.donations.push(d);
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.month_key.localeCompare(a.month_key));
+}
+
+// GET all donations (with total & monthly breakdown)
+router.get('/', (req, res) => {
   const donations = db.prepare(`
     SELECT d.*, 
       n.item_name as linked_need_title, 
@@ -54,8 +93,26 @@ router.get('/', authenticateToken, (req, res) => {
   
   const totalAmount = db.prepare("SELECT SUM(amount) as total FROM donations WHERE status != 'Cancelled'").get().total || 0;
   const count = db.prepare('SELECT COUNT(*) as count FROM donations').get().count || 0;
+  const monthlyBreakdown = getMonthlyBreakdown(donations);
 
-  res.json({ donations, total_donations_amount: totalAmount, total_count: count });
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthStats = monthlyBreakdown.find(m => m.month_key === currentMonthKey) || {
+    month_key: currentMonthKey,
+    month_label: now.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+    total_amount: 0,
+    direct_amount: 0,
+    pledge_amount: 0,
+    donors_count: 0
+  };
+
+  res.json({
+    donations,
+    total_donations_amount: totalAmount,
+    total_count: count,
+    current_month: currentMonthStats,
+    monthly_breakdown: monthlyBreakdown
+  });
 });
 
 // POST record donation/pledge (Public)

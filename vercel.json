@@ -131,6 +131,22 @@
       "destination": "/api/timetable.js"
     },
     {
+      "source": "/api/donations/:path*",
+      "destination": "/api/donations.js"
+    },
+    {
+      "source": "/api/donations",
+      "destination": "/api/donations.js"
+    },
+    {
+      "source": "/api/needed/:path*",
+      "destination": "/api/needed.js"
+    },
+    {
+      "source": "/api/needed",
+      "destination": "/api/needed.js"
+    },
+    {
       "source": "/((?!api/|.*\\.(?:ico|png|jpg|jpeg|svg|webp|json|txt|xml|pdf|js|css|map|woff|woff2|ttf)$).*)",
       "destination": "/index.html"
     }

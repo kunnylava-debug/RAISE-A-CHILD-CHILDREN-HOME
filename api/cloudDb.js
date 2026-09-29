@@ -18,6 +18,8 @@ function githubRequest(method, path, body = null) {
         'User-Agent': 'RAC-CloudStore-Engine',
         'Authorization': `token ${GITHUB_TOKEN}`,
         'Accept': 'application/vnd.github.v3+json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
         ...(payload ? {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(payload)
@@ -46,7 +48,7 @@ function githubRequest(method, path, body = null) {
 async function getCloudData(fileKey, fallback = []) {
   try {
     const filePath = `data_cloud/${fileKey}.json`;
-    const res = await githubRequest('GET', `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`);
+    const res = await githubRequest('GET', `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}?ref=main&_ts=${Date.now()}`);
     if (res.status === 200 && res.data && res.data.content) {
       const parsed = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
       cache[fileKey] = { data: parsed, sha: res.data.sha, timestamp: Date.now() };
@@ -63,8 +65,8 @@ async function getCloudData(fileKey, fallback = []) {
 async function setCloudData(fileKey, data, commitMessage = 'Update cloud data') {
   try {
     const filePath = `data_cloud/${fileKey}.json`;
-    // Get latest SHA
-    const getRes = await githubRequest('GET', `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`);
+    // Get latest SHA with fresh timestamp
+    const getRes = await githubRequest('GET', `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}?ref=main&_ts=${Date.now()}`);
     const sha = getRes.status === 200 && getRes.data ? getRes.data.sha : cache[fileKey]?.sha;
 
     const base64 = Buffer.from(JSON.stringify(data, null, 2), 'utf8').toString('base64');

@@ -5,7 +5,7 @@ import {
   BookOpen, Utensils, Moon, GraduationCap, Smile, 
   Sun, Edit, Bed, Sparkles, Save, RefreshCw
 } from 'lucide-react';
-import { api, subscribeToRealtimeSync } from '../services/api';
+import { api, subscribeToRealtimeSync, broadcastLocalSyncEvent } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function TimeTable({ onShowToast }) {
@@ -81,8 +81,28 @@ export default function TimeTable({ onShowToast }) {
         fetchSchedule(false);
       }
     });
-    return unsubscribe;
-  }, []);
+
+    // Active cross-device polling interval (every 4 seconds) to eliminate any lag between devices
+    const interval = setInterval(() => {
+      fetchSchedule(false);
+    }, 4000);
+
+    // Instant refresh when user switches tabs or unlocks mobile phone screen
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        fetchSchedule(false);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
+  }, [fetchSchedule, schedule.length]);
 
   const handleOpenAdd = () => {
     setCurrentRow({
@@ -124,6 +144,7 @@ export default function TimeTable({ onShowToast }) {
         await api.createTimetableRow(currentRow);
         onShowToast?.({ type: 'success', message: 'New activity added to schedule' });
       }
+      broadcastLocalSyncEvent({ type: 'TIMETABLE_UPDATED', action: 'UPDATE' });
       setEditModalOpen(false);
       setCurrentRow(null);
       fetchSchedule(false);
@@ -145,6 +166,7 @@ export default function TimeTable({ onShowToast }) {
 
     try {
       await api.deleteTimetableRow(id);
+      broadcastLocalSyncEvent({ type: 'TIMETABLE_UPDATED', action: 'DELETE' });
       onShowToast?.({ type: 'success', message: 'Schedule row deleted' });
       fetchSchedule(false);
     } catch (err) {
@@ -182,6 +204,7 @@ export default function TimeTable({ onShowToast }) {
 
     try {
       await api.reorderTimetable(orderedIds);
+      broadcastLocalSyncEvent({ type: 'TIMETABLE_UPDATED', action: 'REORDER' });
       onShowToast?.({ type: 'success', message: 'Schedule order adjusted' });
     } catch (err) {
       onShowToast?.({ type: 'error', message: 'Failed to adjust order: ' + err.message });
