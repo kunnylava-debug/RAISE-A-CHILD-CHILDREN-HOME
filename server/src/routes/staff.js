@@ -16,7 +16,6 @@ function isAuthorized(req) {
     token = req.query.token;
   }
   if (!token) return false;
-  if (token.startsWith('rac_offline_token_') || token.startsWith('shanti_offline_token_')) return true;
   try {
     jwt.verify(token, JWT_SECRET);
     return true;

@@ -10,11 +10,6 @@ export function authenticateToken(req, res, next) {
     return res.status(401).json({ error: 'Access denied. No authentication token provided.' });
   }
 
-  if (token.startsWith('rac_offline_token_') || token.startsWith('shanti_offline_token_')) {
-    req.user = { id: 1, username: 'admin', role: 'admin' };
-    return next();
-  }
-
   try {
     const verified = jwt.verify(token, JWT_SECRET);
     req.user = verified;

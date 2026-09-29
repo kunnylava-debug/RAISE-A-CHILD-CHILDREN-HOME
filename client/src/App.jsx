@@ -15,6 +15,7 @@ import TimeTable from './pages/TimeTable';
 import Menu from './pages/Menu';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLoginModal from './pages/admin/AdminLoginModal';
+import NotFound from './pages/NotFound';
 
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { api } from './services/api';
@@ -59,6 +60,10 @@ const SEO_CONFIG = {
   admin: {
     title: "Hostel Management Console | RISE A CHILD CHILDREN HOME",
     description: "Authorized administrator and staff operations portal for RISE A CHILD CHILDREN HOME."
+  },
+  '404': {
+    title: "Page Not Found (404 Error) | RISE A CHILD CHILDREN HOME",
+    description: "The requested page could not be located. Access our safe directory of children, admissions, hostel needs, and campus facilities."
   }
 };
 
@@ -102,21 +107,41 @@ export default function App() {
       setHasAcceptedRestriction(true);
     }
 
-    // Support direct hash deep-linking (e.g. #admissions, #needed, #timetable) for SEO
-    const initialHash = window.location.hash.replace('#', '').toLowerCase();
+    // Support direct hash deep-linking and path routing for SEO & bookmarks
     const validTabs = ['home', 'staff', 'licence', 'children', 'views', 'admissions', 'needed', 'timetable', 'menu', 'admin'];
-    if (validTabs.includes(initialHash)) {
-      setActiveTab(initialHash);
-    }
 
-    const onHashChange = () => {
-      const hash = window.location.hash.replace('#', '').toLowerCase();
-      if (validTabs.includes(hash)) {
-        setActiveTab(hash);
+    const resolveTabFromLocation = () => {
+      const hash = window.location.hash.replace('#', '').toLowerCase().trim();
+      if (hash) {
+        return validTabs.includes(hash) ? hash : '404';
       }
+
+      const pathname = window.location.pathname.replace(/^\/+/, '').split('/')[0].toLowerCase().trim();
+      if (!pathname || pathname === 'index.html') {
+        return 'home';
+      }
+
+      if (validTabs.includes(pathname)) {
+        return pathname;
+      }
+
+      return '404';
     };
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+
+    const initialTab = resolveTabFromLocation();
+    setActiveTab(initialTab);
+
+    const onLocationChange = () => {
+      const tab = resolveTabFromLocation();
+      setActiveTab(tab);
+    };
+
+    window.addEventListener('hashchange', onLocationChange);
+    window.addEventListener('popstate', onLocationChange);
+    return () => {
+      window.removeEventListener('hashchange', onLocationChange);
+      window.removeEventListener('popstate', onLocationChange);
+    };
   }, []);
 
   // Update document title and SEO meta tags when tab or settings change
@@ -134,7 +159,9 @@ export default function App() {
     setActiveTab(tabId);
     if (window.history && window.history.pushState) {
       const newUrl = tabId === 'home' 
-        ? window.location.pathname + window.location.search 
+        ? '/'
+        : tabId === '404' 
+        ? window.location.pathname
         : `#${tabId}`;
       window.history.pushState(null, '', newUrl);
     }
@@ -224,6 +251,13 @@ export default function App() {
               onRefreshSettings={fetchSettings} 
               setActiveTab={handleTabChange} 
               onShowToast={setToast} 
+            />
+          )}
+
+          {(!['home', 'staff', 'licence', 'children', 'views', 'admissions', 'needed', 'timetable', 'menu', 'admin'].includes(activeTab)) && (
+            <NotFound 
+              setActiveTab={handleTabChange} 
+              settings={settings} 
             />
           )}
         </main>

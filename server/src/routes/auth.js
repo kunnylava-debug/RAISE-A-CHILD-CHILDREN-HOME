@@ -24,11 +24,20 @@ function checkRateLimit(key, maxRequests = 5, windowMs = 15 * 60 * 1000) {
   return entry.count <= maxRequests;
 }
 
-// 1. Admin Login
+// 1. Admin Login (Hardened with rate-limiting against brute-force attacks)
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required.' });
+  }
+
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || 'ip';
+  const loginRateKey = `login_attempts_${clientIp}`;
+
+  if (!checkRateLimit(loginRateKey, 10, 15 * 60 * 1000)) {
+    return res.status(429).json({ 
+      error: 'Security Notice: Too many login attempts. Access is temporarily locked. Please try again in 15 minutes.' 
+    });
   }
 
   const user = db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
@@ -40,6 +49,9 @@ router.post('/login', (req, res) => {
   if (!validPassword) {
     return res.status(401).json({ error: 'Invalid username or password.' });
   }
+
+  // Clear rate limit on successful authentication
+  otpRateLimitMap.delete(loginRateKey);
 
   const token = jwt.sign(
     { id: user.id, username: user.username, role: user.role },

@@ -22,27 +22,47 @@ const storage = multer.diskStorage({
   }
 });
 
+const DANGEROUS_EXTENSIONS = new Set([
+  '.php', '.phtml', '.php3', '.php4', '.php5', '.php7', '.phps', 
+  '.cgi', '.pl', '.asp', '.aspx', '.jsp', '.sh', '.bash', 
+  '.exe', '.bat', '.cmd', '.com', '.vbs', '.ps1', '.py', '.rb', 
+  '.jar', '.war', '.html', '.htm', '.shtml', '.xhtml', '.js', '.mjs', '.cjs'
+]);
+
 const fileFilter = (req, file, cb) => {
-  const allowedImageMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-  const allowedDocMimes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-  const allowedVideoMimes = [
-    'video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska', 
-    'video/avi', 'video/m4v', 'video/3gpp', 'video/ogg', 'video/x-msvideo'
-  ];
+  const allowedExtensions = new Set([
+    '.jpg', '.jpeg', '.png', '.webp', '.gif', 
+    '.pdf', 
+    '.mp4', '.webm', '.mov', '.mkv', '.m4v', '.3gp'
+  ]);
 
-  const ext = path.extname(file.originalname).toLowerCase();
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.pdf', '.mp4', '.webm', '.mov', '.mkv', '.m4v', '.3gp'];
+  const ext = path.extname(file.originalname || '').toLowerCase();
 
-  if (
-    allowedImageMimes.includes(file.mimetype) ||
-    allowedDocMimes.includes(file.mimetype) ||
-    allowedVideoMimes.includes(file.mimetype) ||
-    allowedExtensions.includes(ext)
-  ) {
-    cb(null, true);
-  } else {
-    cb(new Error(`Invalid file type (${file.mimetype}). Supported formats: Images (JPEG, PNG, WEBP), Documents (PDF), and Videos (MP4, WEBM, MOV, MKV).`));
+  // 1. Block null-byte or path traversal in original name
+  if (!file.originalname || file.originalname.includes('\0') || file.originalname.includes('..')) {
+    return cb(new Error('Security Exception: Invalid or malicious filename detected.'));
   }
+
+  // 2. Reject all dangerous and executable extensions
+  if (DANGEROUS_EXTENSIONS.has(ext)) {
+    return cb(new Error('Security Exception: Executable or script files are strictly blocked.'));
+  }
+
+  // 3. Extension MUST be in the safe whitelist
+  if (!allowedExtensions.has(ext)) {
+    return cb(new Error(`Invalid file extension (${ext}). Allowed: Images (.jpg, .png, .webp, .gif), Documents (.pdf), Videos (.mp4, .webm, .mov, .mkv).`));
+  }
+
+  // 4. MIME type must be an acceptable media/document type
+  const isImage = file.mimetype.startsWith('image/');
+  const isVideo = file.mimetype.startsWith('video/') || file.mimetype === 'application/octet-stream';
+  const isPdf = file.mimetype === 'application/pdf';
+
+  if (!isImage && !isVideo && !isPdf) {
+    return cb(new Error(`Invalid MIME type (${file.mimetype}). File content must match allowed image, video, or PDF formats.`));
+  }
+
+  cb(null, true);
 };
 
 export const upload = multer({
