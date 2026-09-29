@@ -4,7 +4,7 @@ import {
   Edit3, Trash2, X, Check, Shield, GraduationCap,
   Download, FileText
 } from 'lucide-react';
-import { api } from '../services/api';
+import { api, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function Staff({ onShowToast }) {
@@ -29,6 +29,12 @@ export default function Staff({ onShowToast }) {
 
   useEffect(() => {
     fetchStaff();
+    const unsubscribe = subscribeToRealtimeSync((event) => {
+      if (event.type === 'STAFF_UPDATED') {
+        fetchStaff();
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const handleSaveStaff = async (e) => {

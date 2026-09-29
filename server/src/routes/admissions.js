@@ -7,6 +7,7 @@ import {
   sendNewApplicationAlertToAdmin,
   sendApplicationReceivedConfirmationToApplicant
 } from '../services/notificationService.js';
+import { broadcastSyncEvent } from '../services/syncService.js';
 
 const router = express.Router();
 
@@ -99,6 +100,9 @@ router.post('/', async (req, res) => {
     console.error('Error sending confirmation email to applicant:', err.message);
   }
 
+  // Real-time synchronization event across all connected devices
+  broadcastSyncEvent({ type: 'ADMISSIONS_UPDATED', action: 'CREATE', data: newApp });
+
   res.status(201).json({
     success: true,
     message: 'Admission application submitted successfully. Our administration has received your details.',
@@ -162,6 +166,8 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
 
   const finalRecord = db.prepare('SELECT * FROM admissions WHERE id = ?').get(req.params.id);
 
+  broadcastSyncEvent({ type: 'ADMISSIONS_UPDATED', action: 'STATUS_UPDATE', data: finalRecord });
+
   res.json({
     ...finalRecord,
     notification_dispatch: dispatchResult
@@ -184,6 +190,9 @@ router.post('/:id/notify', authenticateToken, async (req, res) => {
 // DELETE application (Admin)
 router.delete('/:id', authenticateToken, (req, res) => {
   db.prepare('DELETE FROM admissions WHERE id = ?').run(req.params.id);
+
+  broadcastSyncEvent({ type: 'ADMISSIONS_UPDATED', action: 'DELETE', id: req.params.id });
+
   res.json({ message: 'Application deleted successfully.' });
 });
 

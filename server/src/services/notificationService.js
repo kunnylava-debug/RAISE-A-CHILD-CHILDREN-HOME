@@ -599,3 +599,101 @@ Email : ${config.contact_email}
     return { success: true, delivered: false, simulated: true, recipient };
   }
 }
+
+/**
+ * Dispatch Password Reset 6-Digit OTP Email to pn9059491777@gmail.com
+ */
+export async function sendPasswordResetOtpEmail({ email, otp, username }) {
+  const config = getHostelSettings();
+  const recipient = 'pn9059491777@gmail.com';
+  const transporter = createSmtpTransporter(config);
+  const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+  const subject = `🔐 Your Admin Password Reset OTP: ${otp} - ${config.hostel_name}`;
+  const textContent = `RISE A CHILD CHILDREN HOME - ADMIN PASSWORD RECOVERY\n\nYour 6-digit one-time password (OTP) is: ${otp}\n\nThis OTP is valid for 10 minutes only.\nRequested by: ${username || 'Admin'}\nAccount email: ${recipient}\nTimestamp: ${now}\n\nSecurity Notice: If you did not request this OTP, please ignore this email. Never share your OTP with anyone.`;
+
+  const htmlContent = `
+  <!DOCTYPE html>
+  <html>
+  <head><meta charset="utf-8"/></head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; padding: 24px 12px; margin: 0;">
+    <div style="max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+      <div style="background: linear-gradient(135deg, #065f46 0%, #0f172a 100%); padding: 28px; text-align: center; color: #ffffff;">
+        <span style="background: #10b981; color: #ffffff; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 999px; text-transform: uppercase; letter-spacing: 1px;">Security Verification</span>
+        <h1 style="margin: 10px 0 0 0; font-size: 20px; font-weight: 800; color: #ffffff;">${config.hostel_name}</h1>
+        <p style="margin: 4px 0 0 0; font-size: 13px; color: #a7f3d0;">Administrator Portal Password Recovery</p>
+      </div>
+      <div style="padding: 28px;">
+        <p style="font-size: 14px; color: #334155; line-height: 1.6; margin-top: 0;">
+          Hello <strong>${username || 'Admin'}</strong>,
+        </p>
+        <p style="font-size: 14px; color: #334155; line-height: 1.6;">
+          A password reset request was initiated for your administrator account. Use the 6-digit OTP code below to verify your identity and set a new password:
+        </p>
+
+        <div style="background: #f0fdf4; border: 2px dashed #10b981; border-radius: 14px; padding: 20px; text-align: center; margin: 24px 0;">
+          <span style="font-size: 12px; font-weight: 700; color: #047857; text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 8px;">One-Time Verification Code (OTP)</span>
+          <div style="font-size: 38px; font-weight: 900; letter-spacing: 8px; color: #065f46; font-family: monospace;">${otp}</div>
+          <span style="font-size: 11px; color: #059669; font-weight: 600; display: block; margin-top: 8px;">⏱ Valid for 10 minutes only</span>
+        </div>
+
+        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+          <p style="margin: 0; font-size: 12px; font-weight: 700; color: #b45309;">⚠️ Security Warning</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: #92400e; line-height: 1.5;">
+            Do NOT share this code with anyone. Hostel staff or technicians will NEVER ask you for your OTP. If you did not request this password reset, please change your credentials immediately.
+          </p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #64748b; margin-top: 16px;">
+          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0;">Dispatched To:</td><td style="padding: 6px 0; font-weight: 700; color: #0f172a;">${recipient}</td></tr>
+          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0;">Timestamp:</td><td style="padding: 6px 0;">${now}</td></tr>
+        </table>
+      </div>
+    </div>
+  </body>
+  </html>
+  `;
+
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: `"${config.smtp_sender_name}" <${config.smtp_user || config.contact_email}>`,
+        to: recipient,
+        subject,
+        text: textContent,
+        html: htmlContent
+      });
+      console.log(`[PASSWORD RESET OTP SENT] 6-digit OTP delivered via SMTP to ${recipient}`);
+      return { success: true, delivered: true, recipient };
+    } catch (err) {
+      console.warn('[PASSWORD RESET OTP SMTP WARN]', err.message);
+    }
+  }
+
+  // Backup dispatch via FormSubmit ajax endpoint
+  try {
+    const formData = new URLSearchParams();
+    formData.append('_subject', subject);
+    formData.append('otp_code', otp);
+    formData.append('username', username || 'admin');
+    formData.append('requested_at', now);
+    formData.append('message', textContent);
+
+    await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(recipient)}`, {
+      method: 'POST',
+      body: formData,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+    console.log(`[PASSWORD RESET OTP DISPATCHED] FormSubmit delivered to ${recipient}`);
+  } catch (fe) {
+    console.warn('[PASSWORD RESET FORMSUBMIT WARN]', fe.message);
+  }
+
+  console.log(`=======================================================`);
+  console.log(`[ADMIN PASSWORD RESET OTP DISPATCHED TO ${recipient}]`);
+  console.log(`OTP Code: ${otp} | Expires in: 10 minutes`);
+  console.log(`=======================================================`);
+
+  return { success: true, delivered: true, recipient, simulated: !transporter };
+}
+

@@ -1,6 +1,7 @@
-﻿import express from 'express';
+import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { broadcastSyncEvent } from '../services/syncService.js';
 
 const router = express.Router();
 
@@ -31,6 +32,7 @@ router.post('/categories', authenticateToken, (req, res) => {
   );
 
   const newCat = db.prepare('SELECT * FROM views_categories WHERE id = ?').get(result.lastInsertRowid);
+  broadcastSyncEvent({ type: 'VIEWS_UPDATED', action: 'CREATE_CATEGORY', data: newCat });
   res.status(201).json({ ...newCat, photos: [] });
 });
 
@@ -44,6 +46,7 @@ router.put('/categories/:id', authenticateToken, (req, res) => {
     req.params.id
   );
   const updated = db.prepare('SELECT * FROM views_categories WHERE id = ?').get(req.params.id);
+  broadcastSyncEvent({ type: 'VIEWS_UPDATED', action: 'UPDATE_CATEGORY', data: updated });
   res.json(updated);
 });
 
@@ -51,6 +54,7 @@ router.put('/categories/:id', authenticateToken, (req, res) => {
 router.delete('/categories/:id', authenticateToken, (req, res) => {
   db.prepare('DELETE FROM views_photos WHERE category_id = ?').run(req.params.id);
   db.prepare('DELETE FROM views_categories WHERE id = ?').run(req.params.id);
+  broadcastSyncEvent({ type: 'VIEWS_UPDATED', action: 'DELETE_CATEGORY', id: req.params.id });
   res.json({ message: 'Category and its photos deleted successfully.' });
 });
 
@@ -67,12 +71,14 @@ router.post('/photos', authenticateToken, (req, res) => {
   `).run(category_id, title || '', description || '', image_url, order_num || 0);
 
   const newPhoto = db.prepare('SELECT * FROM views_photos WHERE id = ?').get(result.lastInsertRowid);
+  broadcastSyncEvent({ type: 'VIEWS_UPDATED', action: 'CREATE_PHOTO', data: newPhoto });
   res.status(201).json(newPhoto);
 });
 
 // DELETE photo (Admin)
 router.delete('/photos/:id', authenticateToken, (req, res) => {
   db.prepare('DELETE FROM views_photos WHERE id = ?').run(req.params.id);
+  broadcastSyncEvent({ type: 'VIEWS_UPDATED', action: 'DELETE_PHOTO', id: req.params.id });
   res.json({ message: 'Photo removed successfully.' });
 });
 

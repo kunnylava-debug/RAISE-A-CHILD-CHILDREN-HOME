@@ -5,7 +5,7 @@ import {
   Filter, Calendar, ExternalLink, Phone, MessageSquare, Trash2,
   Clock, Handshake, Check, XCircle
 } from 'lucide-react';
-import { api } from '../../services/api';
+import { api, subscribeToRealtimeSync } from '../../services/api';
 
 export default function AdminDonationsTab({ onShowToast }) {
   const [donations, setDonations] = useState([]);
@@ -36,8 +36,8 @@ export default function AdminDonationsTab({ onShowToast }) {
         api.getDonations(),
         api.getNeeded()
       ]);
-      setDonations(donationsData || []);
-      setNeededItems(neededData || []);
+      setDonations(Array.isArray(donationsData) ? donationsData : (donationsData?.donations || []));
+      setNeededItems(Array.isArray(neededData) ? neededData : []);
     } catch (err) {
       onShowToast?.({ type: 'error', message: 'Failed to load donations audit: ' + err.message });
     } finally {
@@ -47,6 +47,12 @@ export default function AdminDonationsTab({ onShowToast }) {
 
   useEffect(() => {
     loadData();
+    const unsubscribe = subscribeToRealtimeSync((event) => {
+      if (event.type === 'DONATIONS_UPDATED' || event.type === 'NEEDED_UPDATED') {
+        loadData();
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleConfirmPledge = async (donation) => {

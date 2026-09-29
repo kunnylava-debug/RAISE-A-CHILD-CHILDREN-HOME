@@ -1,6 +1,7 @@
-﻿import express from 'express';
+import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { broadcastSyncEvent } from '../services/syncService.js';
 
 const router = express.Router();
 
@@ -31,6 +32,10 @@ router.post('/', authenticateToken, (req, res) => {
   );
 
   const newItem = db.prepare('SELECT * FROM needed_items WHERE id = ?').get(result.lastInsertRowid);
+
+  // Real-time synchronization event across all connected devices
+  broadcastSyncEvent({ type: 'NEEDED_UPDATED', action: 'CREATE', data: newItem });
+
   res.status(201).json(newItem);
 });
 
@@ -55,12 +60,20 @@ router.put('/:id', authenticateToken, (req, res) => {
   );
 
   const updated = db.prepare('SELECT * FROM needed_items WHERE id = ?').get(req.params.id);
+
+  // Real-time synchronization event across all connected devices
+  broadcastSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE', data: updated });
+
   res.json(updated);
 });
 
 // DELETE needed item (Admin)
 router.delete('/:id', authenticateToken, (req, res) => {
   db.prepare('DELETE FROM needed_items WHERE id = ?').run(req.params.id);
+
+  // Real-time synchronization event across all connected devices
+  broadcastSyncEvent({ type: 'NEEDED_UPDATED', action: 'DELETE', id: req.params.id });
+
   res.json({ message: 'Item deleted successfully.' });
 });
 

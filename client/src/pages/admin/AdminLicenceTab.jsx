@@ -10,6 +10,7 @@ export default function AdminLicenceTab({ onShowToast }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const [form, setForm] = useState({
@@ -77,8 +78,11 @@ export default function AdminLicenceTab({ onShowToast }) {
     }
 
     setUploadingDoc(true);
+    setUploadProgress(0);
     try {
-      const res = await api.uploadFile(file);
+      const res = await api.uploadFile(file, (percent) => {
+        setUploadProgress(percent);
+      });
       handleChange('document_url', res.url);
       onShowToast?.({ 
         type: 'success', 
@@ -89,6 +93,7 @@ export default function AdminLicenceTab({ onShowToast }) {
       onShowToast?.({ type: 'error', message: 'Failed to upload certificate: ' + err.message });
     } finally {
       setUploadingDoc(false);
+      setUploadProgress(0);
     }
   };
 
@@ -412,6 +417,24 @@ export default function AdminLicenceTab({ onShowToast }) {
               )}
             </div>
           </div>
+
+          {uploadingDoc && (
+            <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                <span className="flex items-center space-x-1.5 text-emerald-700">
+                  <Upload className="w-3.5 h-3.5 animate-bounce" />
+                  <span>Uploading Certificate Document...</span>
+                </span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-emerald-600 h-full transition-all duration-200 rounded-full"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block font-semibold text-slate-700 mb-1">

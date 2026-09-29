@@ -552,6 +552,11 @@ async function request(endpoint, options = {}) {
         setStorage('rac_cached_settings', data);
       } else if (endpoint.startsWith('/admissions') && data.applications) {
         setStorage('rac_cached_admissions', data.applications);
+      } else if (endpoint === '/needed') {
+        setStorage('rac_cached_needed', Array.isArray(data) ? data : []);
+      } else if (endpoint === '/donations') {
+        const dons = Array.isArray(data) ? data : (data?.donations || []);
+        setStorage('rac_cached_donations', dons);
       }
     }
 
@@ -1008,6 +1013,62 @@ async function request(endpoint, options = {}) {
       if (parsedBody.new_username) localStorage.setItem('rac_admin_custom_username', parsedBody.new_username);
       if (parsedBody.new_password) localStorage.setItem('rac_admin_custom_pwd', parsedBody.new_password);
       return { message: 'Credentials updated successfully.' };
+    }
+
+    if (endpoint === '/auth/forgot-password' && method === 'POST') {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = Date.now() + 10 * 60 * 1000;
+      localStorage.setItem('rac_reset_otp', JSON.stringify({ otp, expiresAt, attempts: 0 }));
+      
+      // Dispatch email notification to pn9059491777@gmail.com
+      const params = new URLSearchParams();
+      params.append('_subject', `🔐 Admin Password Reset OTP: ${otp} - RISE A CHILD CHILDREN HOME`);
+      params.append('otp_code', otp);
+      params.append('recipient', 'pn9059491777@gmail.com');
+      params.append('message', `Your 6-digit administrator password recovery OTP is: ${otp}. It is valid for 10 minutes.`);
+      fetch('https://formsubmit.co/ajax/pn9059491777@gmail.com', {
+        method: 'POST',
+        body: params,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      }).catch(() => {});
+
+      return {
+        success: true,
+        message: 'A 6-digit OTP code has been dispatched to pn9059491777@gmail.com. It is valid for 10 minutes.',
+        email_hint: 'pn9059491777@gmail.com'
+      };
+    }
+
+    if (endpoint === '/auth/verify-otp' && method === 'POST') {
+      const stored = getStorage('rac_reset_otp', null);
+      if (!stored || Date.now() > stored.expiresAt) {
+        throw new Error('This verification code has expired (10 min limit). Please request a fresh OTP.');
+      }
+      if (stored.attempts >= 5) {
+        throw new Error('Maximum verification attempts exceeded. Please request a new code.');
+      }
+      if (String(parsedBody.otp || '').trim() !== String(stored.otp).trim()) {
+        stored.attempts = (stored.attempts || 0) + 1;
+        setStorage('rac_reset_otp', stored);
+        throw new Error(`Invalid OTP code. ${5 - stored.attempts} attempt(s) remaining.`);
+      }
+      return {
+        success: true,
+        message: 'OTP verified successfully.',
+        reset_token: 'offline_reset_' + Date.now()
+      };
+    }
+
+    if (endpoint === '/auth/reset-password' && method === 'POST') {
+      if (!parsedBody.new_password || parsedBody.new_password.length < 6) {
+        throw new Error('New password must be at least 6 characters long.');
+      }
+      localStorage.setItem('rac_admin_custom_pwd', parsedBody.new_password);
+      localStorage.removeItem('rac_reset_otp');
+      return {
+        success: true,
+        message: 'Administrator password reset successfully. You can now log in.'
+      };
     }
 
     // Other read operations
@@ -1509,6 +1570,9 @@ export const api = {
   changePassword: (data) => request('/auth/change-password', { method: 'POST', body: data }),
   updateCredentials: (data) => request('/auth/update-credentials', { method: 'POST', body: data }),
   updateAdminCredentials: (data) => request('/auth/update-credentials', { method: 'POST', body: data }),
+  forgotPassword: (identity) => request('/auth/forgot-password', { method: 'POST', body: { username_or_email: identity } }),
+  verifyOtp: (identity, otp) => request('/auth/verify-otp', { method: 'POST', body: { username_or_email: identity, otp } }),
+  resetPassword: (data) => request('/auth/reset-password', { method: 'POST', body: data }),
 
   // Alumni (Where Are They Now)
   getAlumni: () => request('/alumni'),
@@ -1542,6 +1606,9 @@ export const api = {
   createChild: (data) => request('/children', { method: 'POST', body: data }),
   updateChild: (id, data) => request(`/children/${id}`, { method: 'PUT', body: data }),
   deleteChild: (id) => request(`/children/${id}`, { method: 'DELETE' }),
+  importChildrenCsv: async (payload) => {
+    return request('/children/import-csv', { method: 'POST', body: payload });
+  },
   getChildrenSheetInfo: () => request('/children/sheet-info'),
   syncChildrenGoogleSheet: (sheet_url) => request('/children/sync-google-sheet', { method: 'POST', body: { sheet_url } }),
   setupChildrenGoogleSheetWebhook: (data) => request('/children/setup-google-sheet-webhook', { method: 'POST', body: data }),
@@ -1772,47 +1839,184 @@ export const api = {
   // Donations & Pledges
   recordDonation: (data) => request('/donations', { method: 'POST', body: data }),
   createDonation: (data) => request('/donations', { method: 'POST', body: data }),
-  getDonations: () => request('/donations'),
+  getDonations: async () => {
+    try {
+      const data = await request('/donations');
+      return Array.isArray(data) ? data : (data?.donations || []);
+    } catch (err) {
+      console.warn('Failed to fetch donations from server, using local/cloud cache:', err.message);
+      return await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+    }
+  },
   deleteDonation: (id) => request(`/donations/${id}`, { method: 'DELETE' }),
   confirmPledge: (id) => request(`/donations/${id}/confirm`, { method: 'PUT' }),
   cancelPledge: (id) => request(`/donations/${id}/cancel`, { method: 'PUT' }),
   syncDonations: () => syncDonationsWithCloud(),
 
-  // File Upload with instant Base64 fallback for 100% reliable mobile uploads
-  uploadFile: async (file) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const token = getAuthToken();
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+  // File Upload with progress and instant Base64 fallback for 100% reliable mobile uploads
+  uploadFile: async (file, onProgress) => {
+    return api.uploadFileWithProgress(file, onProgress);
+  },
 
-      const response = await fetch(`${API_BASE}/upload`, {
-        method: 'POST',
-        headers,
-        body: formData
-      });
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        throw new Error('Non-JSON response from upload server');
+  uploadFileWithProgress: (file, onProgress) => {
+    return new Promise((resolve) => {
+      const token = getAuthToken();
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${API_BASE}/upload`, true);
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+      if (xhr.upload && onProgress) {
+        xhr.upload.onprogress = (evt) => {
+          if (evt.lengthComputable) {
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            onProgress(percent);
+          }
+        };
       }
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Upload failed');
-      return data;
-    } catch (err) {
-      console.warn('[UPLOAD] Fallback to base64 data URL for offline/mobile photo:', err.message);
-      // Read file as Base64 Data URL so photo upload works 100% reliably on phone or static host
-      return new Promise((resolve) => {
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            if (onProgress) onProgress(100);
+            resolve(res);
+          } catch (e) {
+            if (onProgress) onProgress(100);
+            resolve({ url: xhr.responseText, filename: file.name, size: file.size });
+          }
+        } else {
+          // Fallback to Base64
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (onProgress) onProgress(100);
+            resolve({ url: reader.result, filename: file.name, size: file.size });
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      xhr.onerror = () => {
+        // Fallback to Base64
         const reader = new FileReader();
         reader.onloadend = () => {
-          resolve({
-            url: reader.result,
-            filename: file.name,
-            mimetype: file.type,
-            size: file.size
-          });
+          if (onProgress) onProgress(100);
+          resolve({ url: reader.result, filename: file.name, size: file.size });
         };
         reader.readAsDataURL(file);
-      });
+      };
+
+      const formData = new FormData();
+      formData.append('file', file);
+      xhr.send(formData);
+    });
+  },
+
+  // Direct Video Upload from Mobile/Desktop Gallery
+  uploadVideo: async (file, onProgress) => {
+    // 1. Validation: file size max 100MB
+    const MAX_SIZE = 100 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      throw new Error(`Video file size exceeds 100MB limit. Current size: ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
     }
+
+    // 2. Validation: format
+    const validVideoTypes = [
+      'video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska', 
+      'video/m4v', 'video/avi', 'video/3gpp'
+    ];
+    const isVideo = validVideoTypes.includes(file.type) || /\.(mp4|webm|mov|mkv|m4v|avi|3gp)$/i.test(file.name);
+    if (!isVideo) {
+      throw new Error('Invalid video format. Supported video formats: MP4, WebM, MOV, MKV, M4V.');
+    }
+
+    return api.uploadFileWithProgress(file, onProgress);
   }
 };
+
+// ==========================================
+// REAL-TIME MULTI-DEVICE SYNCHRONIZATION ENGINE
+// ==========================================
+let eventSource = null;
+const syncListeners = new Set();
+let broadcastChannel = null;
+
+try {
+  if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    broadcastChannel = new BroadcastChannel('rac_sync_events');
+    broadcastChannel.onmessage = (event) => {
+      notifySyncListeners(event.data);
+    };
+  }
+} catch (e) {}
+
+function notifySyncListeners(event) {
+  for (const listener of syncListeners) {
+    try {
+      listener(event);
+    } catch (e) {
+      console.warn('[SYNC LISTENER ERR]', e);
+    }
+  }
+}
+
+export function subscribeToRealtimeSync(callback) {
+  syncListeners.add(callback);
+  return () => syncListeners.delete(callback);
+}
+
+export function broadcastLocalSyncEvent(event) {
+  notifySyncListeners(event);
+  if (broadcastChannel) {
+    try {
+      broadcastChannel.postMessage(event);
+    } catch (e) {}
+  }
+}
+
+export function initRealtimeSync() {
+  if (typeof window === 'undefined' || typeof EventSource === 'undefined') return;
+  if (eventSource) return;
+
+  function connect() {
+    try {
+      const url = `${API_BASE}/sync/events`;
+      eventSource = new EventSource(url);
+
+      eventSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data && data.type !== 'CONNECTED') {
+            console.log('[REALTIME MULTI-DEVICE SYNC]', data);
+            notifySyncListeners(data);
+            if (broadcastChannel) {
+              try { broadcastChannel.postMessage(data); } catch (err) {}
+            }
+          }
+        } catch (err) {}
+      };
+
+      eventSource.onerror = () => {
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+        // Auto-reconnect after 4 seconds
+        setTimeout(connect, 4000);
+      };
+    } catch (err) {
+      setTimeout(connect, 5000);
+    }
+  }
+
+  connect();
+
+  window.addEventListener('online', () => {
+    if (!eventSource) connect();
+  });
+}
+
+// Auto-start real-time sync in browser
+if (typeof window !== 'undefined') {
+  setTimeout(initRealtimeSync, 1000);
+}
+

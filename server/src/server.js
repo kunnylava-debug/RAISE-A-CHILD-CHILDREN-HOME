@@ -20,6 +20,7 @@ import supportersRoutes from './routes/supporters.js';
 import donationsRoutes from './routes/donations.js';
 import uploadRoutes from './routes/upload.js';
 import alumniRoutes from './routes/alumni.js';
+import syncRoutes from './routes/sync.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,6 +61,7 @@ app.use('/api/supporters', supportersRoutes);
 app.use('/api/donations', donationsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/alumni', alumniRoutes);
+app.use('/api/sync', syncRoutes);
 
 // Serve frontend dist build if present
 const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');

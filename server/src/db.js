@@ -186,7 +186,23 @@ export function initDatabase() {
       order_num INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS password_reset_otps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      admin_id INTEGER,
+      email TEXT NOT NULL,
+      otp_hash TEXT NOT NULL,
+      expires_at DATETIME NOT NULL,
+      attempts INTEGER DEFAULT 0,
+      used INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
+
+  // Ensure admin_users has email
+  try {
+    db.exec(`ALTER TABLE admin_users ADD COLUMN email TEXT DEFAULT 'pn9059491777@gmail.com'`);
+  } catch (e) {}
 
   // Ensure donation columns exist if table was already created
   try {
@@ -197,6 +213,18 @@ export function initDatabase() {
   } catch (e) {}
   try {
     db.exec(`ALTER TABLE donations ADD COLUMN quantity_donated INTEGER DEFAULT 1`);
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE donations ADD COLUMN entry_type TEXT DEFAULT 'Direct Donation'`);
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE donations ADD COLUMN status TEXT DEFAULT 'Confirmed'`);
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE donations ADD COLUMN confirmed_at TEXT`);
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE donations ADD COLUMN cancelled_at TEXT`);
   } catch (e) {}
 
   // Ensure admission notification tracking columns exist

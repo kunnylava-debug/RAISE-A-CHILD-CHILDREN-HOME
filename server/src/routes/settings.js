@@ -2,6 +2,7 @@ import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { testSmtpConnection } from '../services/notificationService.js';
+import { broadcastSyncEvent } from '../services/syncService.js';
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ router.put('/', authenticateToken, (req, res) => {
 
   try {
     updateTx(updates);
+    broadcastSyncEvent({ type: 'SETTINGS_UPDATED', action: 'UPDATE', data: updates });
     res.json({ message: 'Settings saved successfully.' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to save settings: ' + err.message });

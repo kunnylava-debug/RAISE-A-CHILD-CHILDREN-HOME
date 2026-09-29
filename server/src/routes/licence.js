@@ -1,6 +1,7 @@
 import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { broadcastSyncEvent } from '../services/syncService.js';
 
 const router = express.Router();
 
@@ -29,12 +30,20 @@ router.put('/', authenticateToken, (req, res) => {
   }
 
   const updated = db.prepare('SELECT * FROM licence ORDER BY id DESC LIMIT 1').get();
+
+  // Real-time synchronization event across all connected devices
+  broadcastSyncEvent({ type: 'LICENCE_UPDATED', action: 'UPDATE', data: updated });
+
   res.json(updated);
 });
 
 // DELETE clear licence (Admin)
 router.delete('/', authenticateToken, (req, res) => {
   db.prepare('DELETE FROM licence').run();
+
+  // Real-time synchronization event across all connected devices
+  broadcastSyncEvent({ type: 'LICENCE_UPDATED', action: 'DELETE' });
+
   res.json({ message: 'Licence records cleared successfully' });
 });
 

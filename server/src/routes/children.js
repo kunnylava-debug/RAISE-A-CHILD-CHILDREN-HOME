@@ -11,6 +11,7 @@ import {
   CSV_PATH 
 } from '../utils/excelSync.js';
 import { sendExcelBackupToAdmin } from '../services/notificationService.js';
+import { broadcastSyncEvent } from '../services/syncService.js';
 import fs from 'fs';
 
 const router = express.Router();
@@ -250,6 +251,12 @@ router.post('/sync-google-sheet', authenticateToken, async (req, res) => {
     const result = await syncFromGoogleSheet(sheetUrl);
     const updatedCount = db.prepare('SELECT COUNT(*) as count FROM children WHERE is_active = 1').get().count;
 
+    broadcastSyncEvent({
+      type: 'CHILDREN_UPDATED',
+      action: 'GOOGLE_SHEET_SYNC',
+      count: result.added
+    });
+
     res.json({
       success: true,
       message: result.message,
@@ -274,6 +281,237 @@ router.post('/setup-google-sheet-webhook', authenticateToken, (req, res) => {
   }
 
   res.json({ message: 'Google Sheet settings updated successfully.' });
+});
+
+// Helper to parse RFC4180 CSV text
+function parseCsvRows(csvText) {
+  const lines = [];
+  let currentRow = [];
+  let currentField = '';
+  let inQuotes = false;
+  const text = (csvText || '').replace(/^\uFEFF/, '');
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (inQuotes) {
+      if (char === '"') {
+        if (nextChar === '"') {
+          currentField += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        currentField += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        currentRow.push(currentField.trim());
+        currentField = '';
+      } else if (char === '\r') {
+        if (nextChar === '\n') i++;
+        currentRow.push(currentField.trim());
+        if (currentRow.some(c => c.length > 0)) lines.push(currentRow);
+        currentRow = [];
+        currentField = '';
+      } else if (char === '\n') {
+        currentRow.push(currentField.trim());
+        if (currentRow.some(c => c.length > 0)) lines.push(currentRow);
+        currentRow = [];
+        currentField = '';
+      } else {
+        currentField += char;
+      }
+    }
+  }
+
+  if (currentField.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.some(c => c.length > 0)) lines.push(currentRow);
+  }
+
+  return lines;
+}
+
+function normalizeCsvHeader(h) {
+  const clean = (h || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (['fullname', 'name', 'childname', 'studentname', 'student'].includes(clean)) return 'name';
+  if (['age', 'years'].includes(clean)) return 'age';
+  if (['gender', 'sex'].includes(clean)) return 'gender';
+  if (['class', 'grade', 'classgrade', 'standard'].includes(clean)) return 'class';
+  if (['admissiondate', 'admitteddate', 'dateofadmission', 'doadm'].includes(clean)) return 'admission_date';
+  if (['guardianname', 'guardianparentname', 'parentname', 'fathername', 'guardian'].includes(clean)) return 'guardian_name';
+  if (['guardianphone', 'phone', 'contactnumber', 'mobilenumber', 'mobile', 'parentphone'].includes(clean)) return 'guardian_phone';
+  if (['guardianaddress', 'address', 'nativeplace', 'addressnativeplace', 'residence'].includes(clean)) return 'guardian_address';
+  if (['medicalnotes', 'healthnotes', 'medicalhealthnotes', 'health', 'medical'].includes(clean)) return 'medical_notes';
+  if (['hobbies', 'talents', 'hobbiestalents', 'interest'].includes(clean)) return 'hobbies';
+  if (['serialid', 'serialno', 'serialnumber', 'id', 'sno'].includes(clean)) return 'serial_no';
+  return clean;
+}
+
+// POST /api/children/import-csv - Validate and import student records from CSV
+router.post('/import-csv', authenticateToken, async (req, res) => {
+  try {
+    const { csv_text, records } = req.body;
+    let parsedRecords = [];
+    const errors = [];
+
+    if (Array.isArray(records) && records.length > 0) {
+      parsedRecords = records;
+    } else if (typeof csv_text === 'string' && csv_text.trim()) {
+      const rows = parseCsvRows(csv_text.trim());
+      if (rows.length < 2) {
+        return res.status(400).json({ error: 'CSV file is empty or missing data rows.' });
+      }
+
+      const rawHeaders = rows[0];
+      const headers = rawHeaders.map(normalizeCsvHeader);
+
+      // Validate required columns
+      const hasName = headers.includes('name');
+      const hasAge = headers.includes('age');
+      const hasGender = headers.includes('gender');
+      const hasClass = headers.includes('class');
+
+      if (!hasName || !hasAge || !hasGender || !hasClass) {
+        const missing = [];
+        if (!hasName) missing.push("'Full Name' or 'Name'");
+        if (!hasAge) missing.push("'Age'");
+        if (!hasGender) missing.push("'Gender'");
+        if (!hasClass) missing.push("'Class'");
+        return res.status(400).json({
+          error: `CSV column validation failed. Missing required column(s): ${missing.join(', ')}. Found headers: [${rawHeaders.join(', ')}]`
+        });
+      }
+
+      // Parse data rows
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const rowObj = {};
+        headers.forEach((h, colIdx) => {
+          rowObj[h] = row[colIdx] || '';
+        });
+        rowObj._rowNumber = i + 1; // 1-indexed Excel row
+        parsedRecords.push(rowObj);
+      }
+    } else {
+      return res.status(400).json({ error: 'Please provide CSV content or validated student records.' });
+    }
+
+    if (parsedRecords.length === 0) {
+      return res.status(400).json({ error: 'No data rows found in the CSV.' });
+    }
+
+    // Row-by-row validation & preparation
+    const validRows = [];
+    let nextSerialNum = 1;
+    const lastChild = db.prepare('SELECT id FROM children ORDER BY id DESC LIMIT 1').get();
+    if (lastChild && lastChild.id) {
+      nextSerialNum = lastChild.id + 1;
+    }
+
+    parsedRecords.forEach((item, idx) => {
+      const lineNum = item._rowNumber || (idx + 2);
+      const name = (item.name || '').trim();
+      const ageRaw = item.age !== undefined ? String(item.age).trim() : '';
+      const childClass = (item.class || '').trim();
+      const genderRaw = (item.gender || '').trim();
+
+      // Check name
+      if (!name) {
+        errors.push(`Row ${lineNum}: Child Full Name is required.`);
+        return;
+      }
+
+      // Check age
+      const age = parseInt(ageRaw, 10);
+      if (isNaN(age) || age < 1 || age > 30) {
+        errors.push(`Row ${lineNum} (${name}): Age "${ageRaw}" must be a valid number between 1 and 30.`);
+        return;
+      }
+
+      // Check class
+      if (!childClass) {
+        errors.push(`Row ${lineNum} (${name}): Class/Grade is required.`);
+        return;
+      }
+
+      // Normalize gender
+      let gender = 'Male';
+      if (/^f/i.test(genderRaw)) gender = 'Female';
+      else if (/^o/i.test(genderRaw)) gender = 'Other';
+      else if (/^m/i.test(genderRaw)) gender = 'Male';
+      else gender = genderRaw || 'Male';
+
+      const serial_no = item.serial_no && item.serial_no.startsWith('SN-CH-') 
+        ? item.serial_no 
+        : `SN-CH-${String(nextSerialNum++).padStart(3, '0')}`;
+
+      validRows.push({
+        serial_no,
+        name,
+        age,
+        class: childClass,
+        gender,
+        admission_date: item.admission_date || new Date().toISOString().split('T')[0],
+        photo: (item.photo || '').trim(),
+        guardian_name: (item.guardian_name || '').trim(),
+        guardian_phone: (item.guardian_phone || '').trim(),
+        guardian_address: (item.guardian_address || '').trim(),
+        medical_notes: item.medical_notes || 'Normal routine checks.',
+        hobbies: item.hobbies || 'Sports, Art, Reading'
+      });
+    });
+
+    if (validRows.length === 0) {
+      return res.status(400).json({
+        error: 'No valid student records could be imported from the CSV.',
+        details: errors
+      });
+    }
+
+    // Insert valid rows in a single atomic transaction
+    const insertStmt = db.prepare(`
+      INSERT INTO children (serial_no, name, age, class, gender, admission_date, photo, guardian_name, guardian_phone, guardian_address, medical_notes, hobbies)
+      VALUES (@serial_no, @name, @age, @class, @gender, @admission_date, @photo, @guardian_name, @guardian_phone, @guardian_address, @medical_notes, @hobbies)
+    `);
+
+    const insertMany = db.transaction((rows) => {
+      for (const row of rows) {
+        insertStmt.run(row);
+      }
+    });
+
+    insertMany(validRows);
+
+    // Regenerate Excel and CSV backups
+    try {
+      generateChildrenExcel();
+    } catch (err) {
+      console.warn('Excel regeneration warn:', err.message);
+    }
+
+    // Real-time synchronization event across all connected devices
+    broadcastSyncEvent({
+      type: 'CHILDREN_UPDATED',
+      action: 'CSV_IMPORT',
+      count: validRows.length
+    });
+
+    res.json({
+      success: true,
+      imported_count: validRows.length,
+      skipped_count: errors.length,
+      errors: errors,
+      message: `Successfully validated and imported ${validRows.length} student records into the database.${errors.length ? ` ${errors.length} row(s) were skipped due to formatting errors.` : ''}`
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to import CSV: ' + err.message });
+  }
 });
 
 // GET single child
@@ -349,6 +587,8 @@ router.post('/', authenticateToken, async (req, res) => {
   // Asynchronously trigger Google Sheet Webhook if configured
   pushChildToGoogleSheetWebhook(newChild, 'add_child').catch(console.error);
 
+  broadcastSyncEvent({ type: 'CHILDREN_UPDATED', action: 'CREATE', data: newChild });
+
   res.status(201).json({
     ...newChild,
     excel_synced: true,
@@ -392,6 +632,8 @@ router.put('/:id', authenticateToken, (req, res) => {
   // Push update to Google Sheet webhook
   pushChildToGoogleSheetWebhook(updated, 'update_child').catch(console.error);
 
+  broadcastSyncEvent({ type: 'CHILDREN_UPDATED', action: 'UPDATE', data: updated });
+
   res.json(updated);
 });
 
@@ -405,6 +647,8 @@ router.delete('/:id', authenticateToken, (req, res) => {
   } catch (err) {
     console.error('Failed to regenerate Excel file after delete:', err);
   }
+
+  broadcastSyncEvent({ type: 'CHILDREN_UPDATED', action: 'DELETE', id: req.params.id });
 
   res.json({ message: 'Child record deleted successfully.' });
 });

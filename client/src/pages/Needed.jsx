@@ -3,7 +3,7 @@ import { X, CheckCircle2, Download, Handshake, Heart, Clock, Phone, AlertCircle 
 import NeededItemsTable from '../components/NeededItemsTable';
 import SupportSection from '../components/SupportSection';
 import SupportersWall from '../components/SupportersWall';
-import { api } from '../services/api';
+import { api, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function Needed({ settings, onShowToast }) {
@@ -84,6 +84,13 @@ export default function Needed({ settings, onShowToast }) {
 
   useEffect(() => {
     fetchData();
+    const unsubscribe = subscribeToRealtimeSync((event) => {
+      if (event.type === 'NEEDED_UPDATED' || event.type === 'DONATIONS_UPDATED') {
+        console.log('[REAL-TIME SYNC] Needs/Donations updated, re-computing live counts...');
+        fetchData();
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const handleCopy = (text, label) => {

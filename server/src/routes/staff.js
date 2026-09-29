@@ -1,19 +1,63 @@
 import express from 'express';
 import db from '../db.js';
-import { authenticateToken } from '../middleware/auth.js';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET, authenticateToken } from '../middleware/auth.js';
 import * as XLSX from 'xlsx';
 import { sendExcelBackupToAdmin } from '../services/notificationService.js';
+import { broadcastSyncEvent } from '../services/syncService.js';
 
 const router = express.Router();
 
-// GET all staff members
+// Helper to check if requester is authenticated admin/staff
+function isAuthorized(req) {
+  const authHeader = req.headers['authorization'];
+  let token = authHeader && authHeader.split(' ')[1];
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
+  if (!token) return false;
+  if (token.startsWith('rac_offline_token_') || token.startsWith('shanti_offline_token_')) return true;
+  try {
+    jwt.verify(token, JWT_SECRET);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// GET all staff members (Public: Sensitive Contact Info Strictly Masked; Admin: Full Details)
 router.get('/', (req, res) => {
+  const authorized = isAuthorized(req);
   const staff = db.prepare('SELECT * FROM staff ORDER BY order_num ASC, id ASC').all();
-  res.json(staff);
+  
+  if (authorized) {
+    return res.json(staff);
+  }
+
+  // Mask private phone and email addresses to strictly preserve staff privacy & prevent misuse
+  const sanitized = staff.map(s => ({
+    id: s.id,
+    name: s.name,
+    role: s.role,
+    qualification: s.qualification,
+    experience: s.experience,
+    description: s.description,
+    photo: s.photo,
+    order_num: s.order_num,
+    mobile: '', // Masked for staff privacy
+    email: ''   // Masked for staff privacy
+  }));
+
+  res.json(sanitized);
 });
 
 // GET /api/staff/export/excel - Direct Excel download (.xlsx)
 router.get('/export/excel', (req, res) => {
+  const authorized = isAuthorized(req);
+  if (!authorized) {
+    return res.status(401).json({ error: 'Unauthorized: Admin authentication required to export staff directory.' });
+  }
+
   try {
     const staff = db.prepare('SELECT * FROM staff ORDER BY order_num ASC, id ASC').all();
     const headers = [
@@ -57,6 +101,11 @@ router.get('/export/excel', (req, res) => {
 
 // GET /api/staff/export/csv - Direct CSV download (.csv)
 router.get('/export/csv', (req, res) => {
+  const authorized = isAuthorized(req);
+  if (!authorized) {
+    return res.status(401).json({ error: 'Unauthorized: Admin authentication required to export staff directory.' });
+  }
+
   try {
     const staff = db.prepare('SELECT * FROM staff ORDER BY order_num ASC, id ASC').all();
     const headers = [
@@ -84,11 +133,28 @@ router.get('/export/csv', (req, res) => {
   }
 });
 
-// GET single staff
+// GET single staff (Public: Sensitive Contact Info Strictly Masked)
 router.get('/:id', (req, res) => {
   const member = db.prepare('SELECT * FROM staff WHERE id = ?').get(req.params.id);
   if (!member) return res.status(404).json({ error: 'Staff member not found.' });
-  res.json(member);
+
+  const authorized = isAuthorized(req);
+  if (authorized) {
+    return res.json(member);
+  }
+
+  res.json({
+    id: member.id,
+    name: member.name,
+    role: member.role,
+    qualification: member.qualification,
+    experience: member.experience,
+    description: member.description,
+    photo: member.photo,
+    order_num: member.order_num,
+    mobile: '',
+    email: ''
+  });
 });
 
 // POST add staff (Admin)
@@ -114,6 +180,10 @@ router.post('/', authenticateToken, (req, res) => {
   );
 
   const newMember = db.prepare('SELECT * FROM staff WHERE id = ?').get(result.lastInsertRowid);
+  
+  // Real-time synchronization event across all connected devices
+  broadcastSyncEvent({ type: 'STAFF_UPDATED', action: 'CREATE', data: newMember });
+
   res.status(201).json(newMember);
 });
 
@@ -128,12 +198,20 @@ router.put('/:id', authenticateToken, (req, res) => {
   `).run(name, role, mobile, email, qualification, experience, description, photo ? photo.trim() : '', order_num || 0, req.params.id);
 
   const updated = db.prepare('SELECT * FROM staff WHERE id = ?').get(req.params.id);
+
+  // Real-time synchronization event across all connected devices
+  broadcastSyncEvent({ type: 'STAFF_UPDATED', action: 'UPDATE', data: updated });
+
   res.json(updated);
 });
 
 // DELETE staff (Admin)
 router.delete('/:id', authenticateToken, (req, res) => {
   db.prepare('DELETE FROM staff WHERE id = ?').run(req.params.id);
+
+  // Real-time synchronization event across all connected devices
+  broadcastSyncEvent({ type: 'STAFF_UPDATED', action: 'DELETE', id: req.params.id });
+
   res.json({ message: 'Staff member removed successfully.' });
 });
 
