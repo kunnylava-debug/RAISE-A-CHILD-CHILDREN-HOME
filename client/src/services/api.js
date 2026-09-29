@@ -1819,9 +1819,11 @@ export const api = {
   deleteTimetableRow: (id) => request(`/timetable/${id}`, { method: 'DELETE' }),
   reorderTimetable: (ordered_ids) => request('/timetable/reorder', { method: 'PUT', body: { ordered_ids } }),
 
-  // Menu
+  // Menu (Food Time Table)
   getMenu: () => request('/menu'),
+  createMenuDay: (data) => request('/menu', { method: 'POST', body: data }),
   updateMenuDay: (id, data) => request(`/menu/${id}`, { method: 'PUT', body: data }),
+  deleteMenuDay: (id) => request(`/menu/${id}`, { method: 'DELETE' }),
 
   // Needed Items
   getNeededItems: () => request('/needed'),

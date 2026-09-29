@@ -19,8 +19,8 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
   ];
 
   const secondaryItems = [
-    { id: 'timetable', label: 'Time Table', icon: Clock },
-    { id: 'menu', label: 'Food Menu', icon: Utensils },
+    { id: 'timetable', label: 'Daily Routine', icon: Clock },
+    { id: 'menu', label: 'Food Time Table', icon: Utensils },
   ];
 
   const handleNavClick = (tabId) => {

@@ -179,7 +179,7 @@ export default function Footer({ setActiveTab, settings }) {
               onClick={() => { setActiveTab('menu'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               className="hover:text-white transition"
             >
-              Food Menu
+              Food Time Table
             </button>
             <span>•</span>
             <button 

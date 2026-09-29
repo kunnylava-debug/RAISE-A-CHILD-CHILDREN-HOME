@@ -100,7 +100,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
     { id: 'manage_staff', label: 'Staff Profiles', icon: Users, navigateTo: 'staff' },
     { id: 'manage_views', label: 'Facility Photos', icon: Image, navigateTo: 'views' },
     { id: 'timetable', label: 'Daily Routine & Schedule', icon: Clock },
-    { id: 'manage_menu', label: 'Food Menu', icon: Utensils, navigateTo: 'menu' },
+    { id: 'manage_menu', label: 'Food Time Table & Menu', icon: Utensils, navigateTo: 'menu' },
     { id: 'manage_needed', label: 'Needs & Supporters', icon: Heart, navigateTo: 'needed' },
   ];
 
