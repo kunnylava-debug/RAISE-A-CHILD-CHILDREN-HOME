@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "day_of_week": "Monday",
+    "breakfast": "Vegetable Dalia / Oats porridge, Boiled Eggs / Boiled Kala Chana, Banana, Warm Cow Milk",
+    "lunch": "Steamed Rice, Musur Dal, Cauliflower & Potato Sabzi, Begun Bhaja, Fresh Tomato Chutney",
+    "snacks": "Roasted Poha with Peanuts, Seasonal Guava / Apple, Hot Herbal Ginger Tea / Milk",
+    "dinner": "Fresh Handmade Chapatis, Mix Vegetable Korma, Moong Dal Tadka, Sweet Kheer"
+  },
+  {
+    "id": 2,
+    "day_of_week": "Tuesday",
+    "breakfast": "Idli / Vegetable Upma with Coconut Chutney & Sambar, Boiled Egg / Sprouted Moong, Milk",
+    "lunch": "Steamed Rice, Arhar Dal with Drumsticks, Bandhakopi (Cabbage) Tarkari, Crispy Papad, Sweet Curd",
+    "snacks": "Murmura (Puffed Rice) with boiled chana, roasted nuts, Lemonade / Warm Milk",
+    "dinner": "Tawa Rotis, Paneer Bhurji / Soyabean Curry, Yellow Dal Fry, Warm Milk before bedtime"
+  },
+  {
+    "id": 3,
+    "day_of_week": "Wednesday",
+    "breakfast": "Wheat Parathas with Aloo Matar Sabzi, Boiled Egg / Curd, Seasonal Orange / Banana, Milk",
+    "lunch": "Fragrant Rice, Katla Fish Curry with potatoes (or Paneer Curry for veg), Masoor Dal, Fresh Salad",
+    "snacks": "Steamed Sweet Corn with butter & chaat masala, Seasonal Fruit, Milk",
+    "dinner": "Fluffy Chapatis, Dal Makhani (lightly spiced), Aloo Gobi Bhaja, Gulab Jamun"
+  },
+  {
+    "id": 4,
+    "day_of_week": "Thursday",
+    "breakfast": "Semolina (Suji) Halwa / Chire Polao with fresh vegetables, Boiled Egg / Sprouts, Warm Milk",
+    "lunch": "Steamed Basmati Rice, Cholar Dal with coconut shavings, Potol Dorma, Crispy Potato Fries",
+    "snacks": "Whole Wheat Biscuits, Roasted Makhana, Fresh Watermelon / Papaya, Warm Milk",
+    "dinner": "Phulkas (Rotis), Seasonal Lau Chingri / Bottle Gourd Kofta, Moong Dal, Payesh (Rice Pudding)"
+  },
+  {
+    "id": 5,
+    "day_of_week": "Friday",
+    "breakfast": "Vegetable Khichdi with Ghee, Roasted Papad, Boiled Egg / Fruit, Warm Milk",
+    "lunch": "Steamed Rice, Rohu Fish Kaliya (or Shahi Paneer for veg), Moong Dal, Mixed Vegetable Labra, Chutney",
+    "snacks": "Boiled Chickpea Chaat with chopped cucumber & tomatoes, Warm Milk / Badam Milk",
+    "dinner": "Fresh Rotis, Egg Curry (or Soya Chunk Curry), Tadka Dal, Green Salad"
+  },
+  {
+    "id": 6,
+    "day_of_week": "Saturday",
+    "breakfast": "Puri with White Chana Masala, Boiled Egg / Banana, Fresh Sweet Lassi / Warm Milk",
+    "lunch": "Jeera Rice, Yellow Dal Tadka, Bhindi Do Pyaza, Crisp Papad, Tomato-Date Chutney, Misti Doi",
+    "snacks": "Vegetable Cutlet / Poha, Seasonal Apple, Masala Milk",
+    "dinner": "Tawa Rotis, Kadai Vegetable curry with Paneer, Chana Dal, Rasgulla"
+  },
+  {
+    "id": 7,
+    "day_of_week": "Sunday",
+    "breakfast": "Bread, Butter, Fruit Jam, Boiled Eggs / Bananas, Cornflakes with Warm Milk",
+    "lunch": "Special Sunday Feast: Basmati Pulao, Bengali Chicken Curry with big potatoes / Shahi Paneer, Dal, Salad, Payesh",
+    "snacks": "Singara (Samosa) / Vegetable Puff, Sweets, Warm Cardamom Milk",
+    "dinner": "Ghee Rotis, Palak Paneer / Methi Malai Matar, Yellow Dal, Fruit Custard"
+  }
+]
