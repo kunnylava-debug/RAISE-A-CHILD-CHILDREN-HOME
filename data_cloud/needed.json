@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "item_name": "Rice & Monthly Kitchen Provisions",
+    "category": "Groceries & Nutrition",
+    "quantity_needed": 25,
+    "quantity_received": 0,
+    "estimated_price": 35000,
+    "urgency": "High",
+    "description": "25 kg bags of premium rice, pulses, cooking oil, and nutritious lentils for resident children's daily meals."
+  },
+  {
+    "id": 2,
+    "item_name": "Dormitory Bunk Beds & Mattresses",
+    "category": "Dormitory & Living",
+    "quantity_needed": 10,
+    "quantity_received": 0,
+    "estimated_price": 45000,
+    "urgency": "High",
+    "description": "Sturdy steel double bunk beds with supportive high-density foam mattresses and clean bedsheets."
+  },
+  {
+    "id": 3,
+    "item_name": "School Uniforms & Study Shoes",
+    "category": "Education & Attire",
+    "quantity_needed": 35,
+    "quantity_received": 0,
+    "estimated_price": 28000,
+    "urgency": "Needed",
+    "description": "Complete sets of tailored school uniforms, white socks, and durable leather school shoes for students."
+  },
+  {
+    "id": 4,
+    "item_name": "Study Desks & Ergonomic Wooden Chairs",
+    "category": "Education",
+    "quantity_needed": 15,
+    "quantity_received": 0,
+    "estimated_price": 30000,
+    "urgency": "Needed",
+    "description": "Spacious wooden study desks and ergonomic study chairs for daily evening homework and tuition hours."
+  },
+  {
+    "id": 5,
+    "item_name": "First Aid & Healthcare Medical Kits",
+    "category": "Health & Medical",
+    "quantity_needed": 8,
+    "quantity_received": 0,
+    "estimated_price": 12000,
+    "urgency": "High",
+    "description": "Pediatric emergency medicines, digital thermometers, antiseptic lotions, bandages, and hygiene kits."
+  },
+  {
+    "id": 6,
+    "item_name": "Library Books & Science Activity Kits",
+    "category": "Education",
+    "quantity_needed": 20,
+    "quantity_received": 0,
+    "estimated_price": 15000,
+    "urgency": "Needed",
+    "description": "Children's illustrated encyclopedias, bilingual storybooks, dictionaries, and practical science learning kits."
+  }
+]
