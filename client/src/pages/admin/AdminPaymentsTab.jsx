@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { 
   CreditCard, Save, QrCode, Phone, Building, 
-  CheckCircle2, Copy, Sparkles, RefreshCw, ExternalLink, ShieldCheck,
-  Upload, Image
+  CheckCircle2, RefreshCw, Upload, Sparkles
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -23,11 +22,6 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
   const [loading, setLoading] = useState(false);
 
   const handleChange = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
-
-  // Dynamic live QR code URL based on UPI ID and Trust Name
-  const dynamicQrUrl = form.upi_id
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`upi://pay?pa=${form.upi_id.trim()}&pn=${encodeURIComponent(form.upi_name || "Hostel Trust")}&cu=INR`)}`
-    : '';
 
   const activeQrCode = form.payment_qr || '/payment_qr.png';
 

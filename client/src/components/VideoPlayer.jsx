@@ -7,7 +7,7 @@ import {
 // Extract YouTube video ID from various YouTube URL formats (watch?v=, youtu.be/, embed/, shorts/)
 function extractYouTubeId(url) {
   if (!url || typeof url !== 'string') return null;
-  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+  const regExp = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
   const match = url.match(regExp);
   return match ? match[1] : null;
 }

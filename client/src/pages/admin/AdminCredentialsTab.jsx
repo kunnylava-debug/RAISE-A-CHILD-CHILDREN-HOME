@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   KeyRound, User, Lock, CheckCircle2, AlertTriangle, 
-  Eye, EyeOff, Save, ShieldCheck 
+  Eye, EyeOff, Save 
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAdminAuth } from '../../context/AdminAuthContext';

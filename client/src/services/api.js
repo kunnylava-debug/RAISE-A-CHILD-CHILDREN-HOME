@@ -1261,7 +1261,7 @@ async function request(endpoint, options = {}) {
           matchedIdx = neededList.findIndex(n => String(n.id) === String(parsedBody.needed_item_id));
         }
         if (matchedIdx === -1 && parsedBody.notes) {
-          const match = String(parsedBody.notes).match(/of:\s*([^\(\n]+)/i);
+          const match = String(parsedBody.notes).match(/of:\s*([^(\n]+)/i);
           if (match) {
             const needName = match[1].trim().toLowerCase();
             matchedIdx = neededList.findIndex(n => n.item_name && n.item_name.toLowerCase().trim() === needName);

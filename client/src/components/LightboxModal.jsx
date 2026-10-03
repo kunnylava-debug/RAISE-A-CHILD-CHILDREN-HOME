@@ -1,12 +1,21 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function LightboxModal({ isOpen, onClose, photos = [], currentIndex = 0, setCurrentIndex }) {
-  if (!isOpen || photos.length === 0) return null;
+  const handleNext = () => {
+    if (setCurrentIndex && photos.length > 0) {
+      setCurrentIndex((currentIndex + 1) % photos.length);
+    }
+  };
 
-  const current = photos[currentIndex] || photos[0];
+  const handlePrev = () => {
+    if (setCurrentIndex && photos.length > 0) {
+      setCurrentIndex((currentIndex - 1 + photos.length) % photos.length);
+    }
+  };
 
   useEffect(() => {
+    if (!isOpen || !photos || photos.length === 0) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowRight') handleNext();
@@ -14,19 +23,11 @@ export default function LightboxModal({ isOpen, onClose, photos = [], currentInd
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, photos.length]);
+  }, [isOpen, currentIndex, photos.length, onClose]);
 
-  const handleNext = () => {
-    if (setCurrentIndex) {
-      setCurrentIndex((currentIndex + 1) % photos.length);
-    }
-  };
+  if (!isOpen || !photos || photos.length === 0) return null;
 
-  const handlePrev = () => {
-    if (setCurrentIndex) {
-      setCurrentIndex((currentIndex - 1 + photos.length) % photos.length);
-    }
-  };
+  const current = photos[currentIndex] || photos[0];
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">

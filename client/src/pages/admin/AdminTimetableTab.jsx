@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Clock, Plus, Edit3, Trash2, ArrowUp, ArrowDown, Save, X, 
-  CheckCircle2, Bell, Activity, Droplets, Coffee, Bus, 
+  Bell, Activity, Droplets, Coffee, Bus, 
   BookOpen, Utensils, Moon, GraduationCap, Smile, Sun, Bed, 
-  RefreshCw, Check 
+  RefreshCw 
 } from 'lucide-react';
 import { api } from '../../services/api';
 

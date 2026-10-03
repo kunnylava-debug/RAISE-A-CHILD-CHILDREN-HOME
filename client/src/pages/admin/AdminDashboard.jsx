@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Settings, UserCheck, Users, 
   FileText, ShieldCheck, Image, Clock, Utensils, 
   Heart, CreditCard, LogOut, ArrowRight, ExternalLink, 
-  Sparkles, CheckCircle2, Calendar, PackageCheck, GraduationCap, KeyRound, Lock, Share2,
+  Calendar, PackageCheck, GraduationCap, KeyRound, Lock, Share2,
   Download, FileSpreadsheet
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';

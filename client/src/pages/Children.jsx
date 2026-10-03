@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, User, Upload, Shield, ShieldCheck, Unlock, Search, 
-  Filter, Plus, Edit3, Trash2, X, ChevronLeft, ChevronRight, 
-  Eye, EyeOff, LayoutGrid, Table as TableIcon, Sparkles,
+  Users, User, Upload, Shield, Unlock, Search, 
+  Plus, Edit3, Trash2, X, ChevronLeft, ChevronRight, 
+  Eye, LayoutGrid, Table as TableIcon,
   FileSpreadsheet, ExternalLink, Download, RefreshCw, Copy, 
   CheckCircle, Check, Settings, AlertCircle, FileText, Mail
 } from 'lucide-react';
@@ -31,8 +31,6 @@ export default function Children({ onShowToast }) {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editChild, setEditChild] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [staffPasskeyModalOpen, setStaffPasskeyModalOpen] = useState(false);
-  const [passkeyInput, setPasskeyInput] = useState('');
   
   // Google Sheet & Excel Integration State
   const [sheetInfo, setSheetInfo] = useState(null);

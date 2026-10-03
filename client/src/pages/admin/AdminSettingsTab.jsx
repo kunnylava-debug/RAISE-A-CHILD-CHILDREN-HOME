@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Image, Phone, Mail, MapPin, Shield, CheckCircle2, CreditCard, Share2, FileSpreadsheet, Send, Key, AlertCircle, Upload, Trash2, RefreshCw } from 'lucide-react';
+import { Save, Mail, MapPin, Shield, CreditCard, Share2, FileSpreadsheet, Send, Key, Upload } from 'lucide-react';
 import { api } from '../../services/api';
 
 export default function AdminSettingsTab({ settings, onRefreshSettings, onShowToast }) {

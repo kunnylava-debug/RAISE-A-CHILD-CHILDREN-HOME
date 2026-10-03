@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShieldCheck, Award, Calendar, Building2, CheckCircle2, 
-  Upload, Save, Trash2, ExternalLink, ZoomIn, AlertCircle, FileText, X
+  ShieldCheck, Award, Calendar, CheckCircle2, 
+  Upload, Save, Trash2, ZoomIn, AlertCircle, FileText, X
 } from 'lucide-react';
 import { api } from '../../services/api';
 import LightboxModal from '../../components/LightboxModal';
 
 export default function AdminLicenceTab({ onShowToast }) {
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
