@@ -1,18 +1,1 @@
-[
-  {
-    "id": 1790678339746,
-    "serial_no": "SN-CH-001",
-    "name": "Rohan Kumar",
-    "age": 11,
-    "class": "Class 6",
-    "gender": "Male",
-    "admission_date": "2026-09-29",
-    "photo": "",
-    "guardian_name": "",
-    "guardian_phone": "",
-    "guardian_address": "",
-    "medical_notes": "Normal routine checks.",
-    "hobbies": "Sports, Art, Reading",
-    "is_active": 1
-  }
-]
+[]
