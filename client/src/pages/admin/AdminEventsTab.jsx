@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Plus, Edit2, Trash2, Image, Sparkles, 
-  X, Check, AlertCircle, RefreshCw 
+  X, Check, AlertCircle, RefreshCw, Upload 
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -11,6 +11,7 @@ export default function AdminEventsTab({ onShowToast }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const initialForm = {
     title: '',
@@ -282,23 +283,65 @@ export default function AdminEventsTab({ onShowToast }) {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Image URL *</label>
-                <input
-                  type="url"
-                  required
-                  placeholder="https://images.unsplash.com/..."
-                  value={form.image_url}
-                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                  className="w-full p-2.5 bg-white/90 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Event Photo (Upload from Gallery or Paste URL) *
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="https://... or choose from gallery"
+                    value={form.image_url}
+                    onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                    className="flex-1 p-2.5 bg-white/90 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs sm:text-sm"
+                  />
+                  <label className="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition shadow-sm whitespace-nowrap">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploadingPhoto ? 'Uploading...' : 'Upload From Gallery'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingPhoto(true);
+                        try {
+                          const res = await api.uploadFile(file);
+                          setForm(prev => ({ ...prev, image_url: res.url }));
+                          onShowToast?.({ type: 'success', message: 'Event photo uploaded directly from gallery!' });
+                        } catch (err) {
+                          onShowToast?.({ type: 'error', message: 'Failed to upload event photo: ' + err.message });
+                        } finally {
+                          setUploadingPhoto(false);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Tap <strong>Upload From Gallery</strong> to choose any celebration or festival photo directly from your mobile or computer.
+                </p>
+
                 {form.image_url && (
-                  <div className="mt-2 h-28 rounded-xl overflow-hidden border border-slate-200">
+                  <div className="mt-2.5 relative h-36 rounded-xl overflow-hidden border border-slate-200 group">
                     <img 
                       src={form.image_url} 
                       alt="Preview" 
                       className="w-full h-full object-cover"
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
+                    <div className="absolute top-2 right-2">
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, image_url: '' })}
+                        className="px-2.5 py-1 bg-black/60 hover:bg-black/80 text-white rounded-lg text-xs font-semibold backdrop-blur-xs transition"
+                      >
+                        Remove Photo
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

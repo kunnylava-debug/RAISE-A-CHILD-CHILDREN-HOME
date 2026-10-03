@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertCircle, ArrowUpRight, Search, 
   Filter, Calendar, ExternalLink, Phone, MessageSquare, Trash2,
   Clock, Handshake, Check, XCircle, TrendingUp, DollarSign,
-  ChevronRight, Sparkles, BarChart2
+  ChevronRight, Sparkles, BarChart2, History, RotateCcw, CalendarDays, X
 } from 'lucide-react';
 import { api, subscribeToRealtimeSync, broadcastLocalSyncEvent } from '../../services/api';
 
@@ -14,6 +14,10 @@ export default function AdminDonationsTab({ onShowToast }) {
   const [loading, setLoading] = useState(true);
   const [filterMode, setFilterMode] = useState('all'); // 'all' | 'pending_pledges' | 'confirmed_pledges' | 'direct_donations' | 'matched'
   const [selectedMonth, setSelectedMonth] = useState('all'); // 'all' | 'YYYY-MM'
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
+  const [resettingIncome, setResettingIncome] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState(() => new Date().toLocaleTimeString());
@@ -140,6 +144,70 @@ export default function AdminDonationsTab({ onShowToast }) {
       donors_count: 0
     };
   }, [monthlyBreakdown, currentMonthKey]);
+
+  // Available Distinct Years across all donations
+  const availableYears = useMemo(() => {
+    const set = new Set([new Date().getFullYear()]);
+    for (const d of donations) {
+      if (d.created_at) {
+        const y = new Date(d.created_at).getFullYear();
+        if (!isNaN(y)) set.add(y);
+      }
+    }
+    return Array.from(set).sort((a, b) => b - a);
+  }, [donations]);
+
+  // All 12 calendar months for selectedYear inspection
+  const yearlyMonthsList = useMemo(() => {
+    const list = [];
+    for (let m = 1; m <= 12; m++) {
+      const monthKey = `${selectedYear}-${String(m).padStart(2, '0')}`;
+      const d = new Date(selectedYear, m - 1, 1);
+      const name = d.toLocaleString('en-US', { month: 'long' });
+      const found = monthlyBreakdown.find(mb => mb.month_key === monthKey);
+      list.push(found || {
+        month_key: monthKey,
+        month_label: `${name} ${selectedYear}`,
+        month_name: name,
+        year: selectedYear,
+        month_num: m,
+        total_amount: 0,
+        direct_amount: 0,
+        pledge_amount: 0,
+        donors_count: 0,
+        donations: []
+      });
+    }
+    return list;
+  }, [selectedYear, monthlyBreakdown]);
+
+  // Active Inspected Month data (or all-time summary)
+  const activeInspectedMonth = useMemo(() => {
+    if (selectedMonth === 'all') {
+      return {
+        is_all: true,
+        month_key: 'all',
+        month_label: 'All-Time Record Ledger',
+        total_amount: totalAmount,
+        direct_amount: donations.filter(d => d.entry_type !== 'Pledge' && d.status !== 'Cancelled').reduce((sum, d) => sum + (Number(d.amount) || 0), 0),
+        pledge_amount: donations.filter(d => (d.entry_type === 'Pledge' || String(d.status || '').toLowerCase().includes('pledge')) && d.status !== 'Cancelled').reduce((sum, d) => sum + (Number(d.amount) || 0), 0),
+        donors_count: donations.filter(d => d.status !== 'Cancelled').length
+      };
+    }
+    const found = monthlyBreakdown.find(m => m.month_key === selectedMonth);
+    if (found) return { is_all: false, ...found };
+    const [y, m] = selectedMonth.split('-');
+    const d = new Date(Number(y), Number(m) - 1, 1);
+    return {
+      is_all: false,
+      month_key: selectedMonth,
+      month_label: !isNaN(d.getTime()) ? d.toLocaleString('en-US', { month: 'long', year: 'numeric' }) : selectedMonth,
+      total_amount: 0,
+      direct_amount: 0,
+      pledge_amount: 0,
+      donors_count: 0
+    };
+  }, [selectedMonth, monthlyBreakdown, totalAmount, donations]);
 
   // Total All-Time Amount
   const totalAmount = useMemo(() => {
@@ -292,7 +360,16 @@ export default function AdminDonationsTab({ onShowToast }) {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2.5 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setResetModalOpen(true)}
+            className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold rounded-xl text-xs sm:text-sm flex items-center space-x-1.5 transition cursor-pointer"
+            title="Reset overall income to ₹0"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+            <span>Reset Income to ₹0</span>
+          </button>
           <button
             onClick={() => loadData(true)}
             className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-slate-50 transition"
@@ -389,109 +466,145 @@ export default function AdminDonationsTab({ onShowToast }) {
         </div>
       </div>
 
-      {/* MONTH-BY-MONTH DIVISION SECTION */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 rounded-3xl p-5 sm:p-7 text-white shadow-lg space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center border border-blue-400/30">
-              <BarChart2 className="w-4 h-4" />
+      {/* YEARLY & MONTHLY INSPECTION DASHBOARD (ACTIVE MONTH VIEW ONLY) */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 rounded-3xl p-5 sm:p-7 text-white shadow-lg space-y-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-300 flex items-center justify-center border border-blue-400/30">
+              <CalendarDays className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold font-serif text-white flex items-center space-x-2">
-                <span>Month-by-Month Funds Breakdown</span>
-                <span className="text-[10px] font-bold uppercase bg-blue-500/30 text-blue-200 px-2.5 py-0.5 rounded-full border border-blue-400/30">
-                  Divided Monthly View
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-400/30">
+                  {selectedMonth === 'all' ? 'All-Time Record Ledger' : 'Monthly Financial Inspection'}
                 </span>
+                {selectedMonth === currentMonthKey && (
+                  <span className="text-[10px] font-bold uppercase bg-emerald-500 text-white px-2 py-0.5 rounded-full">
+                    Current Calendar Month
+                  </span>
+                )}
+                {selectedMonth !== 'all' && selectedMonth !== currentMonthKey && (
+                  <span className="text-[10px] font-bold uppercase bg-amber-500 text-white px-2 py-0.5 rounded-full">
+                    Archived Month
+                  </span>
+                )}
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold font-serif text-white mt-1">
+                {activeInspectedMonth.month_label}
               </h3>
-              <p className="text-xs text-slate-300">
-                Entire received amount categorized by calendar month. Tap any month card to view and filter its receipts.
-              </p>
             </div>
           </div>
 
-          {selectedMonth !== 'all' && (
+          {/* Quick Inspector Toolbar */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Year Selector Dropdown */}
+            <div className="flex items-center space-x-1.5 bg-white/10 px-2.5 py-1.5 rounded-xl border border-white/15 text-xs">
+              <span className="text-slate-400 text-[11px]">Year:</span>
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  const y = Number(e.target.value);
+                  setSelectedYear(y);
+                  const m = selectedMonth !== 'all' ? selectedMonth.split('-')[1] : String(new Date().getMonth() + 1).padStart(2, '0');
+                  setSelectedMonth(`${y}-${m}`);
+                }}
+                className="bg-transparent text-white font-bold focus:outline-none cursor-pointer"
+              >
+                {availableYears.map(y => (
+                  <option key={y} value={y} className="bg-slate-900 text-white">
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Quick Month Selector Dropdown */}
+            <div className="flex items-center space-x-1.5 bg-white/10 px-2.5 py-1.5 rounded-xl border border-white/15 text-xs">
+              <span className="text-slate-400 text-[11px]">Month:</span>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="bg-transparent text-white font-bold focus:outline-none cursor-pointer max-w-[150px] truncate"
+              >
+                <option value="all" className="bg-slate-900 text-white">All Months</option>
+                {yearlyMonthsList.map(m => (
+                  <option key={m.month_key} value={m.month_key} className="bg-slate-900 text-white">
+                    {m.month_name} ({m.total_amount > 0 ? `₹${m.total_amount.toLocaleString('en-IN')}` : '₹0'})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Open Full Year & Month History Modal */}
             <button
-              onClick={() => setSelectedMonth('all')}
-              className="text-xs text-blue-300 hover:text-white underline font-semibold cursor-pointer self-start sm:self-auto"
+              type="button"
+              onClick={() => setHistoryModalOpen(true)}
+              className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm cursor-pointer"
             >
-              Reset Month Filter (Show All)
+              <History className="w-3.5 h-3.5" />
+              <span>View Months History</span>
             </button>
-          )}
+
+            {/* Quick Jump Buttons */}
+            {selectedMonth !== currentMonthKey && (
+              <button
+                type="button"
+                onClick={() => setSelectedMonth(currentMonthKey)}
+                className="px-3 py-2 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-xl text-xs font-semibold transition"
+              >
+                This Month
+              </button>
+            )}
+            {selectedMonth !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setSelectedMonth('all')}
+                className="px-2.5 py-2 text-slate-300 hover:text-white text-xs underline"
+              >
+                Show All
+              </button>
+            )}
+          </div>
         </div>
 
-        {monthlyBreakdown.length === 0 ? (
-          <div className="text-center py-6 text-slate-400 text-xs">
-            No donation records logged yet to divide into monthly categories.
+        {/* Selected Month Metrics Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+            <span className="text-xs text-slate-300 uppercase tracking-wider block font-medium">
+              Total Funds Received
+            </span>
+            <span className="text-2xl sm:text-3xl font-extrabold font-serif text-emerald-400 mt-1 block">
+              ₹{activeInspectedMonth.total_amount.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[11px] text-slate-400 mt-0.5 block">
+              {activeInspectedMonth.donors_count} contribution(s) logged
+            </span>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
-            {monthlyBreakdown.map((m) => {
-              const isSelected = selectedMonth === m.month_key;
-              const isCurrent = m.month_key === currentMonthKey;
-              const pct = totalAmount > 0 ? Math.round((m.total_amount / totalAmount) * 100) : 0;
 
-              return (
-                <div
-                  key={m.month_key}
-                  onClick={() => setSelectedMonth(isSelected ? 'all' : m.month_key)}
-                  className={`p-4 rounded-2xl border transition cursor-pointer relative overflow-hidden flex flex-col justify-between space-y-3 ${
-                    isSelected
-                      ? 'bg-blue-600/30 border-blue-400 shadow-md ring-2 ring-blue-400/50'
-                      : isCurrent
-                      ? 'bg-emerald-950/40 border-emerald-500/50 hover:bg-emerald-900/40'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-blue-300" />
-                      <span className="font-bold text-sm text-white">{m.month_label}</span>
-                    </div>
-                    {isCurrent && (
-                      <span className="text-[10px] font-bold uppercase bg-emerald-500 text-white px-2 py-0.5 rounded-full">
-                        This Month
-                      </span>
-                    )}
-                    {isSelected && !isCurrent && (
-                      <span className="text-[10px] font-bold uppercase bg-blue-500 text-white px-2 py-0.5 rounded-full">
-                        Active Filter
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-baseline justify-between">
-                    <div>
-                      <span className="text-xs text-slate-300 block">Total Received</span>
-                      <span className="text-xl sm:text-2xl font-bold font-serif text-white">
-                        ₹{m.total_amount.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs text-slate-300 block">Share</span>
-                      <span className="text-sm font-bold text-emerald-400">{pct}% of total</span>
-                    </div>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-gradient-to-r from-emerald-400 to-teal-300 h-full rounded-full transition-all duration-500" 
-                      style={{ width: `${Math.max(5, pct)}%` }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-slate-300 pt-1 border-t border-white/10">
-                    <span>{m.donors_count} contribution(s)</span>
-                    <span className="font-semibold text-blue-300 flex items-center space-x-1">
-                      <span>{isSelected ? 'Viewing Month' : 'Click to Filter'}</span>
-                      <ChevronRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+            <span className="text-xs text-slate-300 uppercase tracking-wider block font-medium">
+              Direct Donations (Cash/UPI/Bank)
+            </span>
+            <span className="text-2xl sm:text-3xl font-bold font-serif text-white mt-1 block">
+              ₹{activeInspectedMonth.direct_amount.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[11px] text-teal-300 mt-0.5 block">
+              Instantly incremented to funds
+            </span>
           </div>
-        )}
+
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+            <span className="text-xs text-slate-300 uppercase tracking-wider block font-medium">
+              Pledges / Promises
+            </span>
+            <span className="text-2xl sm:text-3xl font-bold font-serif text-amber-300 mt-1 block">
+              ₹{activeInspectedMonth.pledge_amount.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[11px] text-amber-200 mt-0.5 block">
+              Pending or confirmed pledges
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* FILTER BAR: MONTH SELECTOR + STATUS TABS */}
@@ -500,7 +613,10 @@ export default function AdminDonationsTab({ onShowToast }) {
         <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs">
           <div className="flex items-center space-x-2">
             <Calendar className="w-4 h-4 text-emerald-600" />
-            <span className="font-bold text-slate-700">Filter Ledger by Month:</span>
+            <span className="font-bold text-slate-700">Ledger Filter:</span>
+            <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200">
+              {activeInspectedMonth.month_label}
+            </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
@@ -512,21 +628,28 @@ export default function AdminDonationsTab({ onShowToast }) {
                   : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
               }`}
             >
-              All Months ({donations.length})
+              All Records ({donations.length})
             </button>
-            {monthlyBreakdown.map(m => (
-              <button
-                key={m.month_key}
-                onClick={() => setSelectedMonth(m.month_key)}
-                className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
-                  selectedMonth === m.month_key
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-                }`}
-              >
-                {m.month_label} (₹{m.total_amount.toLocaleString('en-IN')})
-              </button>
-            ))}
+
+            <button
+              onClick={() => setSelectedMonth(currentMonthKey)}
+              className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                selectedMonth === currentMonthKey
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+              }`}
+            >
+              Current Month ({now.toLocaleString('en-US', { month: 'short' })})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setHistoryModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white flex items-center space-x-1 shadow-xs cursor-pointer"
+            >
+              <History className="w-3.5 h-3.5" />
+              <span>Choose Any Month / History</span>
+            </button>
           </div>
         </div>
 
@@ -1039,6 +1162,202 @@ export default function AdminDonationsTab({ onShowToast }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. YEARLY & MONTHLY INSPECTION HISTORY MODAL */}
+      {historyModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-serif text-slate-900">
+                    Yearly & Monthly Income Archive
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Inspect past months and select any month to view its detailed receipts on the main board.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHistoryModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Year Selector Tabs */}
+            <div className="flex items-center space-x-2 border-b border-slate-200 pb-3 overflow-x-auto">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2">Select Year:</span>
+              {availableYears.map(year => (
+                <button
+                  key={year}
+                  type="button"
+                  onClick={() => setSelectedYear(year)}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                    selectedYear === year
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  {year}
+                </button>
+              ))}
+            </div>
+
+            {/* Months Grid for Selected Year */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {yearlyMonthsList.map((m) => {
+                const isSelected = selectedMonth === m.month_key;
+                const isCurrent = m.month_key === currentMonthKey;
+                const hasIncome = m.total_amount > 0;
+
+                return (
+                  <div
+                    key={m.month_key}
+                    className={`p-4 rounded-2xl border transition flex flex-col justify-between space-y-3 ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-50/70 ring-2 ring-blue-400'
+                        : isCurrent
+                        ? 'border-emerald-300 bg-emerald-50/40'
+                        : hasIncome
+                        ? 'border-slate-200 bg-white hover:border-slate-300 shadow-2xs'
+                        : 'border-slate-100 bg-slate-50/60 opacity-70'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-slate-900">{m.month_name} {selectedYear}</span>
+                      {isCurrent && (
+                        <span className="text-[10px] font-extrabold uppercase bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                          Current
+                        </span>
+                      )}
+                      {isSelected && !isCurrent && (
+                        <span className="text-[10px] font-extrabold uppercase bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                          Selected
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <span className="text-[11px] text-slate-500 block">Total Received</span>
+                      <span className={`text-xl font-extrabold font-serif ${hasIncome ? 'text-slate-900' : 'text-slate-400'}`}>
+                        ₹{m.total_amount.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+                      <span className="text-[11px] text-slate-500">
+                        {m.donors_count} contribution(s)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedMonth(m.month_key);
+                          setHistoryModalOpen(false);
+                          onShowToast?.({
+                            type: 'info',
+                            message: `Inspecting ${m.month_name} ${selectedYear} financial records`
+                          });
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-900 hover:bg-blue-600 text-white'
+                        }`}
+                      >
+                        {isSelected ? 'Viewing' : 'Inspect Month'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setHistoryModalOpen(false)}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs sm:text-sm transition cursor-pointer"
+              >
+                Close History
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. RESET INCOME TO ZERO CONFIRMATION MODAL */}
+      {resetModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-rose-200 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-bold font-serif text-slate-900">
+                Reset Overall Income to ₹0?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                This will clear all recorded gift and pledge receipts (current total: <strong className="text-slate-900">₹{totalAmount.toLocaleString('en-IN')}</strong>) and reset the income counter to zero across all your mobile phones and computers.
+              </p>
+              <p className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                ⚠️ Use this option when beginning a new financial year audit or if you want to start fresh with zero balance.
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3 pt-2">
+              <button
+                type="button"
+                disabled={resettingIncome}
+                onClick={() => setResetModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs sm:text-sm hover:bg-slate-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={resettingIncome}
+                onClick={async () => {
+                  setResettingIncome(true);
+                  try {
+                    await api.resetDonationsIncome();
+                    setDonations([]);
+                    setSelectedMonth('all');
+                    onShowToast?.({
+                      type: 'success',
+                      title: 'Income Reset Completed',
+                      message: 'All donation records cleared. Overall income is now ₹0.'
+                    });
+                    setResetModalOpen(false);
+                  } catch (err) {
+                    onShowToast?.({ type: 'error', message: 'Failed to reset income: ' + err.message });
+                  } finally {
+                    setResettingIncome(false);
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm transition shadow-md shadow-rose-200 flex items-center justify-center space-x-1.5 cursor-pointer"
+              >
+                {resettingIncome ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Resetting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Yes, Reset to ₹0</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

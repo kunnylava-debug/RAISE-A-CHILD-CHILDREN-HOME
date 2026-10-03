@@ -199,10 +199,18 @@ module.exports = async (req, res) => {
       }));
     }
 
-    // 4. DELETE /api/donations/:id
+    // 4. DELETE /api/donations/:id or /api/donations/reset/all
     if (method === 'DELETE') {
       const parts = url.split('?')[0].split('/');
       const targetId = parts[parts.length - 1];
+
+      if (url.includes('reset') || targetId === 'all') {
+        donations = [];
+        await setCloudData('donations', [], 'Reset all donation records to zero');
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify({ success: true, message: 'All donation records cleared and overall income reset to ₹0.' }));
+      }
 
       donations = donations.filter(d => String(d.id) !== String(targetId));
       await setCloudData('donations', donations, `Delete donation ${targetId}`);

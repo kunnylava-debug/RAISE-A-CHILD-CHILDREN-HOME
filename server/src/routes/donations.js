@@ -337,6 +337,13 @@ router.put('/:id/cancel', authenticateToken, (req, res) => {
   });
 });
 
+// DELETE /api/donations/reset/all - Reset overall income to zero by clearing all records (Admin)
+router.delete('/reset/all', authenticateToken, (req, res) => {
+  db.prepare('DELETE FROM donations').run();
+  broadcastSyncEvent({ type: 'DONATIONS_UPDATED', action: 'RESET_ALL' });
+  res.json({ success: true, message: 'All donation records cleared and overall income reset to ₹0.' });
+});
+
 // DELETE donation record (Admin)
 router.delete('/:id', authenticateToken, (req, res) => {
   const donation = db.prepare('SELECT * FROM donations WHERE id = ? OR receipt_no = ?').get(req.params.id, req.params.id);

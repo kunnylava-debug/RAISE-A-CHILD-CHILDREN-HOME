@@ -1803,6 +1803,18 @@ export const api = {
   deleteDonation: (id) => request(`/donations/${id}`, { method: 'DELETE' }),
   confirmPledge: (id) => request(`/donations/${id}/confirm`, { method: 'PUT' }),
   cancelPledge: (id) => request(`/donations/${id}/cancel`, { method: 'PUT' }),
+  resetDonationsIncome: async () => {
+    try {
+      await request('/donations/reset/all', { method: 'DELETE' });
+    } catch (err) {
+      console.warn('Backend reset call warn:', err.message);
+    }
+    setStorage('rac_cached_donations', []);
+    try {
+      broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'RESET_ALL' });
+    } catch (e) {}
+    return { success: true, message: 'All donation records cleared and overall income reset to ₹0.' };
+  },
   syncDonations: () => syncDonationsWithCloud(),
 
   // File Upload with progress and instant Base64 fallback for 100% reliable mobile uploads

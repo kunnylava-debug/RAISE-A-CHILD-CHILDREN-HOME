@@ -8,6 +8,7 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
   const [testingEmail, setTestingEmail] = useState(false);
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingQr, setUploadingQr] = useState(false);
 
   useEffect(() => {
     if (settings && Object.keys(settings).length > 0) {
@@ -362,14 +363,57 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
         </div>
 
         <div>
-          <label className="block font-semibold text-slate-700 mb-1">Payment QR Code Image URL</label>
-          <input
-            type="text"
-            value={form.payment_qr || ''}
-            onChange={e => handleChange('payment_qr', e.target.value)}
-            placeholder="https://... (or leave blank to auto-generate from UPI ID)"
-            className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-xs"
-          />
+          <label className="block font-semibold text-slate-700 mb-1">Payment QR Code Image (Gallery Upload or URL)</label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={form.payment_qr || ''}
+              onChange={e => handleChange('payment_qr', e.target.value)}
+              placeholder="https://... (or choose from gallery below)"
+              className="flex-1 p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-xs"
+            />
+            <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition shadow-sm whitespace-nowrap">
+              <Upload className="w-3.5 h-3.5" />
+              <span>{uploadingQr ? 'Uploading QR...' : 'Upload From Gallery'}</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploadingQr}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setUploadingQr(true);
+                  try {
+                    const res = await api.uploadFile(file);
+                    handleChange('payment_qr', res.url);
+                    onShowToast?.({ type: 'success', message: 'Payment QR Code image uploaded directly from gallery!' });
+                  } catch (err) {
+                    onShowToast?.({ type: 'error', message: 'Failed to upload QR image: ' + err.message });
+                  } finally {
+                    setUploadingQr(false);
+                  }
+                }}
+              />
+            </label>
+          </div>
+          {form.payment_qr && (
+            <div className="mt-2.5 flex items-center space-x-3">
+              <img 
+                src={form.payment_qr} 
+                alt="QR Preview" 
+                className="w-16 h-16 object-contain rounded-lg border border-slate-200 bg-white p-1"
+                onError={e => { e.target.style.display = 'none'; }}
+              />
+              <button
+                type="button"
+                onClick={() => handleChange('payment_qr', '')}
+                className="text-xs text-rose-600 hover:underline font-semibold"
+              >
+                Clear Custom QR (Revert to Auto)
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

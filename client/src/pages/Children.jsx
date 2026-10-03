@@ -323,8 +323,8 @@ function doPost(e) {
 
       {/* 2. GOOGLE SHEET & EXCEL LIVE FORM INTEGRATION (PRIVATE - AUTHORIZED ADMIN ONLY) */}
       {adminUser && (
-        <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 rounded-3xl p-5 sm:p-7 text-white shadow-xl border border-emerald-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="space-y-2 flex-1 min-w-0">
+        <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 rounded-3xl p-5 sm:p-7 text-white shadow-xl border border-emerald-500/30 flex flex-col gap-5 w-full">
+          <div className="space-y-2.5 w-full">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center space-x-1.5 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-400/30">
                 <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
@@ -345,23 +345,23 @@ function doPost(e) {
               )}
             </div>
 
-            <h3 className="text-lg sm:text-xl font-bold font-serif text-white flex items-center space-x-2">
-              <span>RISE A CHILD Children Records Excel Form</span>
+            <h3 className="text-xl sm:text-2xl font-bold font-serif text-white tracking-tight">
+              RISE A CHILD Children Records Excel Form
             </h3>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
               Adding or updating children details automatically stores the record in your up-to-date Excel spreadsheet (.xlsx / .csv) and pushes directly to your connected Google Sheet.
             </p>
 
-            <div className="text-[11px] text-emerald-400 font-mono flex items-center space-x-2 pt-0.5">
+            <div className="text-[11px] text-emerald-400 font-mono flex flex-wrap items-center gap-2 pt-0.5">
               <span>Connected Sheet ID: 1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ</span>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <span>{sheetInfo?.total_records || childrenData.total_children || 0} Records Formatted</span>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5 self-stretch lg:self-auto">
+          {/* Action Buttons Toolbar (Dedicated full-width row) */}
+          <div className="flex flex-wrap items-center gap-2.5 w-full pt-4 border-t border-emerald-500/20">
             {/* Open Google Sheet Link */}
             <a
               href={sheetInfo?.google_sheet_url || 'https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing'}
