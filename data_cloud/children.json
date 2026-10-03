@@ -78,21 +78,5 @@
     "medical_notes": "Normal routine checks.",
     "hobbies": "Sports, Art, Reading",
     "is_active": 1
-  },
-  {
-    "id": 1790998883872,
-    "serial_no": "006",
-    "name": "Love kumari",
-    "age": 15,
-    "class": "College / Degree",
-    "gender": "Female",
-    "admission_date": "2026-10-03",
-    "photo": "",
-    "guardian_name": "Prem",
-    "guardian_phone": "8247693027",
-    "guardian_address": "Vig",
-    "medical_notes": "Normal routine health checkup.",
-    "hobbies": "Sports, Reading",
-    "is_active": 1
   }
 ]
