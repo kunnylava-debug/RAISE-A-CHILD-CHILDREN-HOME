@@ -4,10 +4,11 @@
     "item_name": "Rice & Monthly Kitchen Provisions",
     "category": "Groceries & Nutrition",
     "quantity_needed": 25,
-    "quantity_received": 0,
+    "quantity_received": 1,
     "estimated_price": 35000,
     "urgency": "High",
-    "description": "25 kg bags of premium rice, pulses, cooking oil, and nutritious lentils for resident children's daily meals."
+    "description": "25 kg bags of premium rice, pulses, cooking oil, and nutritious lentils for resident children's daily meals.",
+    "is_fulfilled": 0
   },
   {
     "id": 2,
