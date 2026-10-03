@@ -34,6 +34,39 @@ module.exports = async (req, res) => {
     // 1. GET /api/children (Public directory with Privacy Shield, full details for admin)
     if (method === 'GET') {
       const urlObj = new URL(url, 'http://localhost');
+
+      // Direct CSV export handler for Vercel
+      if (url.includes('/export/csv')) {
+        const sorted = sortChildrenAscending(children);
+        const headers = [
+          'S.No', 'Serial ID', 'Full Name', 'Age', 'Gender', 'Class',
+          'Admission Date', 'Guardian Name', 'Guardian Phone', 'Address',
+          'Medical Notes', 'Hobbies', 'Status'
+        ];
+        const escapeCsv = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+        const rows = sorted.map((c, idx) => [
+          idx + 1,
+          c.serial_no || `SN-CH-${String(idx + 1).padStart(3, '0')}`,
+          c.name || '',
+          c.age || '',
+          c.gender || '',
+          c.class || '',
+          c.admission_date || '',
+          authorized ? (c.guardian_name || '') : 'Protected (Staff Only)',
+          authorized ? (c.guardian_phone || '') : '••••••••••',
+          authorized ? (c.guardian_address || '') : 'Protected',
+          authorized ? (c.medical_notes || '') : 'Confidential',
+          c.hobbies || '',
+          c.is_active === 0 ? 'Inactive' : 'Active in Hostel'
+        ].map(escapeCsv).join(','));
+
+        const csvData = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Children_Records.csv"');
+        return res.end(csvData);
+      }
+
       const page = parseInt(urlObj.searchParams.get('page')) || 1;
       const limit = parseInt(urlObj.searchParams.get('limit')) || 12;
       const search = (urlObj.searchParams.get('search') || '').toLowerCase().trim();

@@ -1621,41 +1621,29 @@ export const api = {
     return `${API_BASE}/children/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`;
   },
   downloadChildrenExcel: async (explicitChildrenList) => {
-    try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE}/children/export/excel${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `RISE_A_CHILD_Children_Records_${new Date().toISOString().split('T')[0]}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-        }, 100);
-        // Automatically ensure download copy is routed to pn9059491777@gmail.com
-        api.emailChildrenExcel().catch(() => {});
-        return { success: true };
-      }
-    } catch (e) {
-      console.warn('Server Excel export unavailable, generating live in browser:', e.message);
-    }
-
-    // Direct Browser Client Fallback (100% Reliable, works on Vercel and offline)
     let list = explicitChildrenList;
     if (!list || !Array.isArray(list) || list.length <= 12) {
-      const data = await api.getChildren({ limit: 1000 }).catch(() => null);
-      list = data?.children || getStorage('rac_cached_children', []);
+      try {
+        const data = await api.getChildren({ limit: 1000 });
+        if (data && Array.isArray(data.children) && data.children.length > 0) {
+          list = data.children;
+        }
+      } catch (e) {
+        console.warn('Could not fetch remote children list, using local cache:', e.message);
+      }
     }
-    // Also trigger email archive attempt
+    if (!list || !Array.isArray(list) || list.length === 0) {
+      list = getStorage('rac_cached_children', defaultSettings.children || []);
+    }
+
+    const token = getAuthToken();
+    const isAuthorizedUser = Boolean(token);
+
+    // Trigger background backup dispatch
     api.emailChildrenExcel().catch(() => {});
-    return exportChildrenToExcel(list, true);
+
+    // Direct Browser Client Generation (100% Reliable, genuine Microsoft Excel .xlsx with 1..N S.No indexing)
+    return exportChildrenToExcel(list, isAuthorizedUser);
   },
 
   emailChildrenExcel: async () => {
@@ -1672,37 +1660,25 @@ export const api = {
   },
 
   downloadChildrenCsv: async (explicitChildrenList) => {
-    try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE}/children/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `RISE_A_CHILD_Children_Records_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-        }, 100);
-        return { success: true };
-      }
-    } catch (e) {
-      console.warn('Server CSV export unavailable, generating live in browser:', e.message);
-    }
-
-    // Direct Browser Client Fallback
     let list = explicitChildrenList;
     if (!list || !Array.isArray(list) || list.length <= 12) {
-      const data = await api.getChildren({ limit: 1000 }).catch(() => null);
-      list = data?.children || getStorage('rac_cached_children', []);
+      try {
+        const data = await api.getChildren({ limit: 1000 });
+        if (data && Array.isArray(data.children) && data.children.length > 0) {
+          list = data.children;
+        }
+      } catch (e) {
+        console.warn('Could not fetch remote children list, using local cache:', e.message);
+      }
     }
-    return exportChildrenToCsv(list, true);
+    if (!list || !Array.isArray(list) || list.length === 0) {
+      list = getStorage('rac_cached_children', defaultSettings.children || []);
+    }
+
+    const token = getAuthToken();
+    const isAuthorizedUser = Boolean(token);
+
+    return exportChildrenToCsv(list, isAuthorizedUser);
   },
 
   // Staff Export methods
@@ -1715,66 +1691,40 @@ export const api = {
     return `${API_BASE}/staff/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`;
   },
   downloadStaffExcel: async (explicitStaffList) => {
-    try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE}/staff/export/excel${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `RISE_A_CHILD_Staff_Directory_${new Date().toISOString().split('T')[0]}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-        }, 100);
-        return { success: true };
-      }
-    } catch (e) {
-      console.warn('Server staff Excel export unavailable, generating in browser:', e.message);
-    }
-
     let list = explicitStaffList;
     if (!list || !Array.isArray(list) || list.length === 0) {
-      list = await api.getStaff().catch(() => getStorage('rac_cached_staff', []));
+      try {
+        const data = await api.getStaff();
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+        }
+      } catch (e) {
+        console.warn('Could not fetch remote staff list, using local cache:', e.message);
+      }
     }
+    if (!list || !Array.isArray(list) || list.length === 0) {
+      list = getStorage('rac_cached_staff', defaultStaff || []);
+    }
+
     return exportStaffToExcel(list);
   },
 
   downloadStaffCsv: async (explicitStaffList) => {
-    try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE}/staff/export/csv${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `RISE_A_CHILD_Staff_Directory_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-        }, 100);
-        return { success: true };
-      }
-    } catch (e) {
-      console.warn('Server staff CSV export unavailable, generating in browser:', e.message);
-    }
-
     let list = explicitStaffList;
     if (!list || !Array.isArray(list) || list.length === 0) {
-      list = await api.getStaff().catch(() => getStorage('rac_cached_staff', []));
+      try {
+        const data = await api.getStaff();
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+        }
+      } catch (e) {
+        console.warn('Could not fetch remote staff list, using local cache:', e.message);
+      }
     }
+    if (!list || !Array.isArray(list) || list.length === 0) {
+      list = getStorage('rac_cached_staff', defaultStaff || []);
+    }
+
     return exportStaffToCsv(list);
   },
 

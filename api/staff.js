@@ -29,6 +29,33 @@ module.exports = async (req, res) => {
 
     // 1. GET /api/staff (Public with Staff Profile Privacy, full details for admin)
     if (method === 'GET') {
+      // Direct CSV export handler for Vercel
+      if (url.includes('/export/csv')) {
+        const sorted = sortStaffAscending(staffList);
+        const headers = [
+          'S.No', 'Full Name', 'Role / Designation', 'Mobile Number', 'Email Address',
+          'Qualification', 'Experience', 'Responsibilities / Description', 'Display Order'
+        ];
+        const escapeCsv = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+        const rows = sorted.map((s, idx) => [
+          idx + 1,
+          s.name || '',
+          s.role || '',
+          authorized ? (s.mobile || '') : '••••••••••',
+          authorized ? (s.email || '') : '••••••@•••••.com',
+          s.qualification || '',
+          s.experience || '',
+          s.description || '',
+          s.order_num || (idx + 1)
+        ].map(escapeCsv).join(','));
+
+        const csvData = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="RISE_A_CHILD_Staff_Directory.csv"');
+        return res.end(csvData);
+      }
+
       const sanitizedStaff = staffList.map(member => {
         if (authorized) return member;
         return {

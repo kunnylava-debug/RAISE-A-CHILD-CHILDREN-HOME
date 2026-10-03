@@ -9,12 +9,17 @@ function triggerDownload(blob, filename) {
   a.style.display = 'none';
   a.href = url;
   a.download = filename;
+  a.setAttribute('download', filename);
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  }, 100);
+    try {
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
+      }
+      window.URL.revokeObjectURL(url);
+    } catch (e) {}
+  }, 10000);
 }
 
 /**
@@ -58,8 +63,8 @@ export function sortChildrenAscending(children = []) {
 export function sortStaffAscending(staff = []) {
   if (!Array.isArray(staff)) return [];
   return [...staff].sort((a, b) => {
-    const oA = Number(a.order_num) || 0;
-    const oB = Number(b.order_num) || 0;
+    const oA = Number(a.order_num) || 9999;
+    const oB = Number(b.order_num) || 9999;
     if (oA !== oB) return oA - oB;
     return (Number(a.id) || 0) - (Number(b.id) || 0);
   });
