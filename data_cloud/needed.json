@@ -65,10 +65,10 @@
     "item_name": "soaps",
     "category": "sanitaory",
     "quantity_needed": 100,
-    "quantity_received": 2,
+    "quantity_received": 102,
     "estimated_price": 0,
     "urgency": "High",
     "description": "",
-    "is_fulfilled": 0
+    "is_fulfilled": 1
   }
 ]
