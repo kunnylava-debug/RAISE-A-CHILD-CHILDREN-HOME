@@ -1,5 +1,23 @@
 [
   {
+    "id": 1791193006672,
+    "receipt_no": "PLG-2026-0113",
+    "donor_name": "Test Pledge Donor",
+    "donor_phone": "9988776655",
+    "donor_email": "",
+    "amount": 3000,
+    "payment_method": "Pledge Commitment",
+    "transaction_ref": "",
+    "notes": "",
+    "needed_item_id": 4,
+    "item_name": "Study Desks & Ergonomic Wooden Chairs",
+    "linked_need_title": "Study Desks & Ergonomic Wooden Chairs",
+    "quantity_donated": 2,
+    "entry_type": "Pledge",
+    "status": "Pledged (Pending Admin Confirmation)",
+    "created_at": "2026-10-05T09:36:46.672Z"
+  },
+  {
     "id": 1791193004202,
     "receipt_no": "REC-2026-0112",
     "donor_name": "Test Direct Donor",
