@@ -45,10 +45,11 @@
     "item_name": "First Aid & Healthcare Medical Kits",
     "category": "Health & Medical",
     "quantity_needed": 8,
-    "quantity_received": 0,
+    "quantity_received": 1500,
     "estimated_price": 12000,
     "urgency": "High",
-    "description": "Pediatric emergency medicines, digital thermometers, antiseptic lotions, bandages, and hygiene kits."
+    "description": "Pediatric emergency medicines, digital thermometers, antiseptic lotions, bandages, and hygiene kits.",
+    "is_fulfilled": 1
   },
   {
     "id": 6,
