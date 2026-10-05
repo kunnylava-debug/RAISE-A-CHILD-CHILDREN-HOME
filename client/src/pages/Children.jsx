@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Users, User, Upload, Shield, Unlock, Search, 
   Plus, Edit3, Trash2, X, ChevronLeft, ChevronRight, 
@@ -49,11 +49,39 @@ export default function Children({ onShowToast }) {
 
   const { adminUser } = useAdminAuth();
 
+  const fetchChildren = useCallback((currentPage = page, showLoading = true) => {
+    if (showLoading) setLoading(true);
+    api.getChildren({
+      page: currentPage,
+      limit: 12,
+      search,
+      class: classFilter,
+      gender: genderFilter
+    })
+      .then(setChildrenData)
+      .catch(() => {
+        if (showLoading) {
+          onShowToast?.({ type: 'error', message: 'Failed to load children records' });
+        }
+      })
+      .finally(() => {
+        if (showLoading) setLoading(false);
+      });
+  }, [page, search, classFilter, genderFilter, onShowToast]);
+
+  const loadSheetInfo = useCallback(() => {
+    api.getChildrenSheetInfo()
+      .then(info => {
+        setSheetInfo(info);
+        if (info.webhook_url) setWebhookInput(info.webhook_url);
+      })
+      .catch(() => {});
+  }, []);
+
   // Multi-Device Real-Time Auto-Refresh across Mobile & Desktop
   useEffect(() => {
     const unsubscribe = subscribeToRealtimeSync((event) => {
       if (event.type === 'CHILDREN_UPDATED') {
-        console.log('[REAL-TIME AUTO-REFRESH] Children data updated, refreshing...');
         fetchChildren(page, false);
         loadSheetInfo();
       }
@@ -79,43 +107,12 @@ export default function Children({ onShowToast }) {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
     };
-  }, [page, search, classFilter, genderFilter]);
-
-  const fetchChildren = (currentPage = page, showLoading = true) => {
-    if (showLoading) setLoading(true);
-    api.getChildren({
-      page: currentPage,
-      limit: 12,
-      search,
-      class: classFilter,
-      gender: genderFilter
-    })
-      .then(setChildrenData)
-      .catch(err => {
-        console.error(err);
-        if (showLoading) {
-          onShowToast?.({ type: 'error', message: 'Failed to load children records' });
-        }
-      })
-      .finally(() => {
-        if (showLoading) setLoading(false);
-      });
-  };
-
-  const loadSheetInfo = () => {
-    api.getChildrenSheetInfo()
-      .then(info => {
-        setSheetInfo(info);
-        if (info.webhook_url) setWebhookInput(info.webhook_url);
-      })
-      .catch(console.error);
-  };
+  }, [fetchChildren, loadSheetInfo, page]);
 
   useEffect(() => {
     fetchChildren(1);
-    setPage(1);
     loadSheetInfo();
-  }, [search, classFilter, genderFilter, adminUser]);
+  }, [search, classFilter, genderFilter, adminUser, fetchChildren, loadSheetInfo]);
 
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > childrenData.total_pages) return;
@@ -460,6 +457,7 @@ function doPost(e) {
 
             {/* Admin Sync from Google Sheet */}
             <button
+              type="button"
               onClick={handleSyncGoogleSheet}
               disabled={syncingSheet}
               className="px-3.5 py-2.5 bg-teal-700 hover:bg-teal-600 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 disabled:opacity-50"
@@ -470,6 +468,7 @@ function doPost(e) {
             </button>
 
             <button
+              type="button"
               onClick={() => setSheetModalOpen(true)}
               className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition border border-white/20"
               title="Google Sheet Integration & Webhook Setup"
@@ -574,6 +573,7 @@ function doPost(e) {
           {/* View mode toggle */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
+              type="button"
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg text-xs font-semibold transition ${
                 viewMode === 'grid' ? 'bg-white shadow text-emerald-700' : 'text-slate-600 hover:text-slate-900'
@@ -583,6 +583,7 @@ function doPost(e) {
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('table')}
               className={`p-1.5 rounded-lg text-xs font-semibold transition ${
                 viewMode === 'table' ? 'bg-white shadow text-emerald-700' : 'text-slate-600 hover:text-slate-900'
@@ -595,6 +596,7 @@ function doPost(e) {
 
           {adminUser && (
             <button
+              type="button"
               onClick={() => {
                 setEditChild({
                   serial_no: '',
@@ -638,6 +640,7 @@ function doPost(e) {
           {adminUser && (
             <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
               <button
+                type="button"
                 onClick={() => {
                   setEditChild({
                     serial_no: '',
@@ -661,6 +664,7 @@ function doPost(e) {
                 <span>Add First Child</span>
               </button>
               <button
+                type="button"
                 onClick={handleSyncGoogleSheet}
                 disabled={syncingSheet}
                 className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition inline-flex items-center space-x-1.5"
@@ -742,6 +746,7 @@ function doPost(e) {
 
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                   <button
+                    type="button"
                     onClick={() => setSelectedChild(child)}
                     className="text-xs text-emerald-700 hover:text-emerald-800 font-bold flex items-center space-x-1"
                   >
@@ -752,6 +757,7 @@ function doPost(e) {
                   {adminUser && (
                     <div className="flex items-center space-x-1">
                       <button
+                        type="button"
                         onClick={() => {
                           setEditChild(child);
                           setAddModalOpen(true);
@@ -762,6 +768,7 @@ function doPost(e) {
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleDeleteChild(child.id, child.name)}
                         className="p-1 text-rose-500 hover:text-rose-700"
                         title="Delete Child"
@@ -831,6 +838,7 @@ function doPost(e) {
                     <td className="py-3 px-3 sm:px-4 text-slate-500 font-mono text-xs whitespace-nowrap hidden sm:table-cell">{child.admission_date}</td>
                     <td className="py-3 px-3 sm:px-4 text-right whitespace-nowrap">
                       <button
+                        type="button"
                         onClick={() => setSelectedChild(child)}
                         className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition mr-1.5"
                       >
@@ -838,6 +846,7 @@ function doPost(e) {
                       </button>
                       {adminUser && (
                         <button
+                          type="button"
                           onClick={() => handleDeleteChild(child.id, child.name)}
                           className="text-rose-600 hover:text-rose-800 p-1"
                         >
@@ -864,6 +873,7 @@ function doPost(e) {
 
           <div className="flex items-center space-x-2">
             <button
+              type="button"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1}
               className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -872,6 +882,7 @@ function doPost(e) {
             </button>
             <span className="font-bold px-2">{page}</span>
             <button
+              type="button"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= childrenData.total_pages}
               className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -887,6 +898,7 @@ function doPost(e) {
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative animate-in zoom-in-95">
             <button
+              type="button"
               onClick={() => setSelectedChild(null)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition"
             >
@@ -978,6 +990,7 @@ function doPost(e) {
 
             <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end">
               <button
+                type="button"
                 onClick={() => setSelectedChild(null)}
                 className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition"
               >
@@ -996,7 +1009,7 @@ function doPost(e) {
               <h3 className="text-lg font-bold text-slate-900 font-serif">
                 {editChild.id ? 'Edit Child Record' : 'Enroll New Child Record'}
               </h3>
-              <button onClick={() => setAddModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button type="button" onClick={() => setAddModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1202,6 +1215,7 @@ function doPost(e) {
                 </h3>
               </div>
               <button 
+                type="button"
                 onClick={() => setSheetModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition"
               >
@@ -1334,6 +1348,7 @@ function doPost(e) {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setCsvImportModalOpen(false);
                   setCsvValidationResult(null);
@@ -1423,8 +1438,8 @@ function doPost(e) {
                         </div>
                       </div>
                       <div className="bg-white/80 rounded-xl p-3 border border-rose-200/60 max-h-32 overflow-y-auto space-y-1 font-mono text-[11px] text-rose-800">
-                        {csvValidationResult.errors.map((err, i) => (
-                          <div key={i} className="flex items-center space-x-1.5">
+                        {csvValidationResult.errors.map((err) => (
+                          <div key={`err:${err}`} className="flex items-center space-x-1.5">
                             <span className="text-rose-500 font-bold">•</span>
                             <span>{err}</span>
                           </div>
@@ -1437,8 +1452,8 @@ function doPost(e) {
                   {csvValidationResult.warnings?.length > 0 && (
                     <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3 text-xs space-y-1">
                       <span className="font-bold block text-[11px]">Notice:</span>
-                      {csvValidationResult.warnings.slice(0, 3).map((w, i) => (
-                        <p key={i} className="text-[11px] text-amber-800">• {w}</p>
+                      {csvValidationResult.warnings.slice(0, 3).map((w) => (
+                        <p key={`warn:${w}`} className="text-[11px] text-amber-800">• {w}</p>
                       ))}
                     </div>
                   )}
@@ -1465,8 +1480,8 @@ function doPost(e) {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-200 bg-white">
-                            {csvValidationResult.records.slice(0, 5).map((rec, i) => (
-                              <tr key={i} className="hover:bg-slate-50 font-mono">
+                            {csvValidationResult.records.slice(0, 5).map((rec, idx) => (
+                              <tr key={rec.serial_no || `rec-${idx}-${rec.name}`} className="hover:bg-slate-50 font-mono">
                                 <td className="p-2 text-emerald-700 font-bold">{rec.serial_no}</td>
                                 <td className="p-2 font-sans font-medium text-slate-900">{rec.name}</td>
                                 <td className="p-2">{rec.age} yrs</td>
