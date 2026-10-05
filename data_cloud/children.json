@@ -158,5 +158,21 @@
     "medical_notes": "GOOD",
     "hobbies": "Sports, Art, Reading",
     "is_active": 1
+  },
+  {
+    "id": 1791181352541,
+    "serial_no": "SN-CH-011",
+    "name": "Student",
+    "age": 10,
+    "class": "Class 5",
+    "gender": "Male",
+    "admission_date": "2026-10-05",
+    "photo": "",
+    "guardian_name": "",
+    "guardian_phone": "",
+    "guardian_address": "",
+    "medical_notes": "Normal routine checks.",
+    "hobbies": "Sports, Art, Reading",
+    "is_active": 1
   }
 ]
