@@ -125,13 +125,57 @@ module.exports = async (req, res) => {
       }));
     }
 
-    // 2. POST /api/children (Add new child to persistent cloud store)
+    // 2. POST /api/children (Add new child or Batch Import to persistent cloud store)
     if (method === 'POST') {
       let body = req.body;
       if (typeof body === 'string') {
         try { body = JSON.parse(body); } catch (e) { body = {}; }
       }
       body = body || {};
+
+      // Batch import from CSV / Excel
+      if (url.includes('/import-csv') || (Array.isArray(body.records) && body.records.length > 0)) {
+        const records = Array.isArray(body.records) ? body.records : [];
+        if (records.length === 0) {
+          res.statusCode = 400;
+          return res.end(JSON.stringify({ error: 'No valid student records provided.' }));
+        }
+
+        const highestSerialNum = children.reduce((max, c) => {
+          const match = String(c.serial_no || '').match(/SN-CH-(\d+)/i);
+          return match ? Math.max(max, parseInt(match[1], 10)) : max;
+        }, 0);
+        let nextSerialCounter = highestSerialNum + 1;
+
+        const imported = records.map((r, idx) => ({
+          id: Date.now() + idx,
+          serial_no: r.serial_no && r.serial_no.startsWith('SN-CH-') ? r.serial_no : `SN-CH-${String(nextSerialCounter++).padStart(3, '0')}`,
+          name: r.name || 'Student',
+          age: parseInt(r.age, 10) || 10,
+          class: r.class || 'Class 5',
+          gender: r.gender || 'Male',
+          admission_date: r.admission_date || new Date().toISOString().split('T')[0],
+          photo: (r.photo || '').trim(),
+          guardian_name: (r.guardian_name || '').trim(),
+          guardian_phone: (r.guardian_phone || '').trim(),
+          guardian_address: (r.guardian_address || '').trim(),
+          medical_notes: r.medical_notes || 'Normal routine checks.',
+          hobbies: r.hobbies || 'Sports, Art, Reading',
+          is_active: 1
+        }));
+
+        children.push(...imported);
+        children = sortChildrenAscending(children);
+        await setCloudData('children', children, `Imported ${imported.length} student records`);
+
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify({
+          success: true,
+          imported_count: imported.length,
+          message: `Successfully imported ${imported.length} student records!`
+        }));
+      }
 
       const nextId = Date.now();
       const highestSerialNum = children.reduce((max, c) => {

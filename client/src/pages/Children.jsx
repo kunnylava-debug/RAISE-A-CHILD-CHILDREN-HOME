@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { api, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { parseAndValidateChildrenCsv } from '../utils/exportUtils';
+import { parseAndValidateChildrenCsv, parseSpreadsheetFileToCsv } from '../utils/exportUtils';
 
 export default function Children({ onShowToast }) {
   const [childrenData, setChildrenData] = useState({
@@ -206,18 +206,24 @@ function doPost(e) {
     onShowToast?.({ type: 'success', message: 'Apps Script code copied to clipboard!' });
   };
 
-  const handleCsvFileSelect = (e) => {
+  const handleCsvFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setCsvImportFile(file);
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const text = evt.target.result;
-      setRawCsvText(text);
-      const validation = parseAndValidateChildrenCsv(text, childrenData?.children || []);
+    try {
+      const csvText = await parseSpreadsheetFileToCsv(file);
+      setRawCsvText(csvText);
+      const validation = parseAndValidateChildrenCsv(csvText, childrenData?.children || []);
       setCsvValidationResult(validation);
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      setCsvValidationResult({
+        valid: false,
+        errors: [`Failed to open spreadsheet: ${err.message || 'Corrupted or unsupported format'}`],
+        warnings: [],
+        records: [],
+        totalRows: 0
+      });
+    }
   };
 
   const handleExecuteCsvImport = async () => {
@@ -436,7 +442,7 @@ function doPost(e) {
               <span>CSV</span>
             </button>
 
-            {/* Import CSV */}
+            {/* Import CSV / Excel */}
             <button
               type="button"
               onClick={() => {
@@ -446,10 +452,10 @@ function doPost(e) {
                 setRawCsvText('');
               }}
               className="px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 border border-emerald-500/40 shadow-sm cursor-pointer"
-              title="Import student records from a CSV file"
+              title="Import student records from an Excel (.xlsx) or CSV file"
             >
               <Upload className="w-3.5 h-3.5 text-emerald-300" />
-              <span>Import CSV</span>
+              <span>Import Excel / CSV</span>
             </button>
 
             {/* Admin Sync from Google Sheet */}
@@ -1320,10 +1326,10 @@ function doPost(e) {
                 <FileSpreadsheet className="w-6 h-6 text-emerald-600" />
                 <div>
                   <h3 className="text-lg sm:text-xl font-bold font-serif text-slate-900">
-                    Import Student Records from CSV
+                    Import Student Records from Excel / CSV
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Pre-validate CSV spreadsheets before persisting into the hostel database
+                    Pre-validate Excel (.xlsx, .xls) and CSV spreadsheets before persisting into the hostel database
                   </p>
                 </div>
               </div>
@@ -1345,26 +1351,26 @@ function doPost(e) {
               {/* Format Guide */}
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs space-y-1.5 text-slate-700">
                 <span className="font-bold text-slate-900 block uppercase tracking-wider text-[11px]">
-                  📋 Required Columns in CSV File:
+                  📋 Supported Columns in Excel & CSV Files:
                 </span>
                 <p className="text-slate-600 leading-relaxed text-[11px]">
-                  <strong className="text-emerald-800 font-mono">Full Name</strong> (or Name), <strong className="text-emerald-800 font-mono">Age</strong> (number 1–30), <strong className="text-emerald-800 font-mono">Gender</strong> (Male/Female), and <strong className="text-emerald-800 font-mono">Class / Grade</strong>.
+                  <strong className="text-emerald-800 font-mono">Full Name</strong> (or Name/Student Name), <strong className="text-emerald-800 font-mono">Age</strong>, <strong className="text-emerald-800 font-mono">Gender</strong>, and <strong className="text-emerald-800 font-mono">Class / Grade</strong>.
                 </p>
                 <p className="text-slate-500 text-[10px]">
-                  Optional columns: Guardian Name, Guardian Phone, Address, Medical Notes, Hobbies, Admission Date.
+                  Optional columns: Serial ID, Guardian Name, Guardian Phone, Address, Medical Notes, Hobbies, Admission Date. If columns like Age or Class are omitted, smart defaults are automatically applied.
                 </p>
               </div>
 
               {/* File Dropzone */}
               <div>
                 <label className="block font-bold text-slate-700 mb-2">
-                  Select CSV File (.csv)
+                  Select Spreadsheet File (.xlsx, .xls, .csv)
                 </label>
                 <div className="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-6 text-center transition bg-slate-50/50 hover:bg-emerald-50/20">
                   <Upload className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
                   <input
                     type="file"
-                    accept=".csv,text/csv"
+                    accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
                     onChange={handleCsvFileSelect}
                     id="csv-file-picker"
                     className="hidden"
@@ -1373,7 +1379,7 @@ function doPost(e) {
                     htmlFor="csv-file-picker"
                     className="inline-flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs cursor-pointer shadow-sm transition"
                   >
-                    <span>Browse CSV Spreadsheet</span>
+                    <span>Browse Excel / CSV Spreadsheet</span>
                   </label>
                   <p className="text-slate-500 text-xs mt-2">
                     {csvImportFile ? (
@@ -1381,7 +1387,7 @@ function doPost(e) {
                         Selected: {csvImportFile.name} ({(csvImportFile.size / 1024).toFixed(1)} KB)
                       </span>
                     ) : (
-                      'Click to upload or drag and drop a .csv file'
+                      'Click to upload or drag and drop any .xlsx, .xls, or .csv file'
                     )}
                   </p>
                 </div>
@@ -1396,7 +1402,7 @@ function doPost(e) {
                       <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                       <div className="space-y-0.5">
                         <span className="font-bold block text-sm">
-                          CSV Validation Passed!
+                          Spreadsheet Validation Passed!
                         </span>
                         <p className="text-xs text-emerald-800">
                           {csvValidationResult.records.length} valid student record(s) ready to import into the hostel database.

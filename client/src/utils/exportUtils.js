@@ -349,25 +349,88 @@ export function parseRawCsvText(csvText) {
 /**
  * Normalizes header string to standard property key
  */
+/**
+ * Reads any uploaded spreadsheet file (Excel .xlsx, .xls or CSV .csv)
+ * and reliably converts it into standard CSV text.
+ */
+export async function parseSpreadsheetFileToCsv(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      return reject(new Error('No file was selected.'));
+    }
+
+    const isExcel = /\.(xlsx|xls)$/i.test(file.name) || 
+      file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      file.type === 'application/vnd.ms-excel';
+
+    const reader = new FileReader();
+
+    if (isExcel) {
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+            throw new Error('Excel workbook contains no sheets.');
+          }
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const csvText = XLSX.utils.sheet_to_csv(worksheet, { blankrows: false });
+          resolve(csvText);
+        } catch (err) {
+          reject(new Error(`Failed to read Excel spreadsheet: ${err.message}`));
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read Excel spreadsheet file.'));
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.onload = (e) => {
+        const text = e.target.result || '';
+        // If file contains binary null bytes (corrupted or misnamed binary file)
+        if (text.includes('\u0000') || text.startsWith('PK\x03\x04')) {
+          try {
+            const data = new TextEncoder().encode(text);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            return resolve(XLSX.utils.sheet_to_csv(worksheet, { blankrows: false }));
+          } catch {
+            // continue with plain text
+          }
+        }
+        resolve(text);
+      };
+      reader.onerror = () => reject(new Error('Failed to read CSV text file.'));
+      reader.readAsText(file);
+    }
+  });
+}
+
+/**
+ * Normalizes header string to standard property key
+ */
 export function normalizeCsvHeader(h) {
   const clean = (h || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (['fullname', 'name', 'childname', 'studentname', 'student'].includes(clean)) return 'name';
-  if (['age', 'years'].includes(clean)) return 'age';
-  if (['gender', 'sex'].includes(clean)) return 'gender';
-  if (['class', 'grade', 'classgrade', 'standard'].includes(clean)) return 'class';
-  if (['admissiondate', 'admitteddate', 'dateofadmission', 'doadm'].includes(clean)) return 'admission_date';
-  if (['guardianname', 'guardianparentname', 'parentname', 'fathername', 'guardian'].includes(clean)) return 'guardian_name';
-  if (['guardianphone', 'phone', 'contactnumber', 'mobilenumber', 'mobile', 'parentphone'].includes(clean)) return 'guardian_phone';
-  if (['guardianaddress', 'address', 'nativeplace', 'addressnativeplace', 'residence'].includes(clean)) return 'guardian_address';
-  if (['medicalnotes', 'healthnotes', 'medicalhealthnotes', 'health', 'medical'].includes(clean)) return 'medical_notes';
-  if (['hobbies', 'talents', 'hobbiestalents', 'interest'].includes(clean)) return 'hobbies';
-  if (['serialid', 'serialno', 'serialnumber', 'id', 'sno'].includes(clean)) return 'serial_no';
+  if (['fullname', 'name', 'childname', 'studentname', 'student', 'child', 'studentfullname', 'beneficiaryname', 'beneficiary', 'nameofthechild'].includes(clean)) return 'name';
+  if (['age', 'years', 'ageyears', 'ageinyears', 'yearsold'].includes(clean)) return 'age';
+  if (['gender', 'sex', 'gendersex', 'morf', 'mf'].includes(clean)) return 'gender';
+  if (['class', 'grade', 'classgrade', 'standard', 'std', 'studyclass', 'currentclass', 'education', 'studying', 'course'].includes(clean)) return 'class';
+  if (['admissiondate', 'admitteddate', 'dateofadmission', 'doadm', 'joiningdate', 'admission', 'date'].includes(clean)) return 'admission_date';
+  if (['guardianname', 'guardianparentname', 'parentname', 'fathername', 'guardian', 'mothername', 'parent', 'caregiver'].includes(clean)) return 'guardian_name';
+  if (['guardianphone', 'phone', 'contactnumber', 'mobilenumber', 'mobile', 'parentphone', 'phonenumber', 'phoneno', 'mobileno', 'contact'].includes(clean)) return 'guardian_phone';
+  if (['guardianaddress', 'address', 'nativeplace', 'addressnativeplace', 'residence', 'location', 'place', 'city', 'town'].includes(clean)) return 'guardian_address';
+  if (['medicalnotes', 'healthnotes', 'medicalhealthnotes', 'health', 'medical', 'bloodgroup', 'medicalcondition', 'notes'].includes(clean)) return 'medical_notes';
+  if (['hobbies', 'talents', 'hobbiestalents', 'interest', 'interests', 'skills'].includes(clean)) return 'hobbies';
+  if (['serialid', 'serialno', 'serialnumber', 'id', 'sno', 'slno', 'serial', 'index', 'no', 'sn'].includes(clean)) return 'serial_no';
+  if (['status', 'activestatus', 'state'].includes(clean)) return 'status';
+  if (['photo', 'image', 'photourl', 'pic', 'picture'].includes(clean)) return 'photo';
   return clean;
 }
 
 /**
- * Pre-import CSV Validator for Children records
- * Checks headers, data types, value boundaries, and duplicate entries.
+ * Pre-import Spreadsheet/CSV Validator for Children records
+ * Dynamically locates the header row, normalizes column names,
+ * and validates data rows with smart fallbacks.
  */
 export function parseAndValidateChildrenCsv(csvText, existingChildren = []) {
   const rows = parseRawCsvText(csvText);
@@ -378,35 +441,78 @@ export function parseAndValidateChildrenCsv(csvText, existingChildren = []) {
   if (rows.length < 2) {
     return {
       valid: false,
-      errors: ['The selected CSV file is empty or does not contain any student data rows.'],
+      errors: ['The selected spreadsheet is empty or does not contain any student data rows.'],
       warnings: [],
       records: [],
       totalRows: 0
     };
   }
 
-  const rawHeaders = rows[0];
-  const normalizedHeaders = rawHeaders.map(normalizeCsvHeader);
+  // Dynamically find the header row (search first 5 rows)
+  let headerRowIndex = -1;
+  let normalizedHeaders = [];
+  let rawHeaders = [];
 
-  // Validate presence of required headers
-  const requiredFields = [
-    { key: 'name', label: 'Full Name' },
-    { key: 'age', label: 'Age' },
-    { key: 'gender', label: 'Gender' },
-    { key: 'class', label: 'Class' }
-  ];
+  for (let r = 0; r < Math.min(rows.length, 5); r++) {
+    const candidateRow = rows[r];
+    const candidateNormalized = candidateRow.map(normalizeCsvHeader);
+    const hasName = candidateNormalized.includes('name');
+    const hasAge = candidateNormalized.includes('age');
+    const hasGender = candidateNormalized.includes('gender');
+    const hasClass = candidateNormalized.includes('class');
 
-  const missingHeaders = requiredFields.filter(f => !normalizedHeaders.includes(f.key));
-  if (missingHeaders.length > 0) {
+    // Found header row if name and at least one other student field are present
+    if (hasName && (hasAge || hasGender || hasClass || candidateNormalized.includes('serial_no') || candidateNormalized.includes('admission_date'))) {
+      headerRowIndex = r;
+      normalizedHeaders = candidateNormalized;
+      rawHeaders = candidateRow;
+      break;
+    }
+  }
+
+  // Fallback: if not found, use first row or row with 'name'
+  if (headerRowIndex === -1) {
+    for (let r = 0; r < Math.min(rows.length, 5); r++) {
+      const candidateRow = rows[r];
+      const candidateNormalized = candidateRow.map(normalizeCsvHeader);
+      if (candidateNormalized.includes('name')) {
+        headerRowIndex = r;
+        normalizedHeaders = candidateNormalized;
+        rawHeaders = candidateRow;
+        break;
+      }
+    }
+  }
+
+  if (headerRowIndex === -1) {
+    headerRowIndex = 0;
+    rawHeaders = rows[0];
+    normalizedHeaders = rawHeaders.map(normalizeCsvHeader);
+  }
+
+  // Student Full Name is the only required key identifier
+  const hasName = normalizedHeaders.includes('name');
+  if (!hasName) {
     return {
       valid: false,
       errors: [
-        `CSV column validation failed. Missing required column(s): ${missingHeaders.map(m => `"${m.label}"`).join(', ')}. Found headers: [${rawHeaders.join(', ')}]`
+        `Spreadsheet validation failed. Could not locate a column for student names (e.g. "Full Name", "Name", "Student Name"). Found columns: [${rawHeaders.filter(Boolean).join(', ')}]`
       ],
       warnings: [],
       records: [],
-      totalRows: rows.length - 1
+      totalRows: Math.max(0, rows.length - (headerRowIndex + 1))
     };
+  }
+
+  // Inform user if non-critical columns will receive smart defaults
+  if (!normalizedHeaders.includes('age')) {
+    warnings.push('Column "Age" was not detected. Records without age will default to 10.');
+  }
+  if (!normalizedHeaders.includes('class')) {
+    warnings.push('Column "Class" was not detected. Records without class will default to "Class 5".');
+  }
+  if (!normalizedHeaders.includes('gender')) {
+    warnings.push('Column "Gender" was not detected. Records without gender will default to "Male".');
   }
 
   // Determine starting serial number
@@ -424,7 +530,7 @@ export function parseAndValidateChildrenCsv(csvText, existingChildren = []) {
   );
 
   // Row-by-row validation
-  for (let i = 1; i < rows.length; i++) {
+  for (let i = headerRowIndex + 1; i < rows.length; i++) {
     const row = rows[i];
     const lineNum = i + 1; // 1-indexed Excel row
     const rowObj = {};
@@ -438,33 +544,29 @@ export function parseAndValidateChildrenCsv(csvText, existingChildren = []) {
     const childClass = rowObj.class || '';
     const genderRaw = rowObj.gender || '';
 
-    // Check empty row
+    // Check completely empty row
     if (!name && !ageRaw && !childClass) {
       continue;
     }
 
-    let hasRowError = false;
-
     // Validate Name
     if (!name || name.length < 2) {
       errors.push(`Row ${lineNum}: Child Full Name is required and must be at least 2 characters.`);
-      hasRowError = true;
-    } else if (existingNamesSet.has(name.toLowerCase())) {
-      warnings.push(`Row ${lineNum}: A child named "${name}" already exists in hostel records. It will be added as a new sequential entry.`);
+      continue;
     }
 
-    // Validate Age
-    const age = parseInt(ageRaw, 10);
+    if (existingNamesSet.has(name.toLowerCase())) {
+      warnings.push(`Row ${lineNum}: A child named "${name}" already exists in hostel records. It will be added as a new entry.`);
+    }
+
+    // Smart age fallback
+    let age = parseInt(ageRaw, 10);
     if (isNaN(age) || age < 1 || age > 30) {
-      errors.push(`Row ${lineNum} (${name || 'Unnamed'}): Age "${ageRaw}" must be a valid number between 1 and 30.`);
-      hasRowError = true;
+      age = 10;
     }
 
-    // Validate Class
-    if (!childClass) {
-      errors.push(`Row ${lineNum} (${name || 'Unnamed'}): Class / Grade is required.`);
-      hasRowError = true;
-    }
+    // Smart class fallback
+    const finalClass = childClass || 'Class 5';
 
     // Normalize Gender
     let gender = 'Male';
@@ -473,32 +575,25 @@ export function parseAndValidateChildrenCsv(csvText, existingChildren = []) {
     else if (/^m/i.test(genderRaw)) gender = 'Male';
     else gender = genderRaw || 'Male';
 
-    // Validate Phone if present
-    if (rowObj.guardian_phone && !/^[0-9+ -]{7,15}$/.test(rowObj.guardian_phone)) {
-      warnings.push(`Row ${lineNum} (${name}): Guardian phone "${rowObj.guardian_phone}" may have non-standard formatting.`);
-    }
+    const serial_no = rowObj.serial_no && rowObj.serial_no.startsWith('SN-CH-')
+      ? rowObj.serial_no
+      : `SN-CH-${String(nextSerialNum++).padStart(3, '0')}`;
 
-    if (!hasRowError) {
-      const serial_no = rowObj.serial_no && rowObj.serial_no.startsWith('SN-CH-')
-        ? rowObj.serial_no
-        : `SN-CH-${String(nextSerialNum++).padStart(3, '0')}`;
-
-      validRecords.push({
-        _rowNumber: lineNum,
-        serial_no,
-        name,
-        age,
-        class: childClass,
-        gender,
-        admission_date: rowObj.admission_date || new Date().toISOString().split('T')[0],
-        photo: rowObj.photo || '',
-        guardian_name: rowObj.guardian_name || '',
-        guardian_phone: rowObj.guardian_phone || '',
-        guardian_address: rowObj.guardian_address || '',
-        medical_notes: rowObj.medical_notes || 'Normal routine checks.',
-        hobbies: rowObj.hobbies || 'Sports, Art, Reading'
-      });
-    }
+    validRecords.push({
+      _rowNumber: lineNum,
+      serial_no,
+      name,
+      age,
+      class: finalClass,
+      gender,
+      admission_date: rowObj.admission_date || new Date().toISOString().split('T')[0],
+      photo: rowObj.photo || '',
+      guardian_name: rowObj.guardian_name || '',
+      guardian_phone: rowObj.guardian_phone || '',
+      guardian_address: rowObj.guardian_address || '',
+      medical_notes: rowObj.medical_notes || 'Normal routine checks.',
+      hobbies: rowObj.hobbies || 'Sports, Art, Reading'
+    });
   }
 
   return {

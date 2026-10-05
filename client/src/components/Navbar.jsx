@@ -79,10 +79,10 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
               />
             </div>
             <div>
-              <span className="block text-lg sm:text-xl font-bold font-serif text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+              <span className="block text-lg sm:text-xl font-bold font-serif text-slate-900 leading-tight group-hover:text-blue-600 transition-colors whitespace-nowrap">
                 {settings?.hostel_name || "RISE A CHILD CHILDREN HOME"}
               </span>
-              <span className="block text-xs font-semibold text-blue-700 tracking-wide uppercase">
+              <span className="block text-xs font-semibold text-blue-700 tracking-wide uppercase whitespace-nowrap">
                 {settings?.hostel_tagline || "A Haven of Love, Learning & Leadership"}
               </span>
             </div>

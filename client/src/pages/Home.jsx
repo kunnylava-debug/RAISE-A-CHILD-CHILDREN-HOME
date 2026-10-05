@@ -91,7 +91,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-          <div className="max-w-3xl space-y-6 sm:space-y-7">
+          <div className="max-w-5xl lg:max-w-6xl xl:max-w-7xl w-full space-y-6 sm:space-y-7">
             
             {/* Prominent Official Logo & Accreditation Badge at the very top of Hero */}
             <div className="inline-flex flex-wrap items-center gap-3 bg-slate-950/75 backdrop-blur-md border border-white/20 p-2 sm:pr-5 rounded-2xl sm:rounded-full shadow-2xl">
@@ -106,7 +106,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
 
               <div className="text-left">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs sm:text-sm font-bold tracking-wide text-white drop-shadow-sm">
+                  <span className="text-xs sm:text-sm font-bold tracking-wide text-white drop-shadow-sm whitespace-nowrap">
                     {settings?.hostel_name || "RISE A CHILD CHILDREN HOME"}
                   </span>
                   <span className="hidden sm:inline-block text-[10px] uppercase font-extrabold bg-amber-500/30 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full">
@@ -120,8 +120,8 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
               </div>
             </div>
 
-            {/* Welcoming Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-serif tracking-tight text-white leading-tight drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)]">
+            {/* Welcoming Headline - Styled in ONE single line */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.85rem] xl:text-[3.5rem] font-extrabold font-serif tracking-tight text-white leading-tight drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] uppercase md:whitespace-nowrap">
               {settings?.hostel_headline || "Welcome to RISE A CHILD CHILDREN HOME"}
             </h1>
 
@@ -132,7 +132,7 @@ export default function Home({ setActiveTab, settings, onShowToast }) {
             </div>
 
             {/* Introduction */}
-            <p className="text-base sm:text-xl text-white leading-relaxed font-normal max-w-2xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+            <p className="text-base sm:text-xl text-white leading-relaxed font-normal max-w-3xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
               {settings?.hostel_intro || 
                 "A safe, caring, and supportive residential home for students and youths of all ages to learn, grow, and build their future. Providing quality accommodation, wholesome nutrition, disciplined study coaching, and warmth for every educational stage."}
             </p>

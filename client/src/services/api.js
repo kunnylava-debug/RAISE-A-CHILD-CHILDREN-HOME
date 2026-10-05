@@ -626,6 +626,43 @@ async function request(endpoint, options = {}) {
         };
       }
 
+      if (method === 'POST' && (endpoint === '/children/import-csv' || endpoint.startsWith('/children/import'))) {
+        const records = Array.isArray(parsedBody.records) ? parsedBody.records : [];
+        const highestSerialNum = childrenList.reduce((max, c) => {
+          const match = String(c.serial_no || '').match(/SN-CH-(\d+)/i);
+          return match ? Math.max(max, parseInt(match[1], 10)) : max;
+        }, 0);
+        let nextSerialCounter = highestSerialNum + 1;
+
+        const imported = records.map((r, idx) => ({
+          id: Date.now() + idx,
+          serial_no: r.serial_no && r.serial_no.startsWith('SN-CH-') ? r.serial_no : `SN-CH-${String(nextSerialCounter++).padStart(3, '0')}`,
+          name: r.name || 'Student',
+          age: parseInt(r.age, 10) || 10,
+          class: r.class || 'Class 5',
+          gender: r.gender || 'Male',
+          admission_date: r.admission_date || new Date().toISOString().split('T')[0],
+          photo: (r.photo || '').trim(),
+          guardian_name: (r.guardian_name || '').trim(),
+          guardian_phone: (r.guardian_phone || '').trim(),
+          guardian_address: (r.guardian_address || '').trim(),
+          medical_notes: r.medical_notes || 'Normal routine checks.',
+          hobbies: r.hobbies || 'Sports, Art, Reading',
+          is_active: 1
+        }));
+
+        childrenList.push(...imported);
+        childrenList = sortChildrenAscending(childrenList);
+        setStorage('rac_cached_children', childrenList);
+        broadcastLocalSyncEvent('children', { action: 'import', count: imported.length });
+
+        return {
+          success: true,
+          imported_count: imported.length,
+          message: `Successfully imported ${imported.length} student records!`
+        };
+      }
+
       if (method === 'POST' && endpoint === '/children') {
         const nextId = Date.now();
         const highestSerialNum = childrenList.reduce((max, c) => {
