@@ -1162,7 +1162,7 @@ async function request(endpoint, options = {}) {
       // CONFIRM PLEDGE: PUT /donations/:id/confirm
       if (method === 'PUT' && endpoint.endsWith('/confirm')) {
         const donId = endpoint.split('/')[2];
-        let donList = await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+        let donList = getStorage('rac_cached_donations', []);
         let neededList = getStorage('rac_cached_needed', []);
         if (!Array.isArray(neededList) || neededList.length === 0) {
           neededList = [...(defaultNeededAndSupporters.needed_items || [])];
@@ -1231,7 +1231,7 @@ async function request(endpoint, options = {}) {
       // CANCEL PLEDGE: PUT /donations/:id/cancel
       if (method === 'PUT' && endpoint.endsWith('/cancel')) {
         const donId = endpoint.split('/')[2];
-        let donList = await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+        let donList = getStorage('rac_cached_donations', []);
         let neededList = getStorage('rac_cached_needed', []);
         if (!Array.isArray(neededList) || neededList.length === 0) {
           neededList = [...(defaultNeededAndSupporters.needed_items || [])];
@@ -1295,7 +1295,7 @@ async function request(endpoint, options = {}) {
 
       // POST: Record new Donation or Pledge
       if (method === 'POST') {
-        let donList = await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+        let donList = getStorage('rac_cached_donations', []);
         const currentYear = new Date().getFullYear();
         const highestNum = donList.reduce((max, d) => {
           const match = String(d.receipt_no || '').match(/(?:REC|PLG)-\d{4}-(\d+)/);
@@ -1390,6 +1390,7 @@ async function request(endpoint, options = {}) {
         return {
           success: true,
           receipt: newDonation,
+          donation: newDonation,
           updated_need: updatedNeed,
           message: isPledge
             ? 'Thank you! Your pledge commitment was registered. Our administrator will contact you soon.'
@@ -1873,9 +1874,7 @@ export const api = {
       return Array.isArray(data) ? data : (data?.donations || []);
     } catch (err) {
       console.warn('Failed to fetch donations from server, using local cache:', err.message);
-      const cached = getStorage('rac_cached_donations', []);
-      syncDonationsWithCloud().catch(() => {});
-      return cached;
+      return getStorage('rac_cached_donations', []);
     }
   },
   deleteDonation: (id) => request(`/donations/${id}`, { method: 'DELETE' }),

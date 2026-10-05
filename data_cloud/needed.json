@@ -4,18 +4,18 @@
     "item_name": "Rice & Monthly Kitchen Provisions",
     "category": "Groceries & Nutrition",
     "quantity_needed": 25,
-    "quantity_received": 1411,
+    "quantity_received": 13,
     "estimated_price": 35000,
     "urgency": "High",
     "description": "25 kg bags of premium rice, pulses, cooking oil, and nutritious lentils for resident children's daily meals.",
-    "is_fulfilled": 1
+    "is_fulfilled": 0
   },
   {
     "id": 2,
     "item_name": "Dormitory Bunk Beds & Mattresses",
     "category": "Dormitory & Living",
     "quantity_needed": 10,
-    "quantity_received": 1,
+    "quantity_received": 0,
     "estimated_price": 45000,
     "urgency": "High",
     "description": "Sturdy steel double bunk beds with supportive high-density foam mattresses and clean bedsheets.",
@@ -29,7 +29,8 @@
     "quantity_received": 0,
     "estimated_price": 28000,
     "urgency": "Needed",
-    "description": "Complete sets of tailored school uniforms, white socks, and durable leather school shoes for students."
+    "description": "Complete sets of tailored school uniforms, white socks, and durable leather school shoes for students.",
+    "is_fulfilled": 0
   },
   {
     "id": 4,
@@ -39,18 +40,19 @@
     "quantity_received": 0,
     "estimated_price": 30000,
     "urgency": "Needed",
-    "description": "Spacious wooden study desks and ergonomic study chairs for daily evening homework and tuition hours."
+    "description": "Spacious wooden study desks and ergonomic study chairs for daily evening homework and tuition hours.",
+    "is_fulfilled": 0
   },
   {
     "id": 5,
     "item_name": "First Aid & Healthcare Medical Kits",
     "category": "Health & Medical",
     "quantity_needed": 8,
-    "quantity_received": 1500,
+    "quantity_received": 2,
     "estimated_price": 12000,
     "urgency": "High",
     "description": "Pediatric emergency medicines, digital thermometers, antiseptic lotions, bandages, and hygiene kits.",
-    "is_fulfilled": 1
+    "is_fulfilled": 0
   },
   {
     "id": 6,
@@ -60,17 +62,18 @@
     "quantity_received": 0,
     "estimated_price": 15000,
     "urgency": "Needed",
-    "description": "Children's illustrated encyclopedias, bilingual storybooks, dictionaries, and practical science learning kits."
+    "description": "Children's illustrated encyclopedias, bilingual storybooks, dictionaries, and practical science learning kits.",
+    "is_fulfilled": 0
   },
   {
     "id": 1791181972584,
     "item_name": "soaps",
     "category": "sanitaory",
     "quantity_needed": 100,
-    "quantity_received": 102,
+    "quantity_received": 1,
     "estimated_price": 0,
     "urgency": "High",
     "description": "Bathing & laundry soaps for resident children.",
-    "is_fulfilled": 1
+    "is_fulfilled": 0
   }
 ]

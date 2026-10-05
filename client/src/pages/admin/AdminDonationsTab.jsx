@@ -8,6 +8,35 @@ import {
 } from 'lucide-react';
 import { api, subscribeToRealtimeSync, broadcastLocalSyncEvent } from '../../services/api';
 
+function computeLiveNeededItems(rawItems, donList) {
+  if (!Array.isArray(rawItems)) return [];
+  const list = Array.isArray(donList) ? donList : [];
+
+  return rawItems.map(item => {
+    const matchingConfirmed = list.filter(d => {
+      if (d.status === 'Cancelled') return false;
+      const matchId = d.needed_item_id && String(d.needed_item_id) === String(item.id);
+      const donTitle = d.linked_need_title || d.item_name;
+      const matchName = donTitle && item.item_name &&
+        donTitle.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+      const isConfirmed = d.status === 'Confirmed' ||
+                          (d.entry_type === 'Direct Donation' && d.status !== 'Cancelled') ||
+                          (!d.status && !d.entry_type);
+      return (matchId || matchName) && isConfirmed;
+    });
+
+    const confirmedQty = matchingConfirmed.reduce((sum, d) => sum + (Number(d.quantity_donated) || 1), 0);
+    const totalReceived = Math.max(Number(item.quantity_received) || 0, confirmedQty);
+    const isFulfilled = totalReceived >= Number(item.quantity_needed);
+
+    return {
+      ...item,
+      quantity_received: totalReceived,
+      is_fulfilled: isFulfilled ? 1 : 0
+    };
+  });
+}
+
 export default function AdminDonationsTab({ onShowToast }) {
   const [donations, setDonations] = useState([]);
   const [neededItems, setNeededItems] = useState([]);
@@ -49,8 +78,9 @@ export default function AdminDonationsTab({ onShowToast }) {
         api.getNeeded()
       ]);
       const dons = Array.isArray(donationsData) ? donationsData : (donationsData?.donations || []);
+      const liveNeeded = computeLiveNeededItems(neededData, dons);
       setDonations(dons);
-      setNeededItems(Array.isArray(neededData) ? neededData : []);
+      setNeededItems(liveNeeded);
       setLastSyncTime(new Date().toLocaleTimeString());
     } catch (err) {
       console.warn('Failed to load donations audit:', err.message);
@@ -70,8 +100,10 @@ export default function AdminDonationsTab({ onShowToast }) {
           api.getNeeded()
         ]);
         if (!isMounted) return;
-        setDonations(Array.isArray(donationsData) ? donationsData : (donationsData?.donations || []));
-        setNeededItems(Array.isArray(neededData) ? neededData : []);
+        const dons = Array.isArray(donationsData) ? donationsData : (donationsData?.donations || []);
+        const liveNeeded = computeLiveNeededItems(neededData, dons);
+        setDonations(dons);
+        setNeededItems(liveNeeded);
         setLastSyncTime(new Date().toLocaleTimeString());
       } catch (err) {
         console.warn('Initial load warning:', err.message);
@@ -87,10 +119,10 @@ export default function AdminDonationsTab({ onShowToast }) {
       }
     });
 
-    // 3-second active polling interval: updates automatically across mobile and desktop
+    // 4.5-second active background polling: reliable non-blocking sync
     const interval = setInterval(() => {
       loadData(false);
-    }, 3000);
+    }, 4500);
 
     // Instant update whenever user switches back to this tab or unlocks mobile phone screen
     const onVisible = () => {

@@ -1,5 +1,28 @@
 const { getCloudData, setCloudData } = require('./cloudDb');
 
+function extractDonationsRoute(req) {
+  const rawUrl = req.url || '';
+  const pathOnly = rawUrl.split('?')[0].replace(/\/+$/, '');
+
+  let extraPath = '';
+  if (req.query && req.query.path) {
+    extraPath = Array.isArray(req.query.path) ? req.query.path.join('/') : String(req.query.path);
+  } else if (rawUrl.includes('?')) {
+    try {
+      const sp = new URL(rawUrl, 'http://localhost').searchParams;
+      extraPath = sp.get('path') || '';
+    } catch {}
+  }
+
+  let fullPath = pathOnly;
+  if (extraPath && !fullPath.includes(extraPath)) {
+    fullPath = fullPath.replace(/\.js$/, '') + '/' + extraPath;
+  }
+
+  const tokens = fullPath.split('/').filter(t => Boolean(t) && t !== 'api' && t !== 'donations' && t !== 'donations.js');
+  return { rawUrl, fullPath, tokens };
+}
+
 function getMonthlyBreakdown(donations) {
   const map = new Map();
 
@@ -28,7 +51,7 @@ function getMonthlyBreakdown(donations) {
     const group = map.get(monthKey);
     const amt = Number(d.amount) || 0;
     group.total_amount += amt;
-    if (d.entry_type === 'Pledge') {
+    if (d.entry_type === 'Pledge' || String(d.status || '').toLowerCase().includes('pledge')) {
       group.pledge_amount += amt;
     } else {
       group.direct_amount += amt;
@@ -37,7 +60,6 @@ function getMonthlyBreakdown(donations) {
     group.donations.push(d);
   }
 
-  // Sort descending by month key (most recent months first)
   return Array.from(map.values()).sort((a, b) => b.month_key.localeCompare(a.month_key));
 }
 
@@ -51,14 +73,14 @@ module.exports = async (req, res) => {
     return res.end();
   }
 
-  const url = req.url || '';
+  const { fullPath, tokens } = extractDonationsRoute(req);
   const method = req.method;
 
   try {
     let donations = await getCloudData('donations', []);
 
     // 1. GET /api/donations (Returns donations + Total + Monthly Breakdown)
-    if (method === 'GET') {
+    if (method === 'GET' && (tokens.length === 0 || tokens[0] === '')) {
       const activeDonations = donations.filter(d => d.status !== 'Cancelled');
       const totalAmount = activeDonations.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
       const monthlyBreakdown = getMonthlyBreakdown(donations);
@@ -85,20 +107,24 @@ module.exports = async (req, res) => {
       }));
     }
 
-    const cleanUrl = (url || '').split('?')[0].replace(/\/+$/, '');
-    const urlParts = cleanUrl.split('/').filter(Boolean);
+    // 2. Confirm Pledge: PUT /api/donations/:id/confirm
+    const isConfirm = ((method === 'PUT' || method === 'POST') && (
+      tokens.includes('confirm') || 
+      tokens.includes('confirm-pledge') || 
+      fullPath.includes('/confirm') ||
+      fullPath.includes('confirm-pledge')
+    ));
 
-    // 2. Confirm / Cancel Pledge Actions (Supports PUT /api/donations/:id/confirm & legacy POST /confirm-pledge)
-    const isConfirm = ((method === 'PUT' || method === 'POST') && (cleanUrl.endsWith('/confirm') || cleanUrl.includes('/confirm-pledge')));
-    const isCancel = ((method === 'PUT' || method === 'POST') && (cleanUrl.endsWith('/cancel') || cleanUrl.includes('/cancel-pledge')));
+    // 3. Cancel Pledge: PUT /api/donations/:id/cancel
+    const isCancel = ((method === 'PUT' || method === 'POST') && (
+      tokens.includes('cancel') || 
+      tokens.includes('cancel-pledge') || 
+      fullPath.includes('/cancel') ||
+      fullPath.includes('cancel-pledge')
+    ));
 
     if (isConfirm) {
-      let targetId = null;
-      if (cleanUrl.includes('/confirm-pledge')) {
-        targetId = urlParts[urlParts.indexOf('confirm-pledge') - 1];
-      } else if (cleanUrl.endsWith('/confirm')) {
-        targetId = urlParts[urlParts.length - 2];
-      }
+      const targetId = tokens.find(t => t !== 'confirm' && t !== 'confirm-pledge') || (tokens.length > 0 ? tokens[0] : null);
 
       let targetDonation = null;
       let wasAlreadyConfirmed = false;
@@ -114,16 +140,16 @@ module.exports = async (req, res) => {
       if (!targetDonation) {
         res.statusCode = 404;
         res.setHeader('Content-Type', 'application/json');
-        return res.end(JSON.stringify({ error: 'Pledge record not found' }));
+        return res.end(JSON.stringify({ error: `Pledge record ${targetId} not found` }));
       }
 
       let updatedNeed = null;
-      if (!wasAlreadyConfirmed && (targetDonation.needed_item_id || targetDonation.item_name)) {
+      if (!wasAlreadyConfirmed && (targetDonation.needed_item_id || targetDonation.item_name || targetDonation.linked_need_title)) {
         let neededItems = await getCloudData('needed', []);
         neededItems = neededItems.map(item => {
           const matchId = targetDonation.needed_item_id && String(item.id) === String(targetDonation.needed_item_id);
-          const matchName = targetDonation.item_name && item.item_name &&
-            item.item_name.toLowerCase().trim() === targetDonation.item_name.toLowerCase().trim();
+          const donName = (targetDonation.item_name || targetDonation.linked_need_title || '').toLowerCase().trim();
+          const matchName = donName && item.item_name && item.item_name.toLowerCase().trim() === donName;
           if (matchId || matchName) {
             const qty = Number(targetDonation.quantity_donated) || 1;
             const newRec = (Number(item.quantity_received) || 0) + qty;
@@ -136,7 +162,9 @@ module.exports = async (req, res) => {
           }
           return item;
         });
-        await setCloudData('needed', neededItems, `Increase received for item ${targetDonation.needed_item_id || targetDonation.item_name}`);
+        if (updatedNeed) {
+          await setCloudData('needed', neededItems, `Increase received for item ${targetDonation.needed_item_id || targetDonation.item_name}`);
+        }
       }
 
       await setCloudData('donations', donations, `Confirm pledge ${targetId}`);
@@ -148,17 +176,13 @@ module.exports = async (req, res) => {
           ? `Pledge confirmed! Added +${targetDonation.quantity_donated || 1} units to "${updatedNeed.item_name}" (${updatedNeed.quantity_received}/${updatedNeed.quantity_needed} received).`
           : 'Pledge confirmed! Received units have been increased.', 
         donation: targetDonation,
+        receipt: targetDonation,
         updated_need: updatedNeed
       }));
     }
 
     if (isCancel) {
-      let targetId = null;
-      if (cleanUrl.includes('/cancel-pledge')) {
-        targetId = urlParts[urlParts.indexOf('cancel-pledge') - 1];
-      } else if (cleanUrl.endsWith('/cancel')) {
-        targetId = urlParts[urlParts.length - 2];
-      }
+      const targetId = tokens.find(t => t !== 'cancel' && t !== 'cancel-pledge') || (tokens.length > 0 ? tokens[0] : null);
 
       let targetDonation = null;
       let wasConfirmed = false;
@@ -174,16 +198,16 @@ module.exports = async (req, res) => {
       if (!targetDonation) {
         res.statusCode = 404;
         res.setHeader('Content-Type', 'application/json');
-        return res.end(JSON.stringify({ error: 'Pledge record not found' }));
+        return res.end(JSON.stringify({ error: `Pledge record ${targetId} not found` }));
       }
 
       let updatedNeed = null;
-      if (wasConfirmed && (targetDonation.needed_item_id || targetDonation.item_name)) {
+      if (wasConfirmed && (targetDonation.needed_item_id || targetDonation.item_name || targetDonation.linked_need_title)) {
         let neededItems = await getCloudData('needed', []);
         neededItems = neededItems.map(item => {
           const matchId = targetDonation.needed_item_id && String(item.id) === String(targetDonation.needed_item_id);
-          const matchName = targetDonation.item_name && item.item_name &&
-            item.item_name.toLowerCase().trim() === targetDonation.item_name.toLowerCase().trim();
+          const donName = (targetDonation.item_name || targetDonation.linked_need_title || '').toLowerCase().trim();
+          const matchName = donName && item.item_name && item.item_name.toLowerCase().trim() === donName;
           if (matchId || matchName) {
             const qty = Number(targetDonation.quantity_donated) || 1;
             const newRec = Math.max(0, (Number(item.quantity_received) || 0) - qty);
@@ -196,7 +220,9 @@ module.exports = async (req, res) => {
           }
           return item;
         });
-        await setCloudData('needed', neededItems, `Reduce received for cancelled pledge ${targetId}`);
+        if (updatedNeed) {
+          await setCloudData('needed', neededItems, `Reduce received for cancelled pledge ${targetId}`);
+        }
       }
 
       await setCloudData('donations', donations, `Cancel pledge ${targetId}`);
@@ -206,11 +232,12 @@ module.exports = async (req, res) => {
         success: true,
         message: 'Pledge commitment has been cancelled.',
         donation: targetDonation,
+        receipt: targetDonation,
         updated_need: updatedNeed
       }));
     }
 
-    // 3. POST /api/donations (Record new donation or pledge)
+    // 4. POST /api/donations (Record new donation or pledge)
     if (method === 'POST') {
       let body = req.body;
       if (typeof body === 'string') {
@@ -218,22 +245,27 @@ module.exports = async (req, res) => {
       }
       body = body || {};
 
-      const isPledge = body.entry_type === 'Pledge' || String(body.payment_method || '').toLowerCase().includes('pledge');
+      const isPledge = body.entry_type === 'Pledge' || 
+        String(body.status || '').toLowerCase().includes('pledge') ||
+        String(body.payment_method || '').toLowerCase().includes('pledge');
+
       const prefix = isPledge ? 'PLG' : 'REC';
       const receiptNo = `${prefix}-${new Date().getFullYear()}-${String(donations.length + 101).padStart(4, '0')}`;
+      const itemName = (body.item_name || body.linked_need_title || '').trim();
 
       const newDonation = {
         id: Date.now(),
         receipt_no: receiptNo,
-        donor_name: body.donor_name || 'Generous Supporter',
-        donor_phone: body.donor_phone || '',
-        donor_email: body.donor_email || '',
+        donor_name: (body.donor_name || 'Generous Supporter').trim(),
+        donor_phone: (body.donor_phone || '').trim(),
+        donor_email: (body.donor_email || '').trim(),
         amount: Number(body.amount) || 0,
         payment_method: body.payment_method || (isPledge ? 'Pledge Commitment' : 'UPI'),
-        transaction_ref: body.transaction_ref || '',
-        notes: body.notes || '',
+        transaction_ref: (body.transaction_ref || '').trim(),
+        notes: (body.notes || '').trim(),
         needed_item_id: body.needed_item_id ? Number(body.needed_item_id) : null,
-        item_name: body.item_name || '',
+        item_name: itemName,
+        linked_need_title: itemName,
         quantity_donated: Number(body.quantity_donated) || 1,
         entry_type: isPledge ? 'Pledge' : 'Direct Donation',
         status: isPledge ? 'Pledged (Pending Admin Confirmation)' : 'Confirmed',
@@ -242,16 +274,17 @@ module.exports = async (req, res) => {
 
       // If direct donation: update needed item inventory immediately
       let updatedNeed = null;
-      if (!isPledge && (newDonation.needed_item_id || newDonation.item_name)) {
+      if (!isPledge && (newDonation.needed_item_id || itemName)) {
         let neededItems = await getCloudData('needed', []);
         neededItems = neededItems.map(item => {
           const matchId = newDonation.needed_item_id && String(item.id) === String(newDonation.needed_item_id);
-          const matchName = newDonation.item_name && item.item_name &&
-            item.item_name.toLowerCase().trim() === newDonation.item_name.toLowerCase().trim();
+          const donName = itemName.toLowerCase().trim();
+          const matchName = donName && item.item_name && item.item_name.toLowerCase().trim() === donName;
           if (matchId || matchName) {
             const qty = newDonation.quantity_donated;
             const newRec = (Number(item.quantity_received) || 0) + qty;
             newDonation.item_name = item.item_name;
+            newDonation.linked_need_title = item.item_name;
             updatedNeed = {
               ...item,
               quantity_received: newRec,
@@ -261,7 +294,9 @@ module.exports = async (req, res) => {
           }
           return item;
         });
-        await setCloudData('needed', neededItems, `Direct donation received for ${newDonation.needed_item_id || newDonation.item_name}`);
+        if (updatedNeed) {
+          await setCloudData('needed', neededItems, `Direct donation received for ${newDonation.item_name}`);
+        }
       }
 
       donations.unshift(newDonation);
@@ -270,23 +305,25 @@ module.exports = async (req, res) => {
       res.statusCode = 201;
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify({
+        success: true,
         message: isPledge ? 'Pledge registered successfully.' : 'Donation recorded and inventory updated.',
+        receipt: newDonation,
         donation: newDonation,
         updated_need: updatedNeed
       }));
     }
 
-    // 4. DELETE /api/donations/:id or /api/donations/reset/all
+    // 5. DELETE /api/donations/:id or /api/donations/reset/all
     if (method === 'DELETE') {
-      if (cleanUrl.includes('reset') || urlParts.includes('all') || urlParts.includes('reset')) {
-        donations = [];
+      const isReset = tokens.includes('reset') || tokens.includes('all') || fullPath.includes('reset');
+      if (isReset) {
         await setCloudData('donations', [], 'Reset all donation records to zero');
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         return res.end(JSON.stringify({ success: true, message: 'All donation records cleared and overall income reset to ₹0.' }));
       }
 
-      const targetId = urlParts[urlParts.length - 1];
+      const targetId = tokens[0];
       const target = donations.find(d => String(d.id) === String(targetId) || String(d.receipt_no) === String(targetId));
 
       // If deleting a confirmed donation linked to a need item, reduce inventory
@@ -295,8 +332,8 @@ module.exports = async (req, res) => {
         const qty = Number(target.quantity_donated) || 1;
         neededItems = neededItems.map(item => {
           const matchId = target.needed_item_id && String(item.id) === String(target.needed_item_id);
-          const matchName = target.item_name && item.item_name &&
-            item.item_name.toLowerCase().trim() === target.item_name.toLowerCase().trim();
+          const donName = (target.item_name || target.linked_need_title || '').toLowerCase().trim();
+          const matchName = donName && item.item_name && item.item_name.toLowerCase().trim() === donName;
           if (matchId || matchName) {
             const newRec = Math.max(0, (Number(item.quantity_received) || 0) - qty);
             return {

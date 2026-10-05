@@ -51,8 +51,9 @@ export default function Needed({ settings, onShowToast }) {
         const computedItems = rawItems.map(item => {
           const matchingConfirmedDonations = donList.filter(d => {
             const matchesId = d.needed_item_id && String(d.needed_item_id) === String(item.id);
-            const matchesName = d.linked_need_title && item.item_name && 
-              d.linked_need_title.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+            const donName = d.linked_need_title || d.item_name;
+            const matchesName = donName && item.item_name && 
+              donName.toLowerCase().trim() === item.item_name.toLowerCase().trim();
             const isMatch = matchesId || matchesName;
 
             // Only count if confirmed (or direct donation). Pending pledges are excluded!
@@ -171,7 +172,8 @@ export default function Needed({ settings, onShowToast }) {
       }
 
       const res = await api.recordDonation(payload);
-      setDonationReceipt(res.receipt);
+      const receiptData = res?.receipt || res?.donation || res || payload;
+      setDonationReceipt(receiptData);
 
       if (isPledge) {
         onShowToast?.({ 
@@ -486,7 +488,7 @@ export default function Needed({ settings, onShowToast }) {
                   <a
                     href={`https://wa.me/919059491777?text=${encodeURIComponent(
                       modalMode === 'pledge'
-                        ? `Hello Bro. Nelson A, I have made a PLEDGE of ${donationReceipt.quantity_donated || 1} units of "${donationReceipt.linked_need_title || 'Materials'}" for RISE A CHILD CHILDREN HOME (Ref: ${donationReceipt.receipt_no}, Name: ${donationReceipt.donor_name}). Please let me know how to deliver/transfer.`
+                        ? `Hello Bro. Nelson A, I have made a PLEDGE of ${donationReceipt.quantity_donated || 1} units of "${donationReceipt.linked_need_title || donationReceipt.item_name || 'Materials'}" for RISE A CHILD CHILDREN HOME (Ref: ${donationReceipt.receipt_no}, Name: ${donationReceipt.donor_name}). Please let me know how to deliver/transfer.`
                         : `Hello Bro. Nelson A, I have recorded a direct donation of ₹${donationReceipt.amount} for RISE A CHILD CHILDREN HOME (Receipt No: ${donationReceipt.receipt_no}, Donor: ${donationReceipt.donor_name}).`
                     )}`}
                     target="_blank"

@@ -214,6 +214,7 @@ router.post('/', (req, res) => {
       ? `Thank you for pledging to support ${hostelName}! Our administrator will contact you soon to coordinate.`
       : `Thank you for supporting ${hostelName}! Your donation was recorded successfully.`,
     receipt: newDonation,
+    donation: newDonation,
     updated_need: updatedNeed
   });
 });
@@ -273,6 +274,7 @@ router.put('/:id/confirm', authenticateToken, (req, res) => {
       ? `Pledge confirmed! Added +${donation.quantity_donated || 1} units to "${updatedNeed.item_name}" (${updatedNeed.quantity_received}/${updatedNeed.quantity_needed} received).`
       : 'Pledge marked as confirmed.',
     donation: updatedDonation,
+    receipt: updatedDonation,
     updated_need: updatedNeed
   });
 });

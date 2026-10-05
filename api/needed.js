@@ -1,5 +1,28 @@
 const { getCloudData, setCloudData } = require('./cloudDb');
 
+function extractNeededRoute(req) {
+  const rawUrl = req.url || '';
+  const pathOnly = rawUrl.split('?')[0].replace(/\/+$/, '');
+
+  let extraPath = '';
+  if (req.query && req.query.path) {
+    extraPath = Array.isArray(req.query.path) ? req.query.path.join('/') : String(req.query.path);
+  } else if (rawUrl.includes('?')) {
+    try {
+      const sp = new URL(rawUrl, 'http://localhost').searchParams;
+      extraPath = sp.get('path') || '';
+    } catch {}
+  }
+
+  let fullPath = pathOnly;
+  if (extraPath && !fullPath.includes(extraPath)) {
+    fullPath = fullPath.replace(/\.js$/, '') + '/' + extraPath;
+  }
+
+  const tokens = fullPath.split('/').filter(t => Boolean(t) && t !== 'api' && t !== 'needed' && t !== 'needed.js');
+  return { rawUrl, fullPath, tokens };
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -10,13 +33,13 @@ module.exports = async (req, res) => {
     return res.end();
   }
 
-  const url = req.url || '';
+  const { tokens } = extractNeededRoute(req);
   const method = req.method;
 
   try {
     let items = await getCloudData('needed', []);
 
-    if (method === 'GET') {
+    if (method === 'GET' && tokens.length === 0) {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify(items));
@@ -56,30 +79,41 @@ module.exports = async (req, res) => {
       }
       body = body || {};
 
-      const parts = url.split('?')[0].split('/').filter(Boolean);
-      const itemId = parts[parts.length - 1];
+      const itemId = tokens[0];
 
+      let updatedItem = null;
       items = items.map(item => {
         if (String(item.id) === String(itemId)) {
-          const updated = { ...item, ...body, id: item.id };
-          if (updated.quantity_received !== undefined && updated.quantity_needed !== undefined) {
-            updated.is_fulfilled = Number(updated.quantity_received) >= Number(updated.quantity_needed) ? 1 : 0;
-          }
-          return updated;
+          const rec = body.quantity_received !== undefined ? Number(body.quantity_received) : item.quantity_received;
+          const need = body.quantity_needed !== undefined ? Number(body.quantity_needed) : item.quantity_needed;
+          updatedItem = {
+            ...item,
+            ...body,
+            id: item.id,
+            quantity_received: rec,
+            quantity_needed: need,
+            is_fulfilled: rec >= need ? 1 : 0
+          };
+          return updatedItem;
         }
         return item;
       });
+
+      if (!updatedItem) {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify({ error: `Needed item ${itemId} not found` }));
+      }
 
       await setCloudData('needed', items, `Update needed item ${itemId}`);
 
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
-      return res.end(JSON.stringify({ ...body, id: itemId }));
+      return res.end(JSON.stringify(updatedItem));
     }
 
     if (method === 'DELETE') {
-      const parts = url.split('?')[0].split('/').filter(Boolean);
-      const itemId = parts[parts.length - 1];
+      const itemId = tokens[0];
 
       items = items.filter(item => String(item.id) !== String(itemId));
       await setCloudData('needed', items, `Delete needed item ${itemId}`);
