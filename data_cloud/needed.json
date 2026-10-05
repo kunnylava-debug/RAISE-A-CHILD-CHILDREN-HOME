@@ -15,10 +15,11 @@
     "item_name": "Dormitory Bunk Beds & Mattresses",
     "category": "Dormitory & Living",
     "quantity_needed": 10,
-    "quantity_received": 0,
+    "quantity_received": 1,
     "estimated_price": 45000,
     "urgency": "High",
-    "description": "Sturdy steel double bunk beds with supportive high-density foam mattresses and clean bedsheets."
+    "description": "Sturdy steel double bunk beds with supportive high-density foam mattresses and clean bedsheets.",
+    "is_fulfilled": 0
   },
   {
     "id": 3,
