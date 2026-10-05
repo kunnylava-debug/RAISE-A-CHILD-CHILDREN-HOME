@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Share2, Save, ExternalLink, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Share2, Save, ExternalLink, RefreshCw } from 'lucide-react';
 import { api } from '../../services/api';
 
 export default function AdminSocialLinksTab({ settings, onRefreshSettings, onShowToast }) {

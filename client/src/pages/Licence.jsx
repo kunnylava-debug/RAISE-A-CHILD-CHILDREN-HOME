@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShieldCheck, Award, FileText, Calendar, Building2, 
-  CheckCircle2, Download, ExternalLink, Edit3, X, ZoomIn, 
-  AlertCircle, ArrowRight, Lock, Upload
+  ShieldCheck, Award, Calendar, 
+  CheckCircle2, Download, Edit3, X, ZoomIn, 
+  AlertCircle, ArrowRight, Upload
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';

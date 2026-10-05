@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Clock, Plus, Edit3, Trash2, ArrowUp, ArrowDown, Save, X, 
   Bell, Activity, Droplets, Coffee, Bus, 
@@ -45,7 +45,7 @@ export default function AdminTimetableTab({ onShowToast }) {
     return found ? found.Icon : Clock;
   };
 
-  const loadSchedule = async () => {
+  const loadSchedule = useCallback(async () => {
     try {
       setLoading(true);
       const data = await api.getTimetable();
@@ -55,11 +55,11 @@ export default function AdminTimetableTab({ onShowToast }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [onShowToast]);
 
   useEffect(() => {
     loadSchedule();
-  }, []);
+  }, [loadSchedule]);
 
   const handleOpenAdd = () => {
     setForm({

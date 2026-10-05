@@ -202,41 +202,41 @@ export function initDatabase() {
   // Ensure admin_users has email
   try {
     db.exec(`ALTER TABLE admin_users ADD COLUMN email TEXT DEFAULT 'pn9059491777@gmail.com'`);
-  } catch (e) {}
+  } catch {}
 
   // Ensure donation columns exist if table was already created
   try {
     db.exec(`ALTER TABLE donations ADD COLUMN needed_item_id INTEGER`);
-  } catch (e) {}
+  } catch {}
   try {
     db.exec(`ALTER TABLE donations ADD COLUMN item_name TEXT`);
-  } catch (e) {}
+  } catch {}
   try {
     db.exec(`ALTER TABLE donations ADD COLUMN quantity_donated INTEGER DEFAULT 1`);
-  } catch (e) {}
+  } catch {}
   try {
     db.exec(`ALTER TABLE donations ADD COLUMN entry_type TEXT DEFAULT 'Direct Donation'`);
-  } catch (e) {}
+  } catch {}
   try {
     db.exec(`ALTER TABLE donations ADD COLUMN status TEXT DEFAULT 'Confirmed'`);
-  } catch (e) {}
+  } catch {}
   try {
     db.exec(`ALTER TABLE donations ADD COLUMN confirmed_at TEXT`);
-  } catch (e) {}
+  } catch {}
   try {
     db.exec(`ALTER TABLE donations ADD COLUMN cancelled_at TEXT`);
-  } catch (e) {}
+  } catch {}
 
   // Ensure admission notification tracking columns exist
   try {
     db.exec(`ALTER TABLE admissions ADD COLUMN notification_sent_at TEXT`);
-  } catch (e) {}
+  } catch {}
   try {
     db.exec(`ALTER TABLE admissions ADD COLUMN notification_type TEXT`);
-  } catch (e) {}
+  } catch {}
   try {
     db.exec(`ALTER TABLE admissions ADD COLUMN notification_status TEXT`);
-  } catch (e) {}
+  } catch {}
 }
 
 export default db;

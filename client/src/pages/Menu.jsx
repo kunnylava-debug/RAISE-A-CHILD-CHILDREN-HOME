@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Utensils, Coffee, Sun, Moon, Edit3, X, CheckCircle2, 
-  Apple, Plus, Calendar, Sparkles, Clock, Trash2, 
-  Check, AlertCircle, ChevronRight, Eye
+  Apple, Plus, Calendar, Sparkles, Trash2, 
+  ChevronRight 
 } from 'lucide-react';
 import { api, subscribeToRealtimeSync, broadcastLocalSyncEvent } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
+
+const standardDaysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function Menu({ onShowToast }) {
   // Instant cache hydration: Render immediately from localStorage if available (0ms lag)
@@ -16,7 +18,7 @@ export default function Menu({ onShowToast }) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch (e) {}
+    } catch {}
     return [];
   });
   const [loading, setLoading] = useState(() => weeklyMenu.length === 0);
@@ -39,8 +41,6 @@ export default function Menu({ onShowToast }) {
   // Current Day of the Week in user's locale
   const todayName = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
 
-  const standardDaysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
   // Stale-While-Revalidate: Fetch latest menu without blocking UI
   const fetchMenu = useCallback((showLoading = false) => {
     if (showLoading && weeklyMenu.length === 0) setLoading(true);
@@ -59,7 +59,7 @@ export default function Menu({ onShowToast }) {
         setWeeklyMenu(sorted);
         try {
           localStorage.setItem('rac_cached_menu', JSON.stringify(sorted));
-        } catch (e) {}
+        } catch {}
       })
       .catch((err) => {
         console.error(err);

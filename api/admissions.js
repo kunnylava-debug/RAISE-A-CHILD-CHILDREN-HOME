@@ -25,7 +25,7 @@ function cloudRequest(method, path, data = null) {
       res.on('end', () => {
         try {
           resolve({ status: res.statusCode, data: JSON.parse(chunks) });
-        } catch (e) {
+        } catch {
           resolve({ status: res.statusCode, data: null });
         }
       });
@@ -64,7 +64,7 @@ async function fetchAllFromCloud() {
         const tB = new Date(b.created_at || 0).getTime() || (b.id || 0);
         return tB - tA;
       });
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -95,7 +95,7 @@ async function createInCloud(newApp) {
     });
 
     return newApp;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -120,7 +120,7 @@ async function updateInCloud(idOrAppNo, updateData) {
       return { ...merged, _cloud_id: cloudId };
     }
     return null;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -143,7 +143,7 @@ async function deleteInCloud(idOrAppNo) {
       });
     }
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -182,7 +182,7 @@ function sendAdminAlertEmail(app) {
     req.on('error', () => {});
     req.write(payload);
     req.end();
-  } catch (e) {}
+  } catch {}
 }
 
 module.exports = async (req, res) => {
@@ -270,7 +270,7 @@ module.exports = async (req, res) => {
     if (method === 'POST') {
       let body = req.body;
       if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (e) { body = {}; }
+        try { body = JSON.parse(body); } catch { body = {}; }
       }
       body = body || {};
 
@@ -323,7 +323,7 @@ module.exports = async (req, res) => {
     if (method === 'PUT') {
       let body = req.body;
       if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (e) { body = {}; }
+        try { body = JSON.parse(body); } catch { body = {}; }
       }
       body = body || {};
 

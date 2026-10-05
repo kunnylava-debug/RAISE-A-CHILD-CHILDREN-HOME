@@ -7,8 +7,7 @@ import {
   generateChildrenExcel, 
   pushChildToGoogleSheetWebhook, 
   syncFromGoogleSheet, 
-  EXCEL_PATH, 
-  CSV_PATH 
+  EXCEL_PATH 
 } from '../utils/excelSync.js';
 import { sendExcelBackupToAdmin } from '../services/notificationService.js';
 import { broadcastSyncEvent } from '../services/syncService.js';

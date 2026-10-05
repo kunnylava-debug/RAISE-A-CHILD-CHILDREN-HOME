@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
     if (method === 'POST') {
       let body = req.body;
       if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (e) { body = {}; }
+        try { body = JSON.parse(body); } catch { body = {}; }
       }
       body = body || {};
 
@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
     if (method === 'PUT' && url.includes('/reorder')) {
       let body = req.body;
       if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (e) { body = {}; }
+        try { body = JSON.parse(body); } catch { body = {}; }
       }
       const orderedIds = body.ordered_ids || [];
       schedule.sort((a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id));
@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
     if (method === 'PUT') {
       let body = req.body;
       if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (e) { body = {}; }
+        try { body = JSON.parse(body); } catch { body = {}; }
       }
       body = body || {};
 

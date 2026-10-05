@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  GraduationCap, Plus, Edit2, Trash2, Image, User, Upload,
-  MapPin, Briefcase, Calendar, RefreshCw, X, Check, Quote 
+  GraduationCap, Plus, Edit2, Trash2, User, Upload,
+  MapPin, Briefcase, Calendar, RefreshCw, X, Check 
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -25,7 +25,7 @@ export default function AdminAlumniTab({ onShowToast }) {
 
   const [form, setForm] = useState(initialForm);
 
-  const loadAlumni = async () => {
+  const loadAlumni = useCallback(async () => {
     try {
       setLoading(true);
       const data = await api.getAlumni();
@@ -35,11 +35,11 @@ export default function AdminAlumniTab({ onShowToast }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [onShowToast]);
 
   useEffect(() => {
     loadAlumni();
-  }, []);
+  }, [loadAlumni]);
 
   const handleOpenCreate = () => {
     setEditingAlumni(null);

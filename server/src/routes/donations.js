@@ -2,7 +2,6 @@ import express from 'express';
 import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { broadcastSyncEvent } from '../services/syncService.js';
-import { getHostelSettings } from '../services/notificationService.js';
 
 const router = express.Router();
 

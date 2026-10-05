@@ -3,7 +3,6 @@ import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { 
   dispatchAdmissionNotification, 
-  formatAdmissionMessage,
   sendNewApplicationAlertToAdmin,
   sendApplicationReceivedConfirmationToApplicant
 } from '../services/notificationService.js';

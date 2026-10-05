@@ -10,7 +10,7 @@ setInterval(() => {
   for (const client of clients) {
     try {
       client.write(': heartbeat\n\n');
-    } catch (e) {
+    } catch {
       clients.delete(client);
     }
   }
@@ -55,7 +55,7 @@ export function broadcastSyncEvent(event) {
     try {
       client.write(formattedMessage);
       sentCount++;
-    } catch (e) {
+    } catch {
       clients.delete(client);
     }
   }

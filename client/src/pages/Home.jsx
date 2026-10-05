@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { 
   Heart, Shield, BookOpen, Award, Users, User, ChevronRight, 
   Sparkles, Calendar, ArrowRight, Play, Quote, CheckCircle2,
-  MapPin, Navigation, GraduationCap, Briefcase, ExternalLink, Phone, ShieldCheck,
-  School, Compass, Camera
+  MapPin, GraduationCap, Briefcase, ShieldCheck,
+  School, Camera
 } from 'lucide-react';
 import VideoPlayer from '../components/VideoPlayer';
 import LightboxModal from '../components/LightboxModal';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
-export default function Home({ setActiveTab, settings, onShowToast }) {
+export default function Home({ setActiveTab, settings }) {
   const { adminUser } = useAdminAuth();
   const [events, setEvents] = useState([]);
   const [alumni, setAlumni] = useState([]);

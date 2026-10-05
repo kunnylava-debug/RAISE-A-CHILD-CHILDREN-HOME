@@ -98,7 +98,7 @@ if (fs.existsSync(clientDist)) {
 }
 
 // Global Error Handler
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error('Server error:', err);
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error occurred.'

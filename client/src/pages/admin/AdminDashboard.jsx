@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   LayoutDashboard, Settings, UserCheck, Users, 
   FileText, ShieldCheck, Image, Clock, Utensils, 
@@ -32,7 +32,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
 
   const { adminUser, logout, setLoginModalOpen } = useAdminAuth();
 
-  const loadStats = () => {
+  const loadStats = useCallback(() => {
     if (!adminUser) return;
     Promise.all([
       api.getChildren({ limit: 1 }),
@@ -49,7 +49,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
         needed_items: Array.isArray(needed) ? needed.length : 0
       });
     }).catch(console.error);
-  };
+  }, [adminUser]);
 
   useEffect(() => {
     if (!adminUser) return;
@@ -76,7 +76,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
     };
-  }, [adminUser]);
+  }, [adminUser, loadStats]);
 
   if (!adminUser) {
     return (

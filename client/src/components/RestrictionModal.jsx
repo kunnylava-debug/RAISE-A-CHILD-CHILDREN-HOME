@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import { ShieldAlert, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import React from 'react';
+import { ShieldAlert, CheckCircle2 } from 'lucide-react';
 
 export default function RestrictionModal({ onAccept, onCancel, isOpen, settings }) {
   if (!isOpen) return null;

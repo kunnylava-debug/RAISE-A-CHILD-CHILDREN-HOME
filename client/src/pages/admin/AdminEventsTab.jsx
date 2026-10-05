@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Calendar, Plus, Edit2, Trash2, Image, Sparkles, 
-  X, Check, AlertCircle, RefreshCw, Upload 
+  Calendar, Plus, Edit2, Trash2, Sparkles, 
+  X, Check, RefreshCw, Upload 
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -24,7 +24,7 @@ export default function AdminEventsTab({ onShowToast }) {
 
   const [form, setForm] = useState(initialForm);
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       const data = await api.getEvents();
@@ -34,11 +34,11 @@ export default function AdminEventsTab({ onShowToast }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [onShowToast]);
 
   useEffect(() => {
     loadEvents();
-  }, []);
+  }, [loadEvents]);
 
   const handleOpenCreate = () => {
     setEditingEvent(null);

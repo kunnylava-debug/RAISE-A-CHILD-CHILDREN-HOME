@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
     if (r.key === 'instructions_dos' || r.key === 'instructions_donts') {
       try {
         settings[r.key] = JSON.parse(r.value);
-      } catch (e) {
+      } catch {
         settings[r.key] = [];
       }
     } else {

@@ -2,17 +2,17 @@ import React, { useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function LightboxModal({ isOpen, onClose, photos = [], currentIndex = 0, setCurrentIndex }) {
-  const handleNext = () => {
+  const handleNext = React.useCallback(() => {
     if (setCurrentIndex && photos.length > 0) {
       setCurrentIndex((currentIndex + 1) % photos.length);
     }
-  };
+  }, [currentIndex, photos.length, setCurrentIndex]);
 
-  const handlePrev = () => {
+  const handlePrev = React.useCallback(() => {
     if (setCurrentIndex && photos.length > 0) {
       setCurrentIndex((currentIndex - 1 + photos.length) % photos.length);
     }
-  };
+  }, [currentIndex, photos.length, setCurrentIndex]);
 
   useEffect(() => {
     if (!isOpen || !photos || photos.length === 0) return;
@@ -23,7 +23,7 @@ export default function LightboxModal({ isOpen, onClose, photos = [], currentInd
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentIndex, photos.length, onClose]);
+  }, [isOpen, photos, onClose, handleNext, handlePrev]);
 
   if (!isOpen || !photos || photos.length === 0) return null;
 

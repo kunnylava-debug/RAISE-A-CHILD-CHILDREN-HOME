@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  MapPin, Phone, Mail, ExternalLink, Navigation, Compass 
+  MapPin, Phone, Mail, ExternalLink, Compass 
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 

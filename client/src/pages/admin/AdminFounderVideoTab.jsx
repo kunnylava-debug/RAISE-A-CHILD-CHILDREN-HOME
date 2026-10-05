@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  Save, UserCheck, Video, Upload, Play, CheckCircle, 
-  AlertCircle, Film, Sparkles, RefreshCw, Eye, Layers, Trash2
+  Save, UserCheck, Video, Upload, CheckCircle, 
+  AlertCircle, Film, Layers
 } from 'lucide-react';
 import { api } from '../../services/api';
 import VideoPlayer from '../../components/VideoPlayer';
@@ -68,7 +68,7 @@ export default function AdminFounderVideoTab({ settings, onRefreshSettings, onSh
         ? JSON.parse(settings.video_templates) 
         : settings.video_templates;
     }
-  } catch (e) {}
+  } catch {}
 
   const [templates, setTemplates] = useState(initialTemplates);
   const [selectedTemplateId, setSelectedTemplateId] = useState(form.active_video_template || 'documentary');
@@ -163,7 +163,7 @@ export default function AdminFounderVideoTab({ settings, onRefreshSettings, onSh
     }
   };
 
-  const currentTemplate = templates.find(t => t.id === selectedTemplateId) || templates[0];
+  const _currentTemplate = templates.find(t => t.id === selectedTemplateId) || templates[0];
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm space-y-10 text-xs sm:text-sm">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Home, Search, ArrowLeft, Phone, Mail, 
+  Home, Phone, Mail, 
   HelpCircle, Compass, ShieldCheck, Heart 
 } from 'lucide-react';
 
@@ -96,6 +96,12 @@ export default function NotFound({ setActiveTab, settings }) {
               <Phone className="w-3.5 h-3.5" />
               <span>{phone}</span>
             </a>
+            {email && (
+              <a href={`mailto:${email}`} className="hover:underline flex items-center space-x-1 text-slate-600">
+                <Mail className="w-3.5 h-3.5" />
+                <span>{email}</span>
+              </a>
+            )}
           </div>
         </div>
 

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Phone, Mail, Award, Clock, User, Upload, Plus, 
-  Edit3, Trash2, X, Check, Shield, GraduationCap,
+  Phone, Mail, User, Upload, Plus, 
+  Edit3, Trash2, X, Shield, GraduationCap,
   Download, FileText
 } from 'lucide-react';
 import { api, subscribeToRealtimeSync } from '../services/api';
@@ -16,7 +16,7 @@ export default function Staff({ onShowToast }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const { adminUser } = useAdminAuth();
 
-  const fetchStaff = (showLoading = true) => {
+  const fetchStaff = useCallback((showLoading = true) => {
     if (showLoading && staffList.length === 0) setLoading(true);
     api.getStaff()
       .then(setStaffList)
@@ -29,7 +29,7 @@ export default function Staff({ onShowToast }) {
       .finally(() => {
         if (showLoading) setLoading(false);
       });
-  };
+  }, [staffList.length, onShowToast]);
 
   useEffect(() => {
     fetchStaff(true);
@@ -59,7 +59,7 @@ export default function Staff({ onShowToast }) {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
     };
-  }, []);
+  }, [fetchStaff]);
 
   const handleSaveStaff = async (e) => {
     e.preventDefault();

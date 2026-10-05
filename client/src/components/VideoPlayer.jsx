@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { 
-  Play, Pause, Volume2, VolumeX, Maximize, 
-  RotateCcw, Film, ShieldAlert, ExternalLink 
+  Play, Pause, Volume2, VolumeX, Maximize, ExternalLink 
 } from 'lucide-react';
 
 // Extract YouTube video ID from various YouTube URL formats (watch?v=, youtu.be/, embed/, shorts/)
@@ -23,7 +22,7 @@ export default function VideoPlayer({ videoUrl, posterUrl, title }) {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [_isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef(null);
 

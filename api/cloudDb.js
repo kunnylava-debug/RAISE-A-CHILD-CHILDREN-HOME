@@ -33,7 +33,7 @@ function githubRequest(method, path, body = null, extraHeaders = {}) {
       res.on('end', () => {
         try {
           resolve({ status: res.statusCode, data: JSON.parse(chunks) });
-        } catch (e) {
+        } catch {
           resolve({ status: res.statusCode, data: chunks });
         }
       });
@@ -71,7 +71,7 @@ async function getCloudData(fileKey, fallback = []) {
     }
     if (cache[fileKey]) return cache[fileKey].data;
     return fallback;
-  } catch (e) {
+  } catch {
     if (cache[fileKey]) return cache[fileKey].data;
     return fallback;
   }
@@ -115,7 +115,7 @@ async function setCloudData(fileKey, data, commitMessage = 'Update cloud data') 
       }
     }
     return false;
-  } catch (e) {
+  } catch {
     return false;
   }
 }

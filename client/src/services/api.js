@@ -1,7 +1,5 @@
 import defaultSettings from '../data/settings.json';
 import defaultStaff from '../data/staff.json';
-import defaultAlumni from '../data/alumni.json';
-import defaultEvents from '../data/events.json';
 import defaultViews from '../data/categories_and_photos.json';
 import defaultTimetableAndMenu from '../data/timetable_and_menu.json';
 import defaultNeededAndSupporters from '../data/needed_and_supporters.json';
@@ -35,7 +33,7 @@ function getStorage(key, fallback = []) {
   try {
     const val = localStorage.getItem(key);
     return val ? JSON.parse(val) : fallback;
-  } catch (e) {
+  } catch {
     return fallback;
   }
 }
@@ -77,7 +75,7 @@ if (typeof window !== 'undefined') {
         }
       }
     }
-  } catch (e) {}
+  } catch {}
 }
 
 // -------------------------------------------------------------
@@ -110,7 +108,7 @@ async function cloudFetch(path, options = {}) {
     }
     if (!res.ok) return null;
     return await res.json();
-  } catch (e) {
+  } catch {
     clearTimeout(timeoutId);
     return null;
   }
@@ -140,7 +138,7 @@ export async function fetchCloudAdmissions() {
       return indexData.data.admissions;
     }
     return [];
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -174,7 +172,7 @@ export async function createCloudAdmission(newApp) {
       })
     });
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -199,7 +197,7 @@ export async function updateCloudAdmission(idOrAppNo, updates) {
       })
     });
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -226,13 +224,13 @@ export async function deleteCloudAdmission(idOrAppNo) {
       });
     }
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
 
 // Legacy alias for compatibility
-export async function pushCloudAdmissions(admissionsList) {
+export async function pushCloudAdmissions(_admissionsList) {
   return true;
 }
 
@@ -353,7 +351,7 @@ export async function fetchCloudDonations() {
       }
     }
     return [];
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -387,7 +385,7 @@ export async function createCloudDonation(newDonation) {
       })
     });
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -414,7 +412,7 @@ export async function deleteCloudDonation(donationId) {
       });
     }
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -576,7 +574,7 @@ async function request(endpoint, options = {}) {
     if (options.body) {
       try {
         parsedBody = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
-      } catch (e) {
+      } catch {
         parsedBody = options.body || {};
       }
     }
@@ -1819,7 +1817,7 @@ export const api = {
     try {
       const data = await request('/events');
       return (Array.isArray(data) ? data : []).filter(e => !isDummyEvent(e));
-    } catch (e) {
+    } catch {
       const cached = getStorage('rac_cached_events', []);
       return (Array.isArray(cached) ? cached : []).filter(e => !isDummyEvent(e));
     }
@@ -1892,7 +1890,7 @@ export const api = {
     setStorage('rac_cached_donations', []);
     try {
       broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'RESET_ALL' });
-    } catch (e) {}
+    } catch {}
     return { success: true, message: 'All donation records cleared and overall income reset to ₹0.' };
   },
   syncDonations: () => syncDonationsWithCloud(),
@@ -1924,7 +1922,7 @@ export const api = {
             const res = JSON.parse(xhr.responseText);
             if (onProgress) onProgress(100);
             resolve(res);
-          } catch (e) {
+          } catch {
             if (onProgress) onProgress(100);
             resolve({ url: xhr.responseText, filename: file.name, size: file.size });
           }
@@ -1991,7 +1989,7 @@ try {
       notifySyncListeners(event.data);
     };
   }
-} catch (e) {}
+} catch {}
 
 function notifySyncListeners(event) {
   for (const listener of syncListeners) {
@@ -2013,12 +2011,12 @@ export function broadcastLocalSyncEvent(event) {
   if (broadcastChannel) {
     try {
       broadcastChannel.postMessage(event);
-    } catch (e) {}
+    } catch {}
   }
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem('rac_sync_ping', JSON.stringify({ ...event, _ts: Date.now() }));
-    } catch (e) {}
+    } catch {}
   }
 }
 
@@ -2029,7 +2027,7 @@ if (typeof window !== 'undefined') {
       try {
         const parsed = JSON.parse(e.newValue);
         notifySyncListeners(parsed);
-      } catch (err) {}
+      } catch {}
     } else if (e.key === 'rac_cached_donations') {
       notifySyncListeners({ type: 'DONATIONS_UPDATED', action: 'STORAGE_CHANGE' });
     } else if (e.key === 'rac_cached_needed') {
@@ -2062,10 +2060,10 @@ export function initRealtimeSync() {
             console.log('[REALTIME MULTI-DEVICE SYNC]', data);
             notifySyncListeners(data);
             if (broadcastChannel) {
-              try { broadcastChannel.postMessage(data); } catch (err) {}
+              try { broadcastChannel.postMessage(data); } catch {}
             }
           }
-        } catch (err) {}
+        } catch {}
       };
 
       eventSource.onerror = () => {
@@ -2080,7 +2078,7 @@ export function initRealtimeSync() {
           console.log('[REALTIME SYNC] SSE endpoint inactive in this cloud environment; active polling & BroadcastChannel active.');
         }
       };
-    } catch (err) {
+    } catch {
       sseErrorCount++;
       if (sseErrorCount < 3) {
         setTimeout(connect, 5000);

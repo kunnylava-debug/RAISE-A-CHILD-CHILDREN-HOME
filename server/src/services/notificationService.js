@@ -603,7 +603,7 @@ Email : ${config.contact_email}
 /**
  * Dispatch Password Reset 6-Digit OTP Email to pn9059491777@gmail.com
  */
-export async function sendPasswordResetOtpEmail({ email, otp, username }) {
+export async function sendPasswordResetOtpEmail({ email: _email, otp, username }) {
   const config = getHostelSettings();
   const recipient = 'pn9059491777@gmail.com';
   const transporter = createSmtpTransporter(config);

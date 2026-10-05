@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, CheckCircle2, Download, Handshake, Heart, Clock, Phone, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, CheckCircle2, Download, Handshake, Heart, Clock } from 'lucide-react';
 import NeededItemsTable from '../components/NeededItemsTable';
 import SupportSection from '../components/SupportSection';
 import SupportersWall from '../components/SupportersWall';
@@ -9,7 +9,6 @@ import { useAdminAuth } from '../context/AdminAuthContext';
 export default function Needed({ settings, onShowToast }) {
   const [neededItems, setNeededItems] = useState([]);
   const [supporters, setSupporters] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // Donation / Pledge modal
   const [pledgeItem, setPledgeItem] = useState(null);
@@ -37,8 +36,7 @@ export default function Needed({ settings, onShowToast }) {
 
   const { adminUser } = useAdminAuth();
 
-  const fetchData = (showLoading = false) => {
-    if (showLoading && neededItems.length === 0) setLoading(true);
+  const fetchData = useCallback(() => {
     Promise.all([
       api.getNeededItems(), 
       api.getSupporters(),
@@ -78,29 +76,28 @@ export default function Needed({ settings, onShowToast }) {
         setNeededItems(computedItems);
         setSupporters(supps || []);
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  };
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
-    fetchData(true);
+    fetchData();
 
     const unsubscribe = subscribeToRealtimeSync((event) => {
       if (event.type === 'NEEDED_UPDATED' || event.type === 'DONATIONS_UPDATED') {
         console.log('[REAL-TIME SYNC] Needs/Donations updated, re-computing live counts...');
-        fetchData(false);
+        fetchData();
       }
     });
 
     // 3-second active polling interval: updates automatically across mobile and desktop
     const interval = setInterval(() => {
-      fetchData(false);
+      fetchData();
     }, 3000);
 
     // Instant update whenever user switches back to this tab or unlocks mobile phone screen
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
-        fetchData(false);
+        fetchData();
       }
     };
     document.addEventListener('visibilitychange', onVisible);
@@ -112,7 +109,7 @@ export default function Needed({ settings, onShowToast }) {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
     };
-  }, []);
+  }, [fetchData]);
 
   const handleCopy = (text, label) => {
     navigator.clipboard.writeText(text);

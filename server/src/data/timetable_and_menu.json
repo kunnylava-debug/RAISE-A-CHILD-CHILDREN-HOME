@@ -1,4 +1,4 @@
-﻿{
+{
   "timetable": [
     { "time_slot": "05:30 AM", "activity": "Wake Up & Morning Bells", "location_or_notes": "Dormitories - Bed making & hygiene", "icon_name": "Bell", "order_num": 1 },
     { "time_slot": "06:00 AM - 06:45 AM", "activity": "Morning Yoga & Physical Exercise", "location_or_notes": "Open Sports Ground with Physical Trainer", "icon_name": "Activity", "order_num": 2 },

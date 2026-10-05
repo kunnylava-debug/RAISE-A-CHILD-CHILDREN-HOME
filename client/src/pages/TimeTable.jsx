@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Clock, Plus, Edit3, Trash2, ArrowUp, ArrowDown, X, 
-  Check, Bell, Activity, Droplets, Coffee, Bus, 
+  Bell, Activity, Droplets, Coffee, Bus, 
   BookOpen, Utensils, Moon, GraduationCap, Smile, 
-  Sun, Edit, Bed, Sparkles, Save, RefreshCw
+  Sun, Edit, Bed, Save, RefreshCw
 } from 'lucide-react';
 import { api, subscribeToRealtimeSync, broadcastLocalSyncEvent } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -17,7 +17,7 @@ export default function TimeTable({ onShowToast }) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch (e) {}
+    } catch {}
     return [];
   });
   const [loading, setLoading] = useState(() => schedule.length === 0);
@@ -62,7 +62,7 @@ export default function TimeTable({ onShowToast }) {
         setSchedule(data);
         try {
           localStorage.setItem('rac_cached_timetable', JSON.stringify(data));
-        } catch (e) {}
+        } catch {}
       }
     } catch (err) {
       console.error(err);
@@ -162,7 +162,7 @@ export default function TimeTable({ onShowToast }) {
     setSchedule(optimistic);
     try {
       localStorage.setItem('rac_cached_timetable', JSON.stringify(optimistic));
-    } catch (e) {}
+    } catch {}
 
     try {
       await api.deleteTimetableRow(id);
@@ -200,7 +200,7 @@ export default function TimeTable({ onShowToast }) {
     setSchedule(newSchedule);
     try {
       localStorage.setItem('rac_cached_timetable', JSON.stringify(newSchedule));
-    } catch (e) {}
+    } catch {}
 
     try {
       await api.reorderTimetable(orderedIds);

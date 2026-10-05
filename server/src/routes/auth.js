@@ -110,7 +110,7 @@ router.post('/forgot-password', async (req, res) => {
   // Invalidate any previous unused OTPs for this admin
   try {
     db.prepare('UPDATE password_reset_otps SET used = 1 WHERE admin_id = ? AND used = 0').run(user.id);
-  } catch (e) {}
+  } catch {}
 
   // Store new OTP in database
   const targetEmail = user.email || 'pn9059491777@gmail.com';
@@ -233,7 +233,7 @@ router.post('/reset-password', (req, res) => {
       }
       adminId = decoded.id;
       otpId = decoded.otp_id;
-    } catch (err) {
+    } catch {
       return res.status(400).json({ error: 'Reset session has expired. Please request a new OTP.' });
     }
   } 

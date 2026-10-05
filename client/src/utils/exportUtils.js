@@ -18,7 +18,7 @@ function triggerDownload(blob, filename) {
         document.body.removeChild(a);
       }
       window.URL.revokeObjectURL(url);
-    } catch (e) {}
+    } catch {}
   }, 10000);
 }
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   PackageCheck, Heart, RefreshCw, Plus, 
-  CheckCircle2, AlertCircle, ArrowUpRight, Search, 
-  Filter, Calendar, ExternalLink, Phone, MessageSquare, Trash2,
-  Clock, Handshake, Check, XCircle, TrendingUp, DollarSign,
-  ChevronRight, Sparkles, BarChart2, History, RotateCcw, CalendarDays, X
+  CheckCircle2, AlertCircle, 
+  Filter, Calendar, Phone, MessageSquare, Trash2,
+  Clock, Handshake, Check, XCircle, DollarSign,
+  History, CalendarDays, X
 } from 'lucide-react';
 import { api, subscribeToRealtimeSync, broadcastLocalSyncEvent } from '../../services/api';
 
@@ -61,7 +61,24 @@ export default function AdminDonationsTab({ onShowToast }) {
 
   // Multi-Device Instant Real-Time Synchronization Engine
   useEffect(() => {
-    loadData(true);
+    // Initial silent/clean fetch without synchronous render cascade
+    let isMounted = true;
+    (async () => {
+      try {
+        const [donationsData, neededData] = await Promise.all([
+          api.getDonations(),
+          api.getNeeded()
+        ]);
+        if (!isMounted) return;
+        setDonations(Array.isArray(donationsData) ? donationsData : (donationsData?.donations || []));
+        setNeededItems(Array.isArray(neededData) ? neededData : []);
+        setLastSyncTime(new Date().toLocaleTimeString());
+      } catch (err) {
+        console.warn('Initial load warning:', err.message);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    })();
 
     const unsubscribe = subscribeToRealtimeSync((event) => {
       if (event.type === 'DONATIONS_UPDATED' || event.type === 'NEEDED_UPDATED') {
@@ -85,6 +102,7 @@ export default function AdminDonationsTab({ onShowToast }) {
     window.addEventListener('focus', onVisible);
 
     return () => {
+      isMounted = false;
       unsubscribe();
       clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisible);
@@ -92,17 +110,25 @@ export default function AdminDonationsTab({ onShowToast }) {
     };
   }, [loadData]);
 
+  // Total All-Time Amount (placed first to preserve clean memoization)
+  const totalAmount = useMemo(() => {
+    return donations
+      .filter(d => d.status !== 'Cancelled')
+      .reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+  }, [donations]);
+
   // Compute month-by-month financial groups
   const monthlyBreakdown = useMemo(() => {
     const map = new Map();
 
     for (const d of donations) {
       if (d.status === 'Cancelled') continue;
-      const dateObj = new Date(d.created_at || Date.now());
-      const year = isNaN(dateObj.getFullYear()) ? new Date().getFullYear() : dateObj.getFullYear();
-      const monthNum = isNaN(dateObj.getMonth()) ? (new Date().getMonth() + 1) : (dateObj.getMonth() + 1);
+      const dateObj = new Date(d.created_at || 0);
+      const isDateValid = !isNaN(dateObj.getTime());
+      const year = isDateValid ? dateObj.getFullYear() : 2026;
+      const monthNum = isDateValid ? (dateObj.getMonth() + 1) : 1;
       const monthKey = `${year}-${String(monthNum).padStart(2, '0')}`;
-      const monthLabel = !isNaN(dateObj.getTime())
+      const monthLabel = isDateValid
         ? dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' })
         : 'Current Period';
 
@@ -137,9 +163,9 @@ export default function AdminDonationsTab({ onShowToast }) {
   }, [donations]);
 
   // Current Month Stats
-  const now = new Date();
-  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const currentMonthStats = useMemo(() => {
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     return monthlyBreakdown.find(m => m.month_key === currentMonthKey) || {
       month_key: currentMonthKey,
       month_label: now.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
@@ -148,7 +174,7 @@ export default function AdminDonationsTab({ onShowToast }) {
       pledge_amount: 0,
       donors_count: 0
     };
-  }, [monthlyBreakdown, currentMonthKey]);
+  }, [monthlyBreakdown]);
 
   // Available Distinct Years across all donations
   const availableYears = useMemo(() => {
@@ -214,13 +240,6 @@ export default function AdminDonationsTab({ onShowToast }) {
     };
   }, [selectedMonth, monthlyBreakdown, totalAmount, donations]);
 
-  // Total All-Time Amount
-  const totalAmount = useMemo(() => {
-    return donations
-      .filter(d => d.status !== 'Cancelled')
-      .reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
-  }, [donations]);
-
   const matchedDonations = useMemo(() => {
     return donations.filter(d => !!d.needed_item_id || !!d.linked_need_title);
   }, [donations]);
@@ -247,7 +266,7 @@ export default function AdminDonationsTab({ onShowToast }) {
     return donations.filter(d => {
       // Month Filter
       if (selectedMonth !== 'all') {
-        const dateObj = new Date(d.created_at || Date.now());
+        const dateObj = new Date(d.created_at || 0);
         const dMonthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
         if (dMonthKey !== selectedMonth) return false;
       }

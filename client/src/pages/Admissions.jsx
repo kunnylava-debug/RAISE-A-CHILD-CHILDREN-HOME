@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  FileText, CheckCircle2, AlertCircle, Send, Check, 
-  X, Info, Phone, Mail, User, MapPin, Sparkles, 
-  HelpCircle, ShieldCheck, Download, Printer, Clock, 
-  Search, ArrowRight 
+  FileText, CheckCircle2, AlertCircle, Send, 
+  Phone, Mail, ShieldCheck, Printer, Clock, Search 
 } from 'lucide-react';
 import { api } from '../services/api';
 

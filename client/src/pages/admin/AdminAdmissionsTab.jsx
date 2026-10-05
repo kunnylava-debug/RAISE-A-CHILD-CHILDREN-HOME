@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Search, Filter, CheckCircle2, XCircle, Clock, Eye, 
-  Trash2, X, Printer, User, MessageSquare, Mail, Send, 
-  Phone, AlertCircle, Share2, Check, FileText, ChevronRight,
-  RefreshCw, Plus
+  Search, CheckCircle2, XCircle, Clock, 
+  Trash2, X, Printer, MessageSquare, Mail, 
+  Phone, Check, RefreshCw, Plus
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -33,7 +32,7 @@ export default function AdminAdmissionsTab({ onShowToast }) {
     hear_about: 'Direct Admin Registration'
   });
 
-  const fetchAdmissions = async (isManualSync = false) => {
+  const fetchAdmissions = useCallback(async (isManualSync = false) => {
     setLoading(true);
     if (isManualSync) setSyncingCloud(true);
     try {
@@ -63,11 +62,11 @@ export default function AdminAdmissionsTab({ onShowToast }) {
       setLoading(false);
       setSyncingCloud(false);
     }
-  };
+  }, [statusFilter, search, onShowToast]);
 
   useEffect(() => {
     fetchAdmissions();
-  }, [statusFilter, search]);
+  }, [fetchAdmissions]);
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();

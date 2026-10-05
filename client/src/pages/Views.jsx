@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Image, Plus, Trash2, ZoomIn, FolderPlus, 
-  Upload, X, Layers, Sparkles, Camera 
+  X, Camera 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';

@@ -82,7 +82,7 @@ module.exports = async (req, res) => {
     if (method === 'POST') {
       let body = req.body;
       if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (e) { body = {}; }
+        try { body = JSON.parse(body); } catch { body = {}; }
       }
       body = body || {};
 
@@ -113,7 +113,7 @@ module.exports = async (req, res) => {
     if (method === 'PUT') {
       let body = req.body;
       if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch (e) { body = {}; }
+        try { body = JSON.parse(body); } catch { body = {}; }
       }
       body = body || {};
 
