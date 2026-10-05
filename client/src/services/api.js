@@ -654,7 +654,7 @@ async function request(endpoint, options = {}) {
         childrenList.push(...imported);
         childrenList = sortChildrenAscending(childrenList);
         setStorage('rac_cached_children', childrenList);
-        broadcastLocalSyncEvent('children', { action: 'import', count: imported.length });
+        broadcastLocalSyncEvent({ type: 'CHILDREN_UPDATED', action: 'IMPORT', count: imported.length });
 
         return {
           success: true,
@@ -691,6 +691,7 @@ async function request(endpoint, options = {}) {
         childrenList.push(newChild);
         childrenList = sortChildrenAscending(childrenList);
         setStorage('rac_cached_children', childrenList);
+        broadcastLocalSyncEvent({ type: 'CHILDREN_UPDATED', action: 'CREATE', data: newChild });
 
         return {
           ...newChild,
@@ -709,6 +710,7 @@ async function request(endpoint, options = {}) {
         });
         childrenList = sortChildrenAscending(childrenList);
         setStorage('rac_cached_children', childrenList);
+        broadcastLocalSyncEvent({ type: 'CHILDREN_UPDATED', action: 'UPDATE', id: childId, data: parsedBody });
         return { ...parsedBody, id: childId };
       }
 
@@ -716,6 +718,7 @@ async function request(endpoint, options = {}) {
         const childId = endpoint.split('/')[2];
         childrenList = childrenList.filter(c => String(c.id) !== String(childId));
         setStorage('rac_cached_children', childrenList);
+        broadcastLocalSyncEvent({ type: 'CHILDREN_UPDATED', action: 'DELETE', id: childId });
         return { message: 'Child record deleted successfully.' };
       }
     }
@@ -748,6 +751,7 @@ async function request(endpoint, options = {}) {
         staffList.push(newStaff);
         staffList = sortStaffAscending(staffList);
         setStorage('rac_cached_staff', staffList);
+        broadcastLocalSyncEvent({ type: 'STAFF_UPDATED', action: 'CREATE', data: newStaff });
         return newStaff;
       }
 
@@ -756,6 +760,7 @@ async function request(endpoint, options = {}) {
         staffList = staffList.map(s => String(s.id) === String(staffId) ? { ...s, ...parsedBody, id: s.id } : s);
         staffList = sortStaffAscending(staffList);
         setStorage('rac_cached_staff', staffList);
+        broadcastLocalSyncEvent({ type: 'STAFF_UPDATED', action: 'UPDATE', id: staffId, data: parsedBody });
         return { ...parsedBody, id: staffId };
       }
 
@@ -763,6 +768,7 @@ async function request(endpoint, options = {}) {
         const staffId = endpoint.split('/')[2];
         staffList = staffList.filter(s => String(s.id) !== String(staffId));
         setStorage('rac_cached_staff', staffList);
+        broadcastLocalSyncEvent({ type: 'STAFF_UPDATED', action: 'DELETE', id: staffId });
         return { message: 'Staff member removed successfully.' };
       }
     }
@@ -954,18 +960,21 @@ async function request(endpoint, options = {}) {
         };
         neededList.push(newItem);
         setStorage('rac_cached_needed', neededList);
+        broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'CREATE', data: newItem });
         return newItem;
       }
       if (method === 'PUT') {
         const itemId = endpoint.split('/')[2];
         neededList = neededList.map(it => String(it.id) === String(itemId) ? { ...it, ...parsedBody, id: it.id } : it);
         setStorage('rac_cached_needed', neededList);
+        broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE', id: itemId, data: parsedBody });
         return { ...parsedBody, id: itemId };
       }
       if (method === 'DELETE') {
         const itemId = endpoint.split('/')[2];
         neededList = neededList.filter(it => String(it.id) !== String(itemId));
         setStorage('rac_cached_needed', neededList);
+        broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'DELETE', id: itemId });
         return { message: 'Needed item removed successfully.' };
       }
     }
@@ -1192,6 +1201,11 @@ async function request(endpoint, options = {}) {
         setStorage('rac_cached_donations', donList);
         setStorage('rac_cached_needed', neededList);
 
+        broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'CONFIRM_PLEDGE', data: updatedDonation });
+        if (updatedNeed) {
+          broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE', data: updatedNeed });
+        }
+
         if (updatedDonation) {
           createCloudDonation(updatedDonation).catch(() => {});
         }
@@ -1255,6 +1269,11 @@ async function request(endpoint, options = {}) {
 
         setStorage('rac_cached_donations', donList);
         setStorage('rac_cached_needed', neededList);
+
+        broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'CANCEL_PLEDGE', data: updatedDonation });
+        if (updatedNeed) {
+          broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE', data: updatedNeed });
+        }
 
         return {
           success: true,
@@ -1349,6 +1368,11 @@ async function request(endpoint, options = {}) {
         donList.unshift(newDonation);
         setStorage('rac_cached_donations', donList);
 
+        broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'CREATE', data: newDonation });
+        if (updatedNeed) {
+          broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE', data: updatedNeed });
+        }
+
         // Save to shared cloud store
         createCloudDonation(newDonation).catch(() => {});
 
@@ -1398,6 +1422,8 @@ async function request(endpoint, options = {}) {
         donList = donList.filter(d => String(d.id) !== String(donId) && String(d.receipt_no) !== String(donId) && String(d._cloud_id) !== String(donId));
         setStorage('rac_cached_donations', donList);
         deleteCloudDonation(donId).catch(() => {});
+        broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'DELETE', id: donId });
+        broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE' });
         return { message: 'Record removed successfully.' };
       }
     }

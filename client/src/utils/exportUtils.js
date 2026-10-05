@@ -359,50 +359,37 @@ export async function parseSpreadsheetFileToCsv(file) {
       return reject(new Error('No file was selected.'));
     }
 
-    const isExcel = /\.(xlsx|xls)$/i.test(file.name) || 
-      file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-      file.type === 'application/vnd.ms-excel';
-
     const reader = new FileReader();
 
-    if (isExcel) {
-      reader.onload = (e) => {
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+
+        // 1. Try reading with SheetJS (handles .xlsx, .xls, .csv, .tsv, etc.)
         try {
-          const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
-          if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-            throw new Error('Excel workbook contains no sheets.');
-          }
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          const csvText = XLSX.utils.sheet_to_csv(worksheet, { blankrows: false });
-          resolve(csvText);
-        } catch (err) {
-          reject(new Error(`Failed to read Excel spreadsheet: ${err.message}`));
-        }
-      };
-      reader.onerror = () => reject(new Error('Failed to read Excel spreadsheet file.'));
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.onload = (e) => {
-        const text = e.target.result || '';
-        // If file contains binary null bytes (corrupted or misnamed binary file)
-        if (text.includes('\u0000') || text.startsWith('PK\x03\x04')) {
-          try {
-            const data = new TextEncoder().encode(text);
-            const workbook = XLSX.read(data, { type: 'array' });
+          if (workbook.SheetNames && workbook.SheetNames.length > 0) {
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            return resolve(XLSX.utils.sheet_to_csv(worksheet, { blankrows: false }));
-          } catch {
-            // continue with plain text
+            const csvText = XLSX.utils.sheet_to_csv(worksheet, { blankrows: false });
+            if (csvText && csvText.trim().length > 0) {
+              return resolve(csvText);
+            }
           }
+        } catch {
+          // If XLSX parser fails on certain raw text formats, decode as text below
         }
+
+        // 2. Fallback to clean UTF-8 text decode
+        const text = new TextDecoder('utf-8').decode(data);
         resolve(text);
-      };
-      reader.onerror = () => reject(new Error('Failed to read CSV text file.'));
-      reader.readAsText(file);
-    }
+      } catch (err) {
+        reject(new Error(`Failed to parse spreadsheet file: ${err.message}`));
+      }
+    };
+
+    reader.onerror = () => reject(new Error('Failed to read spreadsheet file.'));
+    reader.readAsArrayBuffer(file);
   });
 }
 

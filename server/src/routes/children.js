@@ -370,20 +370,12 @@ router.post('/import-csv', authenticateToken, async (req, res) => {
       const rawHeaders = rows[0];
       const headers = rawHeaders.map(normalizeCsvHeader);
 
-      // Validate required columns
+      // Validate required columns - Child Full Name is the only strictly mandatory column
       const hasName = headers.includes('name');
-      const hasAge = headers.includes('age');
-      const hasGender = headers.includes('gender');
-      const hasClass = headers.includes('class');
 
-      if (!hasName || !hasAge || !hasGender || !hasClass) {
-        const missing = [];
-        if (!hasName) missing.push("'Full Name' or 'Name'");
-        if (!hasAge) missing.push("'Age'");
-        if (!hasGender) missing.push("'Gender'");
-        if (!hasClass) missing.push("'Class'");
+      if (!hasName) {
         return res.status(400).json({
-          error: `CSV column validation failed. Missing required column(s): ${missing.join(', ')}. Found headers: [${rawHeaders.join(', ')}]`
+          error: `Spreadsheet validation failed. Could not locate a column for student names (e.g. "Full Name", "Name", "Student Name"). Found headers: [${rawHeaders.join(', ')}]`
         });
       }
 
@@ -420,24 +412,20 @@ router.post('/import-csv', authenticateToken, async (req, res) => {
       const childClass = (item.class || '').trim();
       const genderRaw = (item.gender || '').trim();
 
-      // Check name
-      if (!name) {
-        errors.push(`Row ${lineNum}: Child Full Name is required.`);
+      // Check name (minimum 2 characters required)
+      if (!name || name.length < 2) {
+        errors.push(`Row ${lineNum}: Child Full Name is required and must be at least 2 characters.`);
         return;
       }
 
-      // Check age
-      const age = parseInt(ageRaw, 10);
+      // Smart age fallback
+      let age = parseInt(ageRaw, 10);
       if (isNaN(age) || age < 1 || age > 30) {
-        errors.push(`Row ${lineNum} (${name}): Age "${ageRaw}" must be a valid number between 1 and 30.`);
-        return;
+        age = 10;
       }
 
-      // Check class
-      if (!childClass) {
-        errors.push(`Row ${lineNum} (${name}): Class/Grade is required.`);
-        return;
-      }
+      // Smart class fallback
+      const finalClass = childClass || 'Class 5';
 
       // Normalize gender
       let gender = 'Male';
@@ -454,7 +442,7 @@ router.post('/import-csv', authenticateToken, async (req, res) => {
         serial_no,
         name,
         age,
-        class: childClass,
+        class: finalClass,
         gender,
         admission_date: item.admission_date || new Date().toISOString().split('T')[0],
         photo: (item.photo || '').trim(),

@@ -84,13 +84,34 @@ export default function Needed({ settings, onShowToast }) {
 
   useEffect(() => {
     fetchData();
+
     const unsubscribe = subscribeToRealtimeSync((event) => {
       if (event.type === 'NEEDED_UPDATED' || event.type === 'DONATIONS_UPDATED') {
         console.log('[REAL-TIME SYNC] Needs/Donations updated, re-computing live counts...');
         fetchData();
       }
     });
-    return unsubscribe;
+
+    // 3-second active polling interval: updates automatically across mobile and desktop
+    const interval = setInterval(() => {
+      fetchData();
+    }, 3000);
+
+    // Instant update whenever user switches back to this tab or unlocks mobile phone screen
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   }, []);
 
   const handleCopy = (text, label) => {

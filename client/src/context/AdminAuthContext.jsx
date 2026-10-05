@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api, getAuthToken, setAuthToken } from '../services/api';
 
 const AdminAuthContext = createContext(null);
@@ -9,23 +9,39 @@ export function AdminAuthProvider({ children }) {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   useEffect(() => {
-    const token = getAuthToken();
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    api.verifyAuth()
-      .then(res => {
-        setAdminUser(res.user);
-      })
-      .catch(() => {
-        setAuthToken(null);
+    const checkAuth = () => {
+      const token = getAuthToken();
+      if (!token) {
         setAdminUser(null);
-      })
-      .finally(() => {
         setLoading(false);
-      });
+        return;
+      }
+
+      api.verifyAuth()
+        .then(res => {
+          setAdminUser(res.user);
+        })
+        .catch(() => {
+          setAuthToken(null);
+          setAdminUser(null);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    };
+
+    checkAuth();
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'rac_admin_token' || e.key === 'shanti_admin_token') {
+        checkAuth();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const login = async (username, password) => {

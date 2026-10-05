@@ -18,7 +18,7 @@ import AdminAlumniTab from './AdminAlumniTab';
 import AdminCredentialsTab from './AdminCredentialsTab';
 import AdminPaymentsTab from './AdminPaymentsTab';
 import AdminLicenceTab from './AdminLicenceTab';
-import { api } from '../../services/api';
+import { api, subscribeToRealtimeSync } from '../../services/api';
 
 export default function AdminDashboard({ settings, onRefreshSettings, setActiveTab, onShowToast }) {
   const [activeAdminTab, setActiveAdminTab] = useState('overview');
@@ -32,7 +32,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
 
   const { adminUser, logout, setLoginModalOpen } = useAdminAuth();
 
-  useEffect(() => {
+  const loadStats = () => {
     if (!adminUser) return;
     Promise.all([
       api.getChildren({ limit: 1 }),
@@ -49,6 +49,33 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
         needed_items: Array.isArray(needed) ? needed.length : 0
       });
     }).catch(console.error);
+  };
+
+  useEffect(() => {
+    if (!adminUser) return;
+    loadStats();
+
+    const unsubscribe = subscribeToRealtimeSync(() => {
+      loadStats();
+    });
+
+    // 4-second cross-device polling interval
+    const interval = setInterval(loadStats, 4000);
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        loadStats();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   }, [adminUser]);
 
   if (!adminUser) {
