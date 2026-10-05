@@ -86,9 +86,12 @@ if (typeof window !== 'undefined') {
 const MASTER_INDEX_ID = 'ff808181a09d98f701a0dd6206d31c18';
 const RESTFUL_API_BASE = 'https://api.restful-api.dev/objects';
 
+let isRestfulApiRateLimited = false;
+
 async function cloudFetch(path, options = {}) {
+  if (isRestfulApiRateLimited) return null;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  const timeoutId = setTimeout(() => controller.abort(), 2000);
   try {
     const res = await fetch(`${RESTFUL_API_BASE}${path}`, {
       ...options,
@@ -100,6 +103,11 @@ async function cloudFetch(path, options = {}) {
       }
     });
     clearTimeout(timeoutId);
+    if (res.status === 429) {
+      isRestfulApiRateLimited = true;
+      console.warn('[RESTFUL_API] Rate limit reached, skipping further requests.');
+      return null;
+    }
     if (!res.ok) return null;
     return await res.json();
   } catch (e) {
@@ -1148,7 +1156,9 @@ async function request(endpoint, options = {}) {
     // 6.7 DONATIONS & PLEDGES OPERATIONS (GET, POST, PUT /confirm, PUT /cancel, DELETE)
     if (endpoint.startsWith('/donations')) {
       if (method === 'GET') {
-        return await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+        const local = getStorage('rac_cached_donations', []);
+        syncDonationsWithCloud().catch(() => {});
+        return local;
       }
 
       // CONFIRM PLEDGE: PUT /donations/:id/confirm
@@ -1391,8 +1401,13 @@ async function request(endpoint, options = {}) {
         };
       }
 
-      // DELETE: Delete donation record
+      // DELETE: Delete donation record or reset all income
       if (method === 'DELETE') {
+        if (endpoint.includes('reset') || endpoint.endsWith('/all')) {
+          setStorage('rac_cached_donations', []);
+          broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'RESET_ALL' });
+          return { success: true, message: 'All donation records cleared and overall income reset to ₹0.' };
+        }
         const donId = endpoint.split('/')[2];
         let donList = getStorage('rac_cached_donations', []);
         let neededList = getStorage('rac_cached_needed', []);
@@ -1859,8 +1874,10 @@ export const api = {
       const data = await request('/donations');
       return Array.isArray(data) ? data : (data?.donations || []);
     } catch (err) {
-      console.warn('Failed to fetch donations from server, using local/cloud cache:', err.message);
-      return await syncDonationsWithCloud().catch(() => getStorage('rac_cached_donations', []));
+      console.warn('Failed to fetch donations from server, using local cache:', err.message);
+      const cached = getStorage('rac_cached_donations', []);
+      syncDonationsWithCloud().catch(() => {});
+      return cached;
     }
   },
   deleteDonation: (id) => request(`/donations/${id}`, { method: 'DELETE' }),
@@ -1998,16 +2015,45 @@ export function broadcastLocalSyncEvent(event) {
       broadcastChannel.postMessage(event);
     } catch (e) {}
   }
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('rac_sync_ping', JSON.stringify({ ...event, _ts: Date.now() }));
+    } catch (e) {}
+  }
 }
+
+// Cross-tab and cross-window instant synchronization via localStorage storage event
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'rac_sync_ping' && e.newValue) {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        notifySyncListeners(parsed);
+      } catch (err) {}
+    } else if (e.key === 'rac_cached_donations') {
+      notifySyncListeners({ type: 'DONATIONS_UPDATED', action: 'STORAGE_CHANGE' });
+    } else if (e.key === 'rac_cached_needed') {
+      notifySyncListeners({ type: 'NEEDED_UPDATED', action: 'STORAGE_CHANGE' });
+    }
+  });
+}
+
+let sseErrorCount = 0;
 
 export function initRealtimeSync() {
   if (typeof window === 'undefined' || typeof EventSource === 'undefined') return;
   if (eventSource) return;
 
   function connect() {
+    if (sseErrorCount >= 3) return; // Cease retrying if environment doesn't support SSE (e.g. Vercel serverless)
+
     try {
       const url = `${API_BASE}/sync/events`;
       eventSource = new EventSource(url);
+
+      eventSource.onopen = () => {
+        sseErrorCount = 0;
+      };
 
       eventSource.onmessage = (e) => {
         try {
@@ -2023,22 +2069,29 @@ export function initRealtimeSync() {
       };
 
       eventSource.onerror = () => {
+        sseErrorCount++;
         if (eventSource) {
           eventSource.close();
           eventSource = null;
         }
-        // Auto-reconnect after 4 seconds
-        setTimeout(connect, 4000);
+        if (sseErrorCount < 3) {
+          setTimeout(connect, 4000);
+        } else {
+          console.log('[REALTIME SYNC] SSE endpoint inactive in this cloud environment; active polling & BroadcastChannel active.');
+        }
       };
     } catch (err) {
-      setTimeout(connect, 5000);
+      sseErrorCount++;
+      if (sseErrorCount < 3) {
+        setTimeout(connect, 5000);
+      }
     }
   }
 
   connect();
 
   window.addEventListener('online', () => {
-    if (!eventSource) connect();
+    if (!eventSource && sseErrorCount < 3) connect();
   });
 }
 

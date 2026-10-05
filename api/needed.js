@@ -56,7 +56,7 @@ module.exports = async (req, res) => {
       }
       body = body || {};
 
-      const parts = url.split('?')[0].split('/');
+      const parts = url.split('?')[0].split('/').filter(Boolean);
       const itemId = parts[parts.length - 1];
 
       items = items.map(item => {
@@ -78,7 +78,7 @@ module.exports = async (req, res) => {
     }
 
     if (method === 'DELETE') {
-      const parts = url.split('?')[0].split('/');
+      const parts = url.split('?')[0].split('/').filter(Boolean);
       const itemId = parts[parts.length - 1];
 
       items = items.filter(item => String(item.id) !== String(itemId));

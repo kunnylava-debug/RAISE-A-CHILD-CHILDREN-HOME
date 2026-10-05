@@ -85,58 +85,129 @@ module.exports = async (req, res) => {
       }));
     }
 
-    // 2. Confirm / Cancel Pledge Actions
-    if (method === 'POST' && url.includes('/confirm-pledge')) {
-      const parts = url.split('?')[0].split('/');
-      const targetId = parts[parts.indexOf('confirm-pledge') - 1];
+    const cleanUrl = (url || '').split('?')[0].replace(/\/+$/, '');
+    const urlParts = cleanUrl.split('/').filter(Boolean);
+
+    // 2. Confirm / Cancel Pledge Actions (Supports PUT /api/donations/:id/confirm & legacy POST /confirm-pledge)
+    const isConfirm = ((method === 'PUT' || method === 'POST') && (cleanUrl.endsWith('/confirm') || cleanUrl.includes('/confirm-pledge')));
+    const isCancel = ((method === 'PUT' || method === 'POST') && (cleanUrl.endsWith('/cancel') || cleanUrl.includes('/cancel-pledge')));
+
+    if (isConfirm) {
+      let targetId = null;
+      if (cleanUrl.includes('/confirm-pledge')) {
+        targetId = urlParts[urlParts.indexOf('confirm-pledge') - 1];
+      } else if (cleanUrl.endsWith('/confirm')) {
+        targetId = urlParts[urlParts.length - 2];
+      }
 
       let targetDonation = null;
+      let wasAlreadyConfirmed = false;
       donations = donations.map(d => {
-        if (String(d.id) === String(targetId)) {
+        if (String(d.id) === String(targetId) || String(d.receipt_no) === String(targetId)) {
+          wasAlreadyConfirmed = d.status === 'Confirmed';
           targetDonation = { ...d, status: 'Confirmed', confirmed_at: new Date().toISOString() };
           return targetDonation;
         }
         return d;
       });
 
-      if (targetDonation && targetDonation.needed_item_id) {
+      if (!targetDonation) {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify({ error: 'Pledge record not found' }));
+      }
+
+      let updatedNeed = null;
+      if (!wasAlreadyConfirmed && (targetDonation.needed_item_id || targetDonation.item_name)) {
         let neededItems = await getCloudData('needed', []);
         neededItems = neededItems.map(item => {
-          if (String(item.id) === String(targetDonation.needed_item_id)) {
+          const matchId = targetDonation.needed_item_id && String(item.id) === String(targetDonation.needed_item_id);
+          const matchName = targetDonation.item_name && item.item_name &&
+            item.item_name.toLowerCase().trim() === targetDonation.item_name.toLowerCase().trim();
+          if (matchId || matchName) {
             const qty = Number(targetDonation.quantity_donated) || 1;
             const newRec = (Number(item.quantity_received) || 0) + qty;
-            return {
+            updatedNeed = {
               ...item,
               quantity_received: newRec,
               is_fulfilled: newRec >= (Number(item.quantity_needed) || 1) ? 1 : 0
             };
+            return updatedNeed;
           }
           return item;
         });
-        await setCloudData('needed', neededItems, `Increase received for item ${targetDonation.needed_item_id}`);
+        await setCloudData('needed', neededItems, `Increase received for item ${targetDonation.needed_item_id || targetDonation.item_name}`);
       }
 
       await setCloudData('donations', donations, `Confirm pledge ${targetId}`);
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
-      return res.end(JSON.stringify({ message: 'Pledge confirmed! Received units have been increased.', donation: targetDonation }));
+      return res.end(JSON.stringify({ 
+        success: true,
+        message: updatedNeed 
+          ? `Pledge confirmed! Added +${targetDonation.quantity_donated || 1} units to "${updatedNeed.item_name}" (${updatedNeed.quantity_received}/${updatedNeed.quantity_needed} received).`
+          : 'Pledge confirmed! Received units have been increased.', 
+        donation: targetDonation,
+        updated_need: updatedNeed
+      }));
     }
 
-    if (method === 'POST' && url.includes('/cancel-pledge')) {
-      const parts = url.split('?')[0].split('/');
-      const targetId = parts[parts.indexOf('cancel-pledge') - 1];
+    if (isCancel) {
+      let targetId = null;
+      if (cleanUrl.includes('/cancel-pledge')) {
+        targetId = urlParts[urlParts.indexOf('cancel-pledge') - 1];
+      } else if (cleanUrl.endsWith('/cancel')) {
+        targetId = urlParts[urlParts.length - 2];
+      }
 
+      let targetDonation = null;
+      let wasConfirmed = false;
       donations = donations.map(d => {
-        if (String(d.id) === String(targetId)) {
-          return { ...d, status: 'Cancelled', cancelled_at: new Date().toISOString() };
+        if (String(d.id) === String(targetId) || String(d.receipt_no) === String(targetId)) {
+          wasConfirmed = d.status === 'Confirmed';
+          targetDonation = { ...d, status: 'Cancelled', cancelled_at: new Date().toISOString() };
+          return targetDonation;
         }
         return d;
       });
 
+      if (!targetDonation) {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify({ error: 'Pledge record not found' }));
+      }
+
+      let updatedNeed = null;
+      if (wasConfirmed && (targetDonation.needed_item_id || targetDonation.item_name)) {
+        let neededItems = await getCloudData('needed', []);
+        neededItems = neededItems.map(item => {
+          const matchId = targetDonation.needed_item_id && String(item.id) === String(targetDonation.needed_item_id);
+          const matchName = targetDonation.item_name && item.item_name &&
+            item.item_name.toLowerCase().trim() === targetDonation.item_name.toLowerCase().trim();
+          if (matchId || matchName) {
+            const qty = Number(targetDonation.quantity_donated) || 1;
+            const newRec = Math.max(0, (Number(item.quantity_received) || 0) - qty);
+            updatedNeed = {
+              ...item,
+              quantity_received: newRec,
+              is_fulfilled: newRec >= (Number(item.quantity_needed) || 1) ? 1 : 0
+            };
+            return updatedNeed;
+          }
+          return item;
+        });
+        await setCloudData('needed', neededItems, `Reduce received for cancelled pledge ${targetId}`);
+      }
+
       await setCloudData('donations', donations, `Cancel pledge ${targetId}`);
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
-      return res.end(JSON.stringify({ message: 'Pledge commitment has been cancelled.' }));
+      return res.end(JSON.stringify({ 
+        success: true,
+        message: 'Pledge commitment has been cancelled.',
+        donation: targetDonation,
+        updated_need: updatedNeed
+      }));
     }
 
     // 3. POST /api/donations (Record new donation or pledge)
@@ -170,22 +241,27 @@ module.exports = async (req, res) => {
       };
 
       // If direct donation: update needed item inventory immediately
-      if (!isPledge && newDonation.needed_item_id) {
+      let updatedNeed = null;
+      if (!isPledge && (newDonation.needed_item_id || newDonation.item_name)) {
         let neededItems = await getCloudData('needed', []);
         neededItems = neededItems.map(item => {
-          if (String(item.id) === String(newDonation.needed_item_id)) {
+          const matchId = newDonation.needed_item_id && String(item.id) === String(newDonation.needed_item_id);
+          const matchName = newDonation.item_name && item.item_name &&
+            item.item_name.toLowerCase().trim() === newDonation.item_name.toLowerCase().trim();
+          if (matchId || matchName) {
             const qty = newDonation.quantity_donated;
             const newRec = (Number(item.quantity_received) || 0) + qty;
             newDonation.item_name = item.item_name;
-            return {
+            updatedNeed = {
               ...item,
               quantity_received: newRec,
               is_fulfilled: newRec >= (Number(item.quantity_needed) || 1) ? 1 : 0
             };
+            return updatedNeed;
           }
           return item;
         });
-        await setCloudData('needed', neededItems, `Direct donation received for ${newDonation.needed_item_id}`);
+        await setCloudData('needed', neededItems, `Direct donation received for ${newDonation.needed_item_id || newDonation.item_name}`);
       }
 
       donations.unshift(newDonation);
@@ -195,16 +271,14 @@ module.exports = async (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify({
         message: isPledge ? 'Pledge registered successfully.' : 'Donation recorded and inventory updated.',
-        donation: newDonation
+        donation: newDonation,
+        updated_need: updatedNeed
       }));
     }
 
     // 4. DELETE /api/donations/:id or /api/donations/reset/all
     if (method === 'DELETE') {
-      const parts = url.split('?')[0].split('/');
-      const targetId = parts[parts.length - 1];
-
-      if (url.includes('reset') || targetId === 'all') {
+      if (cleanUrl.includes('reset') || urlParts.includes('all') || urlParts.includes('reset')) {
         donations = [];
         await setCloudData('donations', [], 'Reset all donation records to zero');
         res.statusCode = 200;
@@ -212,12 +286,36 @@ module.exports = async (req, res) => {
         return res.end(JSON.stringify({ success: true, message: 'All donation records cleared and overall income reset to ₹0.' }));
       }
 
-      donations = donations.filter(d => String(d.id) !== String(targetId));
+      const targetId = urlParts[urlParts.length - 1];
+      const target = donations.find(d => String(d.id) === String(targetId) || String(d.receipt_no) === String(targetId));
+
+      // If deleting a confirmed donation linked to a need item, reduce inventory
+      if (target && target.status === 'Confirmed' && (target.needed_item_id || target.item_name)) {
+        let neededItems = await getCloudData('needed', []);
+        const qty = Number(target.quantity_donated) || 1;
+        neededItems = neededItems.map(item => {
+          const matchId = target.needed_item_id && String(item.id) === String(target.needed_item_id);
+          const matchName = target.item_name && item.item_name &&
+            item.item_name.toLowerCase().trim() === target.item_name.toLowerCase().trim();
+          if (matchId || matchName) {
+            const newRec = Math.max(0, (Number(item.quantity_received) || 0) - qty);
+            return {
+              ...item,
+              quantity_received: newRec,
+              is_fulfilled: newRec >= (Number(item.quantity_needed) || 1) ? 1 : 0
+            };
+          }
+          return item;
+        });
+        await setCloudData('needed', neededItems, `Reduce received for deleted donation ${targetId}`);
+      }
+
+      donations = donations.filter(d => String(d.id) !== String(targetId) && String(d.receipt_no) !== String(targetId));
       await setCloudData('donations', donations, `Delete donation ${targetId}`);
 
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
-      return res.end(JSON.stringify({ message: 'Donation entry removed.' }));
+      return res.end(JSON.stringify({ success: true, message: 'Donation entry removed.' }));
     }
 
     res.statusCode = 405;

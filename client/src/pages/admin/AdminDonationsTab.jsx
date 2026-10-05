@@ -38,7 +38,12 @@ export default function AdminDonationsTab({ onShowToast }) {
 
   const loadData = useCallback(async (showLoading = false) => {
     try {
-      if (showLoading && donations.length === 0) setLoading(true);
+      if (showLoading) {
+        setDonations(prev => {
+          if (prev.length === 0) setLoading(true);
+          return prev;
+        });
+      }
       const [donationsData, neededData] = await Promise.all([
         api.getDonations(),
         api.getNeeded()
@@ -52,7 +57,7 @@ export default function AdminDonationsTab({ onShowToast }) {
     } finally {
       setLoading(false);
     }
-  }, [donations.length]);
+  }, []);
 
   // Multi-Device Instant Real-Time Synchronization Engine
   useEffect(() => {
@@ -264,20 +269,53 @@ export default function AdminDonationsTab({ onShowToast }) {
   }, [donations, filterMode, selectedMonth]);
 
   const handleConfirmPledge = async (donation) => {
+    const donId = donation.id || donation._cloud_id;
+    const wasConfirmed = donation.status === 'Confirmed';
+    if (wasConfirmed) return;
+
+    const confirmedAt = new Date().toISOString();
+    const qtyToAdd = Number(donation.quantity_donated) || 1;
+
+    // 1. Instant optimistic state update (0ms lag!)
+    setDonations(prev => prev.map(d => {
+      if (String(d.id) === String(donId) || String(d._cloud_id) === String(donId) || (d.receipt_no && d.receipt_no === donation.receipt_no)) {
+        return { ...d, status: 'Confirmed', confirmed_at: confirmedAt };
+      }
+      return d;
+    }));
+
+    setNeededItems(prev => prev.map(item => {
+      const matchId = donation.needed_item_id && String(donation.needed_item_id) === String(item.id);
+      const matchName = donation.item_name && item.item_name &&
+        donation.item_name.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+      const matchLinked = donation.linked_need_title && item.item_name &&
+        donation.linked_need_title.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+      if (matchId || matchName || matchLinked) {
+        const newRec = (Number(item.quantity_received) || 0) + qtyToAdd;
+        return {
+          ...item,
+          quantity_received: newRec,
+          is_fulfilled: newRec >= (Number(item.quantity_needed) || 1)
+        };
+      }
+      return item;
+    }));
+
+    onShowToast?.({
+      type: 'success',
+      title: 'Pledge Confirmed & Added to Inventory',
+      message: `Pledge confirmed! Added +${qtyToAdd} units to inventory.`
+    });
+
+    broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'CONFIRM_PLEDGE', id: donId });
+    broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE' });
+
+    // 2. Background persistence without blocking UI
     try {
-      setLoading(true);
-      const res = await api.confirmPledge(donation.id || donation._cloud_id);
-      onShowToast?.({
-        type: 'success',
-        title: 'Pledge Confirmed & Added to Inventory',
-        message: res.message || 'Pledge confirmed! Received units have been increased.'
-      });
-      broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'UPDATE' });
-      await loadData();
+      await api.confirmPledge(donId);
+      loadData(false);
     } catch (err) {
-      onShowToast?.({ type: 'error', message: 'Failed to confirm pledge: ' + err.message });
-    } finally {
-      setLoading(false);
+      console.warn('Background pledge confirm error:', err.message);
     }
   };
 
@@ -285,20 +323,52 @@ export default function AdminDonationsTab({ onShowToast }) {
     if (!window.confirm(`Cancel pledge from ${donation.donor_name}? If previously counted, received units will be decreased.`)) {
       return;
     }
+    const donId = donation.id || donation._cloud_id;
+    const wasConfirmed = donation.status === 'Confirmed';
+    const qtyToSub = Number(donation.quantity_donated) || 1;
+
+    // 1. Instant optimistic state update (0ms lag!)
+    setDonations(prev => prev.map(d => {
+      if (String(d.id) === String(donId) || String(d._cloud_id) === String(donId) || (d.receipt_no && d.receipt_no === donation.receipt_no)) {
+        return { ...d, status: 'Cancelled', cancelled_at: new Date().toISOString() };
+      }
+      return d;
+    }));
+
+    if (wasConfirmed) {
+      setNeededItems(prev => prev.map(item => {
+        const matchId = donation.needed_item_id && String(donation.needed_item_id) === String(item.id);
+        const matchName = donation.item_name && item.item_name &&
+          donation.item_name.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+        const matchLinked = donation.linked_need_title && item.item_name &&
+          donation.linked_need_title.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+        if (matchId || matchName || matchLinked) {
+          const newRec = Math.max(0, (Number(item.quantity_received) || 0) - qtyToSub);
+          return {
+            ...item,
+            quantity_received: newRec,
+            is_fulfilled: newRec >= (Number(item.quantity_needed) || 1)
+          };
+        }
+        return item;
+      }));
+    }
+
+    onShowToast?.({
+      type: 'info',
+      title: 'Pledge Cancelled',
+      message: 'Pledge commitment has been cancelled.'
+    });
+
+    broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'CANCEL_PLEDGE', id: donId });
+    broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE' });
+
+    // 2. Background persistence without blocking UI
     try {
-      setLoading(true);
-      const res = await api.cancelPledge(donation.id || donation._cloud_id);
-      onShowToast?.({
-        type: 'info',
-        title: 'Pledge Cancelled',
-        message: res.message || 'Pledge commitment has been cancelled.'
-      });
-      broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'UPDATE' });
-      await loadData();
+      await api.cancelPledge(donId);
+      loadData(false);
     } catch (err) {
-      onShowToast?.({ type: 'error', message: 'Failed to cancel pledge: ' + err.message });
-    } finally {
-      setLoading(false);
+      console.warn('Background pledge cancel error:', err.message);
     }
   };
 
@@ -309,31 +379,116 @@ export default function AdminDonationsTab({ onShowToast }) {
       return;
     }
 
+    const isPledge = form.entry_type === 'Pledge';
+    const qty = Number(form.quantity_donated) || 1;
+    const tempId = Date.now();
+    const prefix = isPledge ? 'PLG' : 'REC';
+    const currentYear = new Date().getFullYear();
+    const receiptNo = `${prefix}-${currentYear}-${String(donations.length + 101).padStart(4, '0')}`;
+
+    let matchedItemName = '';
+    if (form.needed_item_id) {
+      const match = neededItems.find(n => String(n.id) === String(form.needed_item_id));
+      if (match) matchedItemName = match.item_name;
+    }
+
+    const optimisticDonation = {
+      id: tempId,
+      receipt_no: receiptNo,
+      donor_name: form.donor_name.trim(),
+      donor_phone: form.donor_phone.trim(),
+      donor_email: form.donor_email.trim(),
+      amount: Number(form.amount) || 0,
+      payment_method: form.payment_method || (isPledge ? 'Pledge Commitment' : 'UPI'),
+      transaction_ref: form.transaction_ref.trim(),
+      notes: form.notes.trim(),
+      needed_item_id: form.needed_item_id ? Number(form.needed_item_id) : null,
+      item_name: matchedItemName,
+      quantity_donated: qty,
+      entry_type: isPledge ? 'Pledge' : 'Direct Donation',
+      status: isPledge ? 'Pledged (Pending Admin Confirmation)' : 'Confirmed',
+      created_at: new Date().toISOString()
+    };
+
+    // 1. Instant optimistic state update (0ms lag!)
+    setDonations(prev => [optimisticDonation, ...prev]);
+
+    if (!isPledge && form.needed_item_id) {
+      setNeededItems(prev => prev.map(item => {
+        if (String(item.id) === String(form.needed_item_id)) {
+          const newRec = (Number(item.quantity_received) || 0) + qty;
+          return {
+            ...item,
+            quantity_received: newRec,
+            is_fulfilled: newRec >= (Number(item.quantity_needed) || 1)
+          };
+        }
+        return item;
+      }));
+    }
+
+    setModalOpen(false);
+    setForm(initialForm);
+
+    onShowToast?.({
+      type: 'success',
+      title: isPledge ? 'Pledge Registered (Pending Call)' : 'Donation Recorded & Count Updated',
+      message: 'Entry successfully recorded into registry.'
+    });
+
+    broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'CREATE', data: optimisticDonation });
+    broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE' });
+
+    // 2. Background sync
     try {
       setSubmitting(true);
-      const isPledge = form.entry_type === 'Pledge';
-      const res = await api.createDonation({
-        ...form,
-        amount: Number(form.amount) || 0,
-        quantity_donated: Number(form.quantity_donated) || 1,
-        needed_item_id: form.needed_item_id ? Number(form.needed_item_id) : null,
-        status: isPledge ? 'Pledged (Pending Admin Confirmation)' : 'Confirmed'
-      });
-
-      onShowToast?.({
-        type: 'success',
-        title: isPledge ? 'Pledge Registered (Pending Call)' : 'Donation Recorded & Count Updated',
-        message: res.message || 'Entry successfully recorded into registry.'
-      });
-
-      broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'CREATE' });
-      setModalOpen(false);
-      setForm(initialForm);
-      loadData();
+      await api.createDonation(optimisticDonation);
+      loadData(false);
     } catch (err) {
-      onShowToast?.({ type: 'error', message: err.message });
+      console.warn('Background record donation error:', err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteDonation = async (d) => {
+    if (!window.confirm(`Delete record for ${d.donor_name}? If confirmed, received count on linked item will decrease.`)) return;
+    const donId = d.id || d._cloud_id;
+    const wasConfirmed = d.status === 'Confirmed';
+    const qtyToDeduct = Number(d.quantity_donated) || 1;
+
+    // 1. Instant optimistic state update (0ms lag!)
+    setDonations(prev => prev.filter(item => String(item.id) !== String(donId) && String(item._cloud_id) !== String(donId)));
+
+    if (wasConfirmed) {
+      setNeededItems(prev => prev.map(item => {
+        const matchId = d.needed_item_id && String(d.needed_item_id) === String(item.id);
+        const matchName = d.item_name && item.item_name &&
+          d.item_name.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+        const matchLinked = d.linked_need_title && item.item_name &&
+          d.linked_need_title.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+        if (matchId || matchName || matchLinked) {
+          const newRec = Math.max(0, (Number(item.quantity_received) || 0) - qtyToDeduct);
+          return {
+            ...item,
+            quantity_received: newRec,
+            is_fulfilled: newRec >= (Number(item.quantity_needed) || 1)
+          };
+        }
+        return item;
+      }));
+    }
+
+    onShowToast?.({ type: 'success', message: 'Record deleted.' });
+    broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'DELETE', id: donId });
+    broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE' });
+
+    // 2. Background persistence
+    try {
+      await api.deleteDonation(donId);
+      loadData(false);
+    } catch (err) {
+      console.warn('Background delete error:', err.message);
     }
   };
 
@@ -931,17 +1086,7 @@ export default function AdminDonationsTab({ onShowToast }) {
                           {/* Delete Record Button */}
                           <button
                             type="button"
-                            onClick={async () => {
-                              if (!window.confirm(`Delete record for ${d.donor_name}? If confirmed, received count on linked item will decrease.`)) return;
-                              try {
-                                await api.deleteDonation(d.id || d._cloud_id);
-                                onShowToast?.({ type: 'success', message: 'Record deleted.' });
-                                broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'DELETE' });
-                                loadData();
-                              } catch (err) {
-                                onShowToast?.({ type: 'error', message: err.message });
-                              }
-                            }}
+                            onClick={() => handleDeleteDonation(d)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                             title="Delete Record"
                           >
@@ -1327,16 +1472,20 @@ export default function AdminDonationsTab({ onShowToast }) {
                 disabled={resettingIncome}
                 onClick={async () => {
                   setResettingIncome(true);
+                  // 1. Instant optimistic reset (0ms lag!)
+                  setDonations([]);
+                  setSelectedMonth('all');
+                  setResetModalOpen(false);
+                  onShowToast?.({
+                    type: 'success',
+                    title: 'Income Reset Completed',
+                    message: 'All donation records cleared. Overall income is now ₹0.'
+                  });
+                  broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'RESET_ALL' });
+
                   try {
                     await api.resetDonationsIncome();
-                    setDonations([]);
-                    setSelectedMonth('all');
-                    onShowToast?.({
-                      type: 'success',
-                      title: 'Income Reset Completed',
-                      message: 'All donation records cleared. Overall income is now ₹0.'
-                    });
-                    setResetModalOpen(false);
+                    loadData(false);
                   } catch (err) {
                     onShowToast?.({ type: 'error', message: 'Failed to reset income: ' + err.message });
                   } finally {

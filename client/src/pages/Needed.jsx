@@ -37,8 +37,8 @@ export default function Needed({ settings, onShowToast }) {
 
   const { adminUser } = useAdminAuth();
 
-  const fetchData = () => {
-    setLoading(true);
+  const fetchData = (showLoading = false) => {
+    if (showLoading && neededItems.length === 0) setLoading(true);
     Promise.all([
       api.getNeededItems(), 
       api.getSupporters(),
@@ -83,24 +83,24 @@ export default function Needed({ settings, onShowToast }) {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(true);
 
     const unsubscribe = subscribeToRealtimeSync((event) => {
       if (event.type === 'NEEDED_UPDATED' || event.type === 'DONATIONS_UPDATED') {
         console.log('[REAL-TIME SYNC] Needs/Donations updated, re-computing live counts...');
-        fetchData();
+        fetchData(false);
       }
     });
 
     // 3-second active polling interval: updates automatically across mobile and desktop
     const interval = setInterval(() => {
-      fetchData();
+      fetchData(false);
     }, 3000);
 
     // Instant update whenever user switches back to this tab or unlocks mobile phone screen
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
-        fetchData();
+        fetchData(false);
       }
     };
     document.addEventListener('visibilitychange', onVisible);
@@ -148,14 +148,30 @@ export default function Needed({ settings, onShowToast }) {
     e.preventDefault();
     try {
       const isPledge = modalMode === 'pledge';
+      const qty = pledgeItem ? Number(donationForm.quantity_donated || 1) : 1;
       const payload = {
         ...donationForm,
         entry_type: isPledge ? 'Pledge' : 'Direct Donation',
         status: isPledge ? 'Pledged (Pending Admin Confirmation)' : 'Confirmed',
         needed_item_id: pledgeItem ? pledgeItem.id : (donationForm.needed_item_id || null),
         linked_need_title: pledgeItem ? pledgeItem.item_name : (donationForm.linked_need_title || null),
-        quantity_donated: pledgeItem ? Number(donationForm.quantity_donated || 1) : 1
+        quantity_donated: qty
       };
+
+      // Optimistically increment received quantity immediately for direct donation
+      if (!isPledge && payload.needed_item_id) {
+        setNeededItems(prev => prev.map(item => {
+          if (String(item.id) === String(payload.needed_item_id)) {
+            const newRec = (Number(item.quantity_received) || 0) + qty;
+            return {
+              ...item,
+              quantity_received: newRec,
+              is_fulfilled: newRec >= (Number(item.quantity_needed) || 1)
+            };
+          }
+          return item;
+        }));
+      }
 
       const res = await api.recordDonation(payload);
       setDonationReceipt(res.receipt);
@@ -176,7 +192,7 @@ export default function Needed({ settings, onShowToast }) {
         });
       }
 
-      fetchData(); // Refresh needed items table so counts update live!
+      fetchData(false); // Background refresh
       setDonationForm({
         donor_name: '',
         donor_phone: '',
@@ -195,29 +211,43 @@ export default function Needed({ settings, onShowToast }) {
 
   const handleSaveNeed = async (e) => {
     e.preventDefault();
+    const isEdit = Boolean(currentNeed.id);
+    const needToSave = { ...currentNeed };
+    setEditNeedOpen(false);
+
+    if (isEdit) {
+      setNeededItems(prev => prev.map(item => String(item.id) === String(needToSave.id) ? { ...item, ...needToSave } : item));
+      onShowToast?.({ type: 'success', message: 'Item updated' });
+    } else {
+      const tempItem = { ...needToSave, id: Date.now() };
+      setNeededItems(prev => [...prev, tempItem]);
+      onShowToast?.({ type: 'success', message: 'Need item added' });
+    }
+
     try {
-      if (currentNeed.id) {
-        await api.updateNeededItem(currentNeed.id, currentNeed);
-        onShowToast?.({ type: 'success', message: 'Item updated' });
+      if (isEdit) {
+        await api.updateNeededItem(needToSave.id, needToSave);
       } else {
-        await api.createNeededItem(currentNeed);
-        onShowToast?.({ type: 'success', message: 'Need item added' });
+        await api.createNeededItem(needToSave);
       }
-      setEditNeedOpen(false);
-      fetchData();
+      fetchData(false);
     } catch (err) {
       onShowToast?.({ type: 'error', message: err.message });
+      fetchData(false);
     }
   };
 
   const handleDeleteNeed = async (id) => {
     if (!window.confirm('Delete this item from needed list?')) return;
+    setNeededItems(prev => prev.filter(item => String(item.id) !== String(id)));
+    onShowToast?.({ type: 'success', message: 'Item removed' });
+
     try {
       await api.deleteNeededItem(id);
-      onShowToast?.({ type: 'success', message: 'Item removed' });
-      fetchData();
+      fetchData(false);
     } catch (err) {
       onShowToast?.({ type: 'error', message: err.message });
+      fetchData(false);
     }
   };
 
