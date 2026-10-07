@@ -11,17 +11,6 @@
     "is_fulfilled": 1
   },
   {
-    "id": 3,
-    "item_name": "School Uniforms & Study Shoes",
-    "category": "Education & Attire",
-    "quantity_needed": 35,
-    "quantity_received": 0,
-    "estimated_price": 28000,
-    "urgency": "Needed",
-    "description": "Complete sets of tailored school uniforms, white socks, and durable leather school shoes for students.",
-    "is_fulfilled": 0
-  },
-  {
     "id": 4,
     "item_name": "Study Desks & Ergonomic Wooden Chairs",
     "category": "Education",
