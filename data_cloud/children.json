@@ -14,53 +14,5 @@
     "medical_notes": "GOOD",
     "hobbies": "Sports, Art, Reading",
     "is_active": 1
-  },
-  {
-    "id": 1791180658377,
-    "serial_no": "SN-CH-009",
-    "name": "GIWTHAM",
-    "age": 14,
-    "class": "7",
-    "gender": "Female",
-    "admission_date": "2026-10-05",
-    "photo": "",
-    "guardian_name": "",
-    "guardian_phone": "",
-    "guardian_address": "",
-    "medical_notes": "GOOD",
-    "hobbies": "Sports, Art, Reading",
-    "is_active": 1
-  },
-  {
-    "id": 1791368156596,
-    "serial_no": "SN-CH-014",
-    "name": "Student",
-    "age": 10,
-    "class": "Class 5",
-    "gender": "Male",
-    "admission_date": "2026-10-07",
-    "photo": "",
-    "guardian_name": "",
-    "guardian_phone": "",
-    "guardian_address": "",
-    "medical_notes": "Normal routine checks.",
-    "hobbies": "Sports, Art, Reading",
-    "is_active": 1
-  },
-  {
-    "id": 1791183519531,
-    "serial_no": "537",
-    "name": "gutam",
-    "age": 10,
-    "class": "Class 5",
-    "gender": "Male",
-    "admission_date": "2026-10-05",
-    "photo": "",
-    "guardian_name": "man",
-    "guardian_phone": "1472583690",
-    "guardian_address": "tpt",
-    "medical_notes": "Normal routine health checkup.",
-    "hobbies": "Sports, Reading",
-    "is_active": 1
   }
 ]
