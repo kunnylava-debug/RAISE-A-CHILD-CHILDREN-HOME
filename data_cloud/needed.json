@@ -70,11 +70,11 @@
     "item_name": "soaps",
     "category": "sanitaory",
     "quantity_needed": 100,
-    "quantity_received": 1,
+    "quantity_received": 100,
     "estimated_price": 0,
     "urgency": "High",
     "description": "Bathing & laundry soaps for resident children.",
-    "is_fulfilled": 0
+    "is_fulfilled": 1
   },
   {
     "id": 1791375315988,
