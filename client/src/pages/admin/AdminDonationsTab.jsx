@@ -194,24 +194,20 @@ export default function AdminDonationsTab({ onShowToast }) {
     return Array.from(map.values()).sort((a, b) => b.month_key.localeCompare(a.month_key));
   }, [donations]);
 
-  // Current Month Stats
-// Current Month Key
-const currentMonthKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+  // Current Month Key
+  const currentMonthKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
-// Current Month Stats
-const currentMonthStats = useMemo(() => {
+  // Current Month Stats
   const currentMonthStats = useMemo(() => {
-    const now = new Date();
-    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     return monthlyBreakdown.find(m => m.month_key === currentMonthKey) || {
       month_key: currentMonthKey,
-      month_label: now.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+      month_label: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
       total_amount: 0,
       direct_amount: 0,
       pledge_amount: 0,
       donors_count: 0
     };
-  }, [monthlyBreakdown]);
+  }, [monthlyBreakdown, currentMonthKey]);
 
   // Available Distinct Years across all donations
   const availableYears = useMemo(() => {
