@@ -39,7 +39,7 @@ export default function NeededItemsTable({
             Current Hostel Needs & Requirements
           </h1>
           <p className="text-slate-600 text-sm sm:text-base mt-1 max-w-2xl">
-            Choose to <strong>Donate Directly</strong> (counts immediately towards fulfilled units) or <strong>Make a Pledge</strong> (promise to sponsor; confirmed by admin upon verification).
+            Choose to <strong>Donate Directly</strong> (counts immediately towards fulfilled units) or <strong>Make a Pledge</strong> (promise to sponsor; confirmed by admin upon verification). To contribute any custom amount without sponsoring a full unit, use the <strong>General Donations</strong> section above!
           </p>
         </div>
 

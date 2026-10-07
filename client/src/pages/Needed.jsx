@@ -4,6 +4,7 @@ import NeededItemsTable from '../components/NeededItemsTable';
 import SupportSection from '../components/SupportSection';
 import SupportersWall from '../components/SupportersWall';
 import CelebrationBlastModal from '../components/CelebrationBlastModal';
+import GeneralDonationCard from '../components/GeneralDonationCard';
 import { api, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
@@ -138,26 +139,29 @@ export default function Needed({ settings, onShowToast }) {
     onShowToast?.({ type: 'success', message: `${label} copied to clipboard!` });
   };
 
-  const handleOpenModal = (item, mode = 'donate') => {
+  const handleOpenModal = (item, mode = 'donate', customAmount = null) => {
     setPledgeItem(item);
     setModalMode(mode);
     setDonationReceipt(null);
 
-    const unitCost = item 
-      ? Math.max(1, Math.round((item.estimated_price || 1000) / (item.quantity_needed || 1)))
-      : 1000;
+    const defaultAmount = customAmount 
+      ? Number(customAmount) 
+      : (item 
+          ? Math.max(1, Math.round((item.estimated_price || 1000) / (item.quantity_needed || 1)))
+          : 250);
 
     setDonationForm({
       donor_name: '',
       donor_phone: '',
       donor_email: '',
-      amount: unitCost,
+      amount: defaultAmount,
       payment_method: mode === 'pledge' ? 'Pledge to Deliver Items' : 'UPI',
       transaction_ref: '',
       notes: mode === 'pledge' 
         ? `Pledge commitment for 1 unit of: ${item?.item_name || 'General Need'}` 
-        : `Direct contribution for 1 unit of: ${item?.item_name || 'General Need'}`,
+        : (item ? `Direct contribution for 1 unit of: ${item.item_name}` : `General Donation for Children Care & Meals`),
       needed_item_id: item?.id || null,
+      linked_need_title: item?.item_name || 'General Student Care & Meals',
       quantity_donated: 1
     });
     setDonationModalOpen(true);
@@ -333,7 +337,15 @@ export default function Needed({ settings, onShowToast }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16">
+      {/* 1. TOP GENERAL DONATIONS BLOCK (Can't sponsor a full unit? Donate any amount) */}
+      <GeneralDonationCard
+        settings={settings}
+        onOpenGeneralDonation={(amount) => handleOpenModal(null, 'donate', amount)}
+        onCopy={handleCopy}
+      />
+
+      {/* 2. SPECIFIC NEEDED ITEMS TABLE */}
       <NeededItemsTable
         neededItems={neededItems}
         adminUser={adminUser}
@@ -406,7 +418,7 @@ export default function Needed({ settings, onShowToast }) {
                   )}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  {pledgeItem ? `Item: ${pledgeItem.item_name}` : 'Support RISE A CHILD CHILDREN HOME'}
+                  {pledgeItem ? `Item: ${pledgeItem.item_name}` : 'General Donation (Student Care, Food & Nutritious Meals)'}
                 </p>
               </div>
               <button 
@@ -432,10 +444,12 @@ export default function Needed({ settings, onShowToast }) {
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 text-xs space-y-1.5 text-emerald-950">
                 <div className="flex items-center space-x-2 font-bold text-emerald-900">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <span>Direct Donation: Instant Inventory Update</span>
+                  <span>{pledgeItem ? 'Direct Donation: Instant Inventory Update' : '💖 General Student Care Donation'}</span>
                 </div>
                 <p className="text-emerald-800 text-[11px] leading-relaxed">
-                  Your direct donation will <strong>immediately increment the received count</strong> and decrease the remaining requirement in real-time across all devices.
+                  {pledgeItem
+                    ? "Your direct donation will immediately increment the received count and decrease the remaining requirement in real-time across all devices."
+                    : "Your general contribution directly provides hot nutritious meals, daily snacks, milk, and stationery supplies for our resident children. Every rupee counts!"}
                 </p>
               </div>
             )}
