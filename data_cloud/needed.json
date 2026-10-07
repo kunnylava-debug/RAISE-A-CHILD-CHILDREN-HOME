@@ -11,17 +11,6 @@
     "is_fulfilled": 1
   },
   {
-    "id": 4,
-    "item_name": "Study Desks & Ergonomic Wooden Chairs",
-    "category": "Education",
-    "quantity_needed": 15,
-    "quantity_received": 0,
-    "estimated_price": 30000,
-    "urgency": "Needed",
-    "description": "Spacious wooden study desks and ergonomic study chairs for daily evening homework and tuition hours.",
-    "is_fulfilled": 0
-  },
-  {
     "id": 5,
     "item_name": "First Aid & Healthcare Medical Kits",
     "category": "Health & Medical",
