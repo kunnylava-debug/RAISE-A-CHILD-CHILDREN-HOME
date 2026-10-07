@@ -16,9 +16,9 @@
   "founder_bio": "BRO.NELSON A dedicated over 20 years to child welfare, youth development, and educational reform. Having witnessed the struggles of disadvantaged students deprived of schooling and stable care, he established RISE A CHILD CHILDREN HOME with a heartfelt mission to ensure every child receives loving shelter, education, and moral guidance.",
   "founder_vision": "Every child possesses boundless potential. When provided with safety, balanced nutrition, education, and genuine affection, they flourish into confident, self-reliant individuals.",
   "founder_message": "To our dearest children: this home is your family. Dream without fear. To our revered guardians: trust us with your hope, we nurture your children as our own. And to our generous supporters: your kindness is the light that illuminates their path. Thank you for walking beside us.",
-  "video_title": "A Message & Documentary From Our Hostel",
+  "video_title": "A Day in the Life of Our Children",
   "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-  "video_poster": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80",
+  "video_poster": "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
   "contact_phone": "+91 90594 91777",
   "contact_phone_alt": "+91 90594 91777",
   "contact_email": "pn9059491777@gmail.com",
@@ -42,5 +42,7 @@
   "social_youtube": "https://www.youtube.com/@nelsonministrys9840",
   "children_google_sheet_url": "https://docs.google.com/spreadsheets/d/1AiMYO2hMBAXqsWw4R0MZPB_On7-CHIvzxTiiidNrBcQ/edit?usp=sharing",
   "children_google_sheet_webhook_url": "",
-  "recipient": "pn9059491777@gmail.com"
+  "recipient": "pn9059491777@gmail.com",
+  "active_video_template": "routine",
+  "video_templates": "[{\"id\":\"documentary\",\"name\":\"Hostel Documentary & Campus Life\",\"description\":\"Main feature documentary showing children living, studying, and growing together at the hostel.\",\"video_title\":\"A Message & Documentary From Our Hostel\",\"video_url\":\"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4\",\"video_poster\":\"https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80\"},{\"id\":\"routine\",\"name\":\"Children Daily Routine & Study Hours\",\"description\":\"Shows morning prayers, school preparation, evening tutoring, and quiet study times.\",\"video_title\":\"A Day in the Life of Our Children\",\"video_url\":\"\",\"video_poster\":\"https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80\"},{\"id\":\"cultural\",\"name\":\"Festivals & Cultural Celebrations\",\"description\":\"Festive celebrations, Independence Day, Christmas, and children singing & dancing.\",\"video_title\":\"Joy & Celebrations at Rise a Child\",\"video_url\":\"\",\"video_poster\":\"https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80\"},{\"id\":\"sports\",\"name\":\"Sports, Games & Physical Wellness\",\"description\":\"Outdoor athletic activities, football, yoga, and children playground moments.\",\"video_title\":\"Sports & Playtime Moments\",\"video_url\":\"\",\"video_poster\":\"https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80\"},{\"id\":\"tour\",\"name\":\"Campus Tour & Facilities Walkthrough\",\"description\":\"Walkthrough of dormitories, study halls, kitchen, dining area, and safe surroundings.\",\"video_title\":\"Campus Tour & Resident Facilities\",\"video_url\":\"\",\"video_poster\":\"https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=1200&q=80\"}]"
 }
