@@ -4,6 +4,7 @@ import {
   GraduationCap, Phone, MapPin, PackageCheck, Utensils, 
   ExternalLink, ChevronRight, Volume2
 } from 'lucide-react';
+import { api } from '../services/api';
 
 const PROACTIVE_QUOTES = [
   {
@@ -34,6 +35,7 @@ const PROACTIVE_QUOTES = [
 ];
 
 const QUICK_ACTIONS = [
+  { label: "👦 Kids & Staff Strength", prompt: "What is the strength and census of the hostel?" },
   { label: "💖 How to donate?", prompt: "How can I donate or sponsor a meal?" },
   { label: "🎓 Admission help", prompt: "How can I apply for admission for a child?" },
   { label: "📦 Urgent hostel needs", prompt: "What are the hostel's urgent needs right now?" },
@@ -42,7 +44,7 @@ const QUICK_ACTIONS = [
   { label: "📞 Contact Bro. Nelson", prompt: "How can I contact Brother Nelson directly?" }
 ];
 
-function generateAIResponse(userText, settings, setActiveTab) {
+function generateAIResponse(userText, settings, setActiveTab, census = {}, staffData = {}) {
   const query = userText.toLowerCase().trim();
   const phone = settings?.contact_phone || '+91 90594 91777';
   const upiId = settings?.upi_id || 'riseachild@sbi';
@@ -170,15 +172,83 @@ Would you like to see how you can brighten a child's day today? 🍲📚`,
     };
   }
 
-  // 7. Total children / kids census
-  if (query.includes('how many child') || query.includes('how many kid') || query.includes('strength') || query.includes('census') || query.includes('count')) {
-    return {
-      text: `Our hostel currently provides a loving home, shelter, and full education for over **50 resident children** (both boys and girls)! 👦👧✨
+  // 7. Total children / kids census & hostel strength
+  if (
+    query.includes('strength') || 
+    query.includes('how many child') || 
+    query.includes('how many kid') || 
+    query.includes('how many student') || 
+    query.includes('how many boy') || 
+    query.includes('how many girl') || 
+    query.includes('census') || 
+    query.includes('count of child') || 
+    query.includes('number of child') || 
+    query.includes('student count') || 
+    query.includes('total child') || 
+    query.includes('total student') || 
+    query.includes('capacity') ||
+    query.includes('how many are in') ||
+    query.includes('how many live')
+  ) {
+    const totalKids = census?.total_children || 0;
+    const boysCount = census?.boys_count || 0;
+    const girlsCount = census?.girls_count || 0;
 
-Every student receives 4 wholesome meals a day, daily school tuition supervision, textbooks, uniforms, and heartfelt guidance like one big family. 💖`,
+    return {
+      text: `👦👧 **Current Hostel Strength & Student Census:**
+
+Our children's home currently provides loving residential care, nutrition, and full schooling for **${totalKids > 0 ? totalKids : 'over 50'} resident children**! 🏡💖
+
+Here is our live census breakdown:
+• 👦 **Boys**: **${boysCount} students** (residing in dedicated Boys Campus Wing)
+• 👧 **Girls**: **${girlsCount} students** (residing in dedicated Girls Campus Wing)
+
+Every student receives:
+🍲 4 wholesome, hot meals a day (healthy breakfast, lunch, evening milk snack & dinner)
+📚 School education & evening supervised homework coaching
+👕 Neat uniforms, footwear, study supplies, and personal living quarters
+🛡️ 24/7 loving care from Brother Nelson and resident wardens.`,
       action: {
-        label: "Meet Our Children",
+        label: "View Children Directory",
         tab: "children"
+      }
+    };
+  }
+
+  // 7.5 Staff & Caregiver Team Strength
+  if (
+    query.includes('staff') || 
+    query.includes('caregiver') || 
+    query.includes('warden') || 
+    query.includes('teacher') || 
+    query.includes('who works') || 
+    query.includes('team member') || 
+    query.includes('team strength') || 
+    query.includes('guardian') || 
+    query.includes('management')
+  ) {
+    const staffCount = staffData?.total_staff || (staffData?.staff_list || []).length || 2;
+    const staffList = staffData?.staff_list || [];
+    const staffSummary = staffList.length > 0 
+      ? staffList.map(s => `• **${s.name}** — ${s.role || 'Resident Mentor'}`).join('\n')
+      : `• **BRO.NELSON A** — Founder & Managing Trustee\n• **A.PRASANTHI** — Girls Warden & Caregiver`;
+
+    return {
+      text: `👨‍🏫👩‍🏫 **Our Dedicated Staff & Guardian Team:**
+
+We currently have **${staffCount} dedicated resident staff members and guardians** taking care of the children round the clock! 🛡️✨
+
+**Key Guardians & Mentors:**
+${staffSummary}
+
+Our staff team provides:
+• 24/7 security and resident care for both boys and girls wings
+• Daily school tuition, homework help, and moral guidance
+• Preparation of hygienic, nutritious meals 4 times a day
+• Loving parental mentorship so every child feels safe and cherished! 💖🌸`,
+      action: {
+        label: "View Staff & Guardians",
+        tab: "staff"
       }
     };
   }
@@ -343,6 +413,60 @@ export default function HomeAIAssistant({ settings, setActiveTab }) {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // Live Census & Staff Strength State
+  const [census, setCensus] = useState({
+    total_children: 0,
+    boys_count: 0,
+    girls_count: 0
+  });
+  const [staffData, setStaffData] = useState({
+    total_staff: 0,
+    staff_list: []
+  });
+
+  // Load live census and staff counts
+  useEffect(() => {
+    try {
+      const cachedKids = JSON.parse(localStorage.getItem('rac_cached_children') || '[]');
+      if (Array.isArray(cachedKids) && cachedKids.length > 0) {
+        setCensus({
+          total_children: cachedKids.length,
+          boys_count: cachedKids.filter(c => c.gender === 'Male').length,
+          girls_count: cachedKids.filter(c => c.gender === 'Female').length
+        });
+      }
+      const cachedStaff = JSON.parse(localStorage.getItem('rac_cached_staff') || '[]');
+      if (Array.isArray(cachedStaff) && cachedStaff.length > 0) {
+        setStaffData({
+          total_staff: cachedStaff.length,
+          staff_list: cachedStaff
+        });
+      }
+    } catch {}
+
+    api.getChildren({ limit: 1000 }).then(data => {
+      if (data) {
+        const total = data.total_children || (data.children || []).length || 0;
+        const boys = data.boys_count || (data.children || []).filter(c => c.gender === 'Male').length || 0;
+        const girls = data.girls_count || (data.children || []).filter(c => c.gender === 'Female').length || 0;
+        setCensus({
+          total_children: total,
+          boys_count: boys,
+          girls_count: girls
+        });
+      }
+    }).catch(() => {});
+
+    api.getStaff().then(data => {
+      if (Array.isArray(data)) {
+        setStaffData({
+          total_staff: data.length,
+          staff_list: data
+        });
+      }
+    }).catch(() => {});
+  }, []);
+
   // Auto-rotate proactive quotes every 9 seconds
   useEffect(() => {
     if (bubbleDismissed || isOpen) return;
@@ -375,7 +499,7 @@ export default function HomeAIAssistant({ settings, setActiveTab }) {
     setIsTyping(true);
 
     setTimeout(() => {
-      const response = generateAIResponse(text, settings, setActiveTab);
+      const response = generateAIResponse(text, settings, setActiveTab, census, staffData);
       const aiMsg = {
         sender: 'ai',
         text: response.text,
