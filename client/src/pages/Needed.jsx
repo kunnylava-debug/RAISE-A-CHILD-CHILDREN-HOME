@@ -74,7 +74,17 @@ export default function Needed({ settings, onShowToast }) {
           };
         });
 
-        setNeededItems(computedItems);
+        // 1. Sort newest first so freshly added items go to the TOP
+        computedItems.sort((a, b) => {
+          const timeA = new Date(a.created_at || 0).getTime() || (Number(a.id) || 0);
+          const timeB = new Date(b.created_at || 0).getTime() || (Number(b.id) || 0);
+          return timeB - timeA;
+        });
+
+        // 2. Automatically remove/hide fulfilled items from the public site
+        const publicItems = computedItems.filter(item => !item.is_fulfilled);
+
+        setNeededItems(publicItems);
         setSupporters(supps || []);
       })
       .catch(console.error);

@@ -13,7 +13,7 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
     { id: 'staff', label: 'Staff' },
     { id: 'licence', label: 'Licence' },
     { id: 'children', label: "Children's" },
-    { id: 'views', label: 'Views' },
+    { id: 'views', label: 'Campus' },
     { id: 'admissions', label: 'Admissions' },
     { id: 'needed', label: 'Needed' },
   ];

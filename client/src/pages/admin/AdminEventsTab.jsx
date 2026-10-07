@@ -19,6 +19,7 @@ export default function AdminEventsTab({ onShowToast }) {
     category: 'Celebration',
     description: '',
     image_url: '',
+    images: [],
     order_num: 1
   };
 
@@ -44,6 +45,7 @@ export default function AdminEventsTab({ onShowToast }) {
     setEditingEvent(null);
     setForm({
       ...initialForm,
+      images: [],
       order_num: (events.length || 0) + 1
     });
     setModalOpen(true);
@@ -51,12 +53,16 @@ export default function AdminEventsTab({ onShowToast }) {
 
   const handleOpenEdit = (event) => {
     setEditingEvent(event);
+    const existingImages = Array.isArray(event.images) && event.images.length > 0
+      ? event.images
+      : (event.image_url ? [event.image_url] : []);
     setForm({
       title: event.title || '',
       date: event.date || '',
       category: event.category || 'Celebration',
       description: event.description || '',
-      image_url: event.image_url || '',
+      image_url: event.image_url || existingImages[0] || '',
+      images: existingImages,
       order_num: event.order_num || 1
     });
     setModalOpen(true);
@@ -75,18 +81,25 @@ export default function AdminEventsTab({ onShowToast }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.image_url.trim()) {
-      onShowToast?.({ type: 'error', message: 'Title and Image URL are required' });
+    const primaryImg = (form.images && form.images.length > 0) ? form.images[0] : form.image_url;
+    if (!form.title.trim() || !primaryImg.trim()) {
+      onShowToast?.({ type: 'error', message: 'Title and at least one Event Photo are required' });
       return;
     }
+
+    const payload = {
+      ...form,
+      image_url: primaryImg,
+      images: form.images && form.images.length > 0 ? form.images : [primaryImg]
+    };
 
     try {
       setSubmitting(true);
       if (editingEvent) {
-        await api.updateEvent(editingEvent.id, form);
+        await api.updateEvent(editingEvent.id, payload);
         onShowToast?.({ type: 'success', message: `Event "${form.title}" updated successfully!` });
       } else {
-        await api.createEvent(form);
+        await api.createEvent(payload);
         onShowToast?.({ type: 'success', message: `New event "${form.title}" created successfully!` });
       }
       setModalOpen(false);
@@ -288,36 +301,74 @@ export default function AdminEventsTab({ onShowToast }) {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Event Photo (Upload from Gallery or Paste URL) *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-semibold text-slate-700 text-xs sm:text-sm">
+                      Event Photos ({form.images?.length || (form.image_url ? 1 : 0)} selected) *
+                    </label>
+                    <span className="text-[11px] text-blue-600 font-medium">
+                      Select one or multiple photos from gallery
+                    </span>
+                  </div>
+
+                  {/* Multi-Photo Upload & URL Input */}
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
-                      required
-                      placeholder="https://... or choose from gallery"
+                      placeholder="Paste image URL and tap 'Add URL' below..."
                       value={form.image_url}
                       onChange={(e) => setForm({ ...form, image_url: e.target.value })}
                       className="flex-1 p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs sm:text-sm"
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!form.image_url.trim()) return;
+                        setForm(prev => {
+                          const currentImages = prev.images || [];
+                          if (currentImages.includes(form.image_url.trim())) return prev;
+                          const updated = [...currentImages, form.image_url.trim()];
+                          return { ...prev, images: updated, image_url: updated[0] };
+                        });
+                        onShowToast?.({ type: 'success', message: 'Photo URL added to event gallery!' });
+                      }}
+                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs transition"
+                    >
+                      + Add URL
+                    </button>
                     <label className="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition shadow-sm whitespace-nowrap">
                       <Upload className="w-3.5 h-3.5" />
-                      <span>{uploadingPhoto ? 'Uploading...' : 'Upload From Gallery'}</span>
+                      <span>{uploadingPhoto ? 'Uploading Photos...' : 'Choose Multiple from Gallery'}</span>
                       <input
                         type="file"
                         accept="image/*"
+                        multiple
                         className="hidden"
                         disabled={uploadingPhoto}
                         onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
+                          const files = Array.from(e.target.files || []);
+                          if (files.length === 0) return;
                           setUploadingPhoto(true);
                           try {
-                            const res = await api.uploadFile(file);
-                            setForm(prev => ({ ...prev, image_url: res.url }));
-                            onShowToast?.({ type: 'success', message: 'Event photo uploaded directly from gallery!' });
+                            const uploadedUrls = [];
+                            for (const file of files) {
+                              const res = await api.uploadFile(file);
+                              if (res && res.url) uploadedUrls.push(res.url);
+                            }
+                            setForm(prev => {
+                              const currentImages = prev.images || [];
+                              const updated = [...currentImages, ...uploadedUrls];
+                              return {
+                                ...prev,
+                                images: updated,
+                                image_url: updated[0] || prev.image_url || ''
+                              };
+                            });
+                            onShowToast?.({
+                              type: 'success',
+                              message: `Added ${uploadedUrls.length} photo${uploadedUrls.length > 1 ? 's' : ''} to this event!`
+                            });
                           } catch (err) {
-                            onShowToast?.({ type: 'error', message: 'Failed to upload event photo: ' + err.message });
+                            onShowToast?.({ type: 'error', message: 'Failed to upload event photos: ' + err.message });
                           } finally {
                             setUploadingPhoto(false);
                           }
@@ -327,25 +378,65 @@ export default function AdminEventsTab({ onShowToast }) {
                   </div>
 
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Tap <strong>Upload From Gallery</strong> to choose any celebration or festival photo directly from your mobile or computer.
+                    Select <strong>multiple photos</strong> at once from your gallery. All photos will be saved together under this single celebration event.
                   </p>
 
-                  {form.image_url && (
-                    <div className="mt-2.5 relative h-36 rounded-xl overflow-hidden border border-slate-200 group bg-slate-50">
-                      <img 
-                        src={form.image_url} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.target.style.display = 'none'; }}
-                      />
-                      <div className="absolute top-2 right-2">
-                        <button
-                          type="button"
-                          onClick={() => setForm({ ...form, image_url: '' })}
-                          className="px-2.5 py-1 bg-black/60 hover:bg-black/80 text-white rounded-lg text-xs font-semibold backdrop-blur-xs transition cursor-pointer"
-                        >
-                          Remove Photo
-                        </button>
+                  {/* Multi-photo Thumbnails Gallery Preview */}
+                  {form.images && form.images.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <span className="text-[11px] font-bold text-slate-600 block">
+                        Selected Event Photos ({form.images.length}):
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {form.images.map((imgUrl, i) => (
+                          <div key={i} className="relative group h-24 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
+                            <img
+                              src={imgUrl}
+                              alt={`Event photo ${i + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                            <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 p-1">
+                              {i !== 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setForm(prev => {
+                                      const reordered = [imgUrl, ...prev.images.filter((_, idx) => idx !== i)];
+                                      return { ...prev, images: reordered, image_url: reordered[0] };
+                                    });
+                                  }}
+                                  className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold shadow"
+                                  title="Make this the cover/primary photo"
+                                >
+                                  Make Cover
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setForm(prev => {
+                                    const filtered = prev.images.filter((_, idx) => idx !== i);
+                                    return {
+                                      ...prev,
+                                      images: filtered,
+                                      image_url: filtered[0] || ''
+                                    };
+                                  });
+                                }}
+                                className="text-[10px] bg-red-600 text-white p-1 rounded font-bold shadow"
+                                title="Remove photo"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                            {i === 0 && (
+                              <span className="absolute top-1 left-1 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                                Cover Photo
+                              </span>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}

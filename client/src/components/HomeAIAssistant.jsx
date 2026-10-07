@@ -50,18 +50,105 @@ function generateAIResponse(userText, settings, setActiveTab) {
   const hostelName = settings?.hostel_name || 'RISE A CHILD CHILDREN HOME';
   const address = settings?.contact_address || 'Mannar Polur, Sullurpeta Mandal, Tirupati District, AP - 524121';
 
-  // 1. Donation / Sponsor
-  if (query.includes('donat') || query.includes('give') || query.includes('upi') || query.includes('gpay') || query.includes('phonepe') || query.includes('sponsor') || query.includes('money') || query.includes('fund')) {
+  // 1. Casual Greetings (ChatGPT-style warmth & emoji expressions)
+  if (/^(hi|hello|hey|hai|heyy|namaste|vanakkam|good morning|good afternoon|good evening|howdy)\b/i.test(query) || query === 'hi' || query === 'hello' || query === 'hey') {
     return {
-      text: `🙏 Thank you for your generous heart to bless our children!
+      text: `Hello there! 😊✨ It's so lovely to meet you! How are you doing today? 🌸
 
-You can donate directly through transparent digital channels:
+I'm your friendly AI guide for **${hostelName}** 🏡💖. Think of me as a warm friend who's always here to help! 
+
+Whether you'd like to:
+• Learn how you can bless our children with meals or donations 🍲💝
+• Fill out or track an admission application 🎓📝
+• Check our urgent grocery and school supplies needs 📦✏️
+• Or speak directly with Brother Nelson 📞🤝
+
+I'm right here with you! What's on your mind today? Feel free to ask me anything! 🤗🌟`
+    };
+  }
+
+  // 2. "How are you" / Friendly checks
+  if (query.includes('how are you') || query.includes('how r u') || query.includes('how do you do') || query.includes('whats up') || query.includes("what's up")) {
+    return {
+      text: `I'm doing wonderfully, thank you so much for asking! 🥰✨ 
+
+Seeing wonderful, kind-hearted people like you visit our children's home brings so much joy! 🌈💖
+
+How is your day going? How can I assist or guide you today? 😊`
+    };
+  }
+
+  // 3. "Who are you" / "What is your name"
+  if (query.includes('who are you') || query.includes('what is your name') || query.includes('your name') || query.includes('what can you do')) {
+    return {
+      text: `I'm your official AI Hostel Guide! 🤖✨💖
+
+I was created to assist visitors, parents, and generous well-wishers 24/7. I can guide you through admissions, explain our transparent UPI & bank donation process, share the children's daily routine and nutritious food menu, or give directions to our campus. 
+
+What would you like to explore today? 🌟`
+    };
+  }
+
+  // 4. "Thank you" / Gratitude
+  if (query.includes('thank') || query.includes('thx') || query.includes('tq') || query.includes('appreciate')) {
+    return {
+      text: `You are so very welcome! 🥰💖 Helping you brings a huge smile to my virtual heart! 
+
+If you ever need anything else, I'm always right here for you. Wishing you abundant peace, joy, and blessings! 🌸✨🙏`
+    };
+  }
+
+  // 5. "Bye" / Farewell
+  if (query.includes('bye') || query.includes('see you') || query.includes('good night') || query.includes('take care')) {
+    return {
+      text: `Goodbye for now! 👋😊 Take great care of yourself! 
+
+Remember, our home and our hearts are always open to you whenever you want to visit or chat again. Have a peaceful and blessed time ahead! 🏡✨💖`
+    };
+  }
+
+  // 6. Inspirational quote / motivation
+  if (query.includes('quote') || query.includes('inspire') || query.includes('motivation') || query.includes('thought')) {
+    return {
+      text: `Here is an inspiring thought for you today: 🌟💖
+
+*“We make a living by what we get, but we make a life by what we give.”* — Winston Churchill 🌱
+
+*“Every child is a beacon of hope; when we lift a child up, we lift the entire future.”* ✨
+
+Would you like to see how you can brighten a child's day today? 🍲📚`,
+      action: {
+        label: "Support Our Children",
+        tab: "needed"
+      }
+    };
+  }
+
+  // 7. Total children / kids census
+  if (query.includes('how many child') || query.includes('how many kid') || query.includes('strength') || query.includes('census') || query.includes('count')) {
+    return {
+      text: `Our hostel currently provides a loving home, shelter, and full education for over **50 resident children** (both boys and girls)! 👦👧✨
+
+Every student receives 4 wholesome meals a day, daily school tuition supervision, textbooks, uniforms, and heartfelt guidance like one big family. 💖`,
+      action: {
+        label: "Meet Our Children",
+        tab: "children"
+      }
+    };
+  }
+
+  // 8. Donation / Sponsor / GPay / UPI
+  if (query.includes('donat') || query.includes('give') || query.includes('upi') || query.includes('gpay') || query.includes('phonepe') || query.includes('sponsor') || query.includes('money') || query.includes('fund') || query.includes('contribut')) {
+    return {
+      text: `🙏✨ Thank you from the bottom of our hearts for your generous heart to bless our children!
+
+You can contribute transparently directly to our trust accounts:
 • **UPI ID**: \`${upiId}\`
-• **Beneficiary**: ${upiName}
+• **Beneficiary Name**: ${upiName}
 • **Google Pay / PhonePe**: ${phone}
-• **Bank**: State Bank of India, Sullurpeta Main Branch (A/C: 38491029384, IFSC: SBIN0001423)
+• **Bank**: State Bank of India, Sullurpeta Branch (A/C: 38491029384, IFSC: SBIN0001423)
 
-Every rupee directly provides nutritious meals, school books, tuition coaching, and medical care for resident students.`,
+Every single rupee goes directly towards nutritious meals, textbooks, tuition support, and medical care for resident students. 🍲📚💖`,
       action: {
         label: "View Urgent Needs & Donate",
         tab: "needed"
@@ -69,15 +156,20 @@ Every rupee directly provides nutritious meals, school books, tuition coaching, 
     };
   }
 
-  // 2. Admissions / Joining
+  // 9. Admissions / Joining / Seat
   if (query.includes('admiss') || query.includes('join') || query.includes('apply') || query.includes('seat') || query.includes('school') || query.includes('register') || query.includes('admission form')) {
     return {
-      text: `🎓 **Hostel Admission Guidance**:
+      text: `🎓✨ **Hostel Admission Guidance**:
 
-${hostelName} welcomes students and youths of all classes and educational stages (Primary, Secondary, Higher Secondary, & College):
-• **Facilities**: 100% loving shelter, wholesome 4-times daily meals, study supervision, and moral care.
-• **Process**: You can fill out the simple online application right here on the website, upload a photo, and receive an instant application tracking number.
-• Our Managing Trustee, **BRO.NELSON A**, reviews all applications with genuine care.`,
+${hostelName} warmly welcomes deserving students of all age groups (Primary, Secondary, Higher Secondary & College)! 👦👧
+
+Here is what we provide:
+• 100% loving shelter, moral care, and secure accommodation
+• Wholesome 4-times daily meals and study supervision
+• Free schooling guidance and personality development
+• Simple online application: you can submit the form directly here, upload a child photo, and receive an instant reference number! 📝
+
+Our Managing Trustee, **BRO.NELSON A**, personally reviews each application with genuine care and dedication.`,
       action: {
         label: "Open Online Admission Form",
         tab: "admissions"
@@ -85,17 +177,17 @@ ${hostelName} welcomes students and youths of all classes and educational stages
     };
   }
 
-  // 3. Urgent Needs / In-kind
-  if (query.includes('need') || query.includes('grocer') || query.includes('rice') || query.includes('book') || query.includes('cloth') || query.includes('uniform') || query.includes('item')) {
+  // 10. Urgent Needs / Groceries
+  if (query.includes('need') || query.includes('grocer') || query.includes('rice') || query.includes('book') || query.includes('cloth') || query.includes('uniform') || query.includes('item') || query.includes('material')) {
     return {
-      text: `📦 **Urgent Hostel Needs**:
+      text: `📦✨ **Urgent Hostel Needs**:
 
 Our children currently welcome support for:
-1. Wholesome Groceries: Rice, Toor Dal, Cooking Oil, Milk & Eggs.
-2. Academic Essentials: Notebooks, School Bags, Geometry Sets & Exam Pens.
-3. Health & Hygiene: Bath Soaps, Toothpaste, Washing Powder, Sanitizers.
+1. 🍲 **Wholesome Groceries**: Rice, Toor Dal, Cooking Oil, Milk & Eggs.
+2. 📚 **Academic Essentials**: Notebooks, School Bags, Geometry Sets & Exam Pens.
+3. 🧼 **Health & Hygiene**: Bath Soaps, Toothpaste, Washing Powder, Sanitizers.
 
-You can pledge specific items or donate in-kind directly at our campus!`,
+You can pledge specific items or donate in-kind directly at our campus! Every fulfilled item is updated live on our website.`,
       action: {
         label: "View Real-Time Needs Audit",
         tab: "needed"
@@ -103,18 +195,18 @@ You can pledge specific items or donate in-kind directly at our campus!`,
     };
   }
 
-  // 4. Routine, Timetable & Food Menu
+  // 11. Routine, Timetable & Food Menu
   if (query.includes('menu') || query.includes('food') || query.includes('routine') || query.includes('timetable') || query.includes('diet') || query.includes('eat') || query.includes('schedule')) {
     return {
-      text: `🍲 **Daily Routine & Wholesome Diet**:
+      text: `🍲✨ **Daily Routine & Wholesome Diet**:
 
-• **5:30 AM**: Wake up, personal hygiene & morning prayer.
-• **6:30 AM**: Yoga, physical wellness & study revision.
-• **7:30 AM**: Wholesome breakfast (Idli/Dosa/Upma + Milk).
-• **8:30 AM - 4:30 PM**: Schooling & academic classes.
-• **5:00 PM**: Nutritious evening snacks & playground games.
-• **6:00 PM - 8:30 PM**: Supervised coaching & homework study.
-• **8:30 PM**: Balanced dinner (Rice, Sambar, Veg curry, Dal, Egg/Curd) & peaceful rest.`,
+• **5:30 AM**: Wake up, personal hygiene & morning prayer 🌅
+• **6:30 AM**: Yoga, physical wellness & study revision 🧘‍♂️
+• **7:30 AM**: Wholesome breakfast (Idli/Dosa/Upma + Milk) 🥛
+• **8:30 AM - 4:30 PM**: Schooling & academic classes 🏫
+• **5:00 PM**: Nutritious evening snacks & playground games ⚽
+• **6:00 PM - 8:30 PM**: Supervised coaching & homework study 📖
+• **8:30 PM**: Balanced dinner (Rice, Sambar, Veg curry, Dal, Egg/Curd) & peaceful rest 🌙`,
       action: {
         label: "View Weekly Food Menu",
         tab: "menu"
@@ -122,17 +214,17 @@ You can pledge specific items or donate in-kind directly at our campus!`,
     };
   }
 
-  // 5. Contact / Brother Nelson
-  if (query.includes('contact') || query.includes('nelson') || query.includes('phone') || query.includes('number') || query.includes('call') || query.includes('email') || query.includes('founder')) {
+  // 12. Contact / Brother Nelson
+  if (query.includes('contact') || query.includes('nelson') || query.includes('phone') || query.includes('number') || query.includes('call') || query.includes('email') || query.includes('founder') || query.includes('trustee')) {
     return {
-      text: `📞 **Direct Contact Information**:
+      text: `📞✨ **Direct Contact Information**:
 
-• **Founder & Managing Trustee**: BRO.NELSON A
+• **Founder & Managing Trustee**: BRO.NELSON A 🤝
 • **Mobile & WhatsApp**: ${phone}
-• **Official Email**: ${settings?.contact_email || 'pn9059491777@gmail.com'}
+• **Official Email**: ${settings?.notification_email || settings?.contact_email || 'pn9059491777@gmail.com'}
 • **Campus Address**: ${address}
 
-Brother Nelson is personally available to speak with parents, guardians, and generous supporters!`,
+Brother Nelson is personally available to speak with parents, guardians, and generous supporters! Feel free to call or WhatsApp anytime. 😊`,
       action: {
         label: "Call Brother Nelson Now",
         href: `tel:${phone.replace(/\s+/g, '')}`
@@ -140,15 +232,15 @@ Brother Nelson is personally available to speak with parents, guardians, and gen
     };
   }
 
-  // 6. Location / Visiting hours / Mannar Polur
+  // 13. Location / Visiting hours / Mannar Polur
   if (query.includes('locat') || query.includes('visit') || query.includes('address') || query.includes('where') || query.includes('map') || query.includes('sullurpeta')) {
     return {
-      text: `📍 **Hostel Location & Visiting Protocol**:
+      text: `📍✨ **Hostel Location & Visiting Protocol**:
 
 • **Address**: ${address}
-• **Landmark**: Near Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh (PIN 524121).
-• **Visiting Hours**: Saturdays & Sundays (10:00 AM – 5:00 PM).
-• **Visitor Protocol**: For the safety and privacy of all resident children, all visitors are requested to sign the visitor log at the entrance and adhere to hostel ethics.`,
+• **Landmark**: Near Mannar Polur, Sullurpeta Mandal, Tirupati District, Andhra Pradesh (PIN 524121) 🌳
+• **Visiting Hours**: Saturdays & Sundays (10:00 AM – 5:00 PM) ⏰
+• **Visitor Protocol**: For the safety and privacy of all resident children, visitors are requested to sign the visitor log at the entrance.`,
       action: {
         label: "Open Google Maps Directions",
         href: settings?.map_directions_url || 'https://www.google.com/maps/dir/?api=1&destination=13.705267,79.999285'
@@ -156,13 +248,13 @@ Brother Nelson is personally available to speak with parents, guardians, and gen
     };
   }
 
-  // 7. Safety, Licence & JJ Act
+  // 14. Safety, Licence & JJ Act
   if (query.includes('safe') || query.includes('rule') || query.includes('licen') || query.includes('gov') || query.includes('jj act') || query.includes('trust')) {
     return {
-      text: `🛡️ **Safety & Statutory Compliance**:
+      text: `🛡️✨ **Safety & Statutory Compliance**:
 
-• ${hostelName} is fully registered under the **Juvenile Justice (Care & Protection of Children) Act, 2015**.
-• We maintain 24/7 dedicated resident wardens, CCTV safety monitoring of campus perimeters, strict child privacy standards, and certified fire & sanitation compliance.`,
+• ${hostelName} is fully registered under the **Juvenile Justice (Care & Protection of Children) Act, 2015** 🏛️.
+• We maintain 24/7 dedicated resident wardens, CCTV perimeter safety, child protection protocols, and certified fire & sanitation compliance.`,
       action: {
         label: "Inspect Government Licences",
         tab: "licence"
@@ -170,18 +262,18 @@ Brother Nelson is personally available to speak with parents, guardians, and gen
     };
   }
 
-  // Default friendly response
+  // Default empathetic ChatGPT-style fallback
   return {
-    text: `Hello! I am the official AI Guide of **${hostelName}**.
+    text: `I'd love to help you with that! 😊✨ 
 
-I can assist you with:
-1. **Donations & Meal Sponsorship** (via UPI, GPay, Bank)
-2. **Student Admissions & Requirements** (Primary to College)
-3. **Urgent Needs List** (Groceries, Clothes, School Supplies)
-4. **Campus Visiting Hours & Daily Timetable**
-5. **Direct Connect with Founder BRO.NELSON A**
+Here are the most popular topics I can guide you through:
+1. 💝 **Donations & Sponsoring Meals** (UPI, GPay, Bank)
+2. 🎓 **Student Admissions & Requirements** (Primary to College)
+3. 📦 **Urgent Hostel Needs** (Groceries, Books, Uniforms)
+4. 🍲 **Weekly Food Menu & Daily Timetable**
+5. 📞 **Connecting Directly with Founder BRO.NELSON A**
 
-Feel free to tap any of the quick topics below or ask your question directly!`,
+Feel free to ask your question or tap any of the quick suggestions below! What would you like to know? 💖🌟`,
     action: {
       label: "Support Our Children",
       tab: "needed"
@@ -307,27 +399,21 @@ export default function HomeAIAssistant({ settings, setActiveTab }) {
       {isOpen && (
         <div className="absolute bottom-0 right-0 w-[92vw] sm:w-[400px] h-[550px] max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in zoom-in-95 origin-bottom-right">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 text-white p-4 flex items-center justify-between shadow-md">
+          <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white p-4 flex items-center justify-between shadow-md">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white overflow-hidden p-1 shadow-sm">
-                  <img
-                    src={settings?.logo_url || "/logo.png"}
-                    alt="Logo"
-                    className="w-full h-full object-contain"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                  <Bot className="w-5 h-5 text-amber-300 absolute" />
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-400 border border-white/30 flex items-center justify-center text-white p-1 shadow-md">
+                  <Sparkles className="w-5 h-5 text-white animate-pulse" />
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-900 animate-pulse" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-900" />
               </div>
               <div>
                 <h3 className="text-sm font-bold font-serif text-white flex items-center space-x-1.5">
-                  <span>RISE A CHILD AI Guide</span>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Hostel AI Assistant</span>
+                  <span className="bg-white/20 text-cyan-200 text-[10px] font-sans font-bold px-1.5 py-0.5 rounded-full">AI</span>
                 </h3>
-                <p className="text-[11px] text-slate-200">
-                  Online • Trained on Hostel Rules & Facts
+                <p className="text-[11px] text-indigo-200">
+                  Always online • Warm, friendly & helpful
                 </p>
               </div>
             </div>
@@ -457,27 +543,20 @@ export default function HomeAIAssistant({ settings, setActiveTab }) {
             setIsOpen(true);
             setShowSpeechBubble(false);
           }}
-          className="relative group w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 text-white shadow-2xl flex items-center justify-center border-2 border-white hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
-          title="Open AI Hostel Assistant"
+          className="relative group w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 text-white shadow-2xl shadow-indigo-600/40 flex items-center justify-center border-2 border-white/90 hover:scale-108 active:scale-95 transition-all duration-300 cursor-pointer ring-4 ring-indigo-400/25"
+          title="Chat with AI Assistant"
         >
           {/* Subtle Outer Ping Wave */}
-          <span className="absolute inset-0 rounded-full bg-blue-500 opacity-30 animate-ping pointer-events-none" />
+          <span className="absolute inset-0 rounded-full bg-indigo-500 opacity-25 animate-ping pointer-events-none" />
 
-          {/* Inner Logo / Avatar */}
-          <div className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center">
-            {settings?.logo_url ? (
-              <img
-                src={settings.logo_url}
-                alt="Logo"
-                className="w-full h-full object-contain filter drop-shadow"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              />
-            ) : null}
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-300" />
+          {/* Pure Modern AI Sparkle Avatar */}
+          <div className="relative flex items-center justify-center">
+            <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-md group-hover:rotate-12 transition-transform duration-300" />
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-300 animate-pulse" />
           </div>
 
           {/* Active Online Status Dot */}
-          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white" />
+          <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white shadow-xs" />
         </button>
       )}
     </div>

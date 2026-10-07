@@ -4,7 +4,7 @@ import {
   FileText, ShieldCheck, Image, Clock, Utensils, 
   Heart, CreditCard, LogOut, ArrowRight, ExternalLink, 
   Calendar, PackageCheck, GraduationCap, KeyRound, Lock, Share2,
-  Download, FileSpreadsheet
+  Download, FileSpreadsheet, CheckCircle2
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import AdminSettingsTab from './AdminSettingsTab';
@@ -30,6 +30,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
     total_facilities: 0,
     needed_items: 0
   });
+  const [fulfilledNeedsAlerts, setFulfilledNeedsAlerts] = useState([]);
 
   const { adminUser, logout, setLoginModalOpen } = useAdminAuth();
 
@@ -40,8 +41,9 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
       api.getStaff(),
       api.getAdmissions({ status: 'Pending' }),
       api.getViews(),
-      api.getNeededItems()
-    ]).then(([childRes, staff, admRes, views, needed]) => {
+      api.getNeededItems(),
+      api.getDonations().catch(() => [])
+    ]).then(([childRes, staff, admRes, views, needed, donationsList]) => {
       setStats({
         total_children: childRes?.total_children ?? 0,
         total_staff: Array.isArray(staff) ? staff.length : 0,
@@ -49,6 +51,22 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
         total_facilities: Array.isArray(views) ? views.length : 0,
         needed_items: Array.isArray(needed) ? needed.length : 0
       });
+
+      const rawItems = Array.isArray(needed) ? needed : [];
+      const donList = Array.isArray(donationsList) ? donationsList : (donationsList?.donations || []);
+      const fulfilled = rawItems.filter(item => {
+        const matchingDonations = donList.filter(d => {
+          const matchId = d.needed_item_id && String(d.needed_item_id) === String(item.id);
+          const donTitle = d.linked_need_title || d.item_name;
+          const matchName = donTitle && item.item_name && donTitle.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+          const isConfirmed = d.status === 'Confirmed' || (d.entry_type === 'Direct Donation' && d.status !== 'Cancelled') || (!d.status && !d.entry_type);
+          return (matchId || matchName) && isConfirmed;
+        });
+        const confirmedQty = matchingDonations.reduce((sum, d) => sum + (Number(d.quantity_donated) || 1), 0);
+        const totalReceived = Math.max(Number(item.quantity_received) || 0, confirmedQty);
+        return item.is_fulfilled || totalReceived >= Number(item.quantity_needed);
+      });
+      setFulfilledNeedsAlerts(fulfilled);
     }).catch(console.error);
   }, [adminUser]);
 
@@ -282,6 +300,37 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
 
           {activeAdminTab === 'overview' && (
             <div className="space-y-8">
+              {/* Fulfilled Needs Alert Banner (Requirement 5) */}
+              {fulfilledNeedsAlerts.length > 0 && (
+                <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-300 rounded-3xl p-5 sm:p-6 shadow-sm">
+                  <div className="flex items-center space-x-2.5 text-emerald-900 font-bold mb-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <h3 className="font-serif text-base sm:text-lg">
+                      🎉 Needs Fulfilled & Archived from Public Website
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-3">
+                    The following hostel requirements were fully met by generous donors and have been automatically retired from the public portal:
+                  </p>
+                  <div className="space-y-2">
+                    {fulfilledNeedsAlerts.map(item => (
+                      <div key={item.id} className="bg-white/90 p-3.5 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div>
+                          <span className="font-bold text-slate-900 text-sm">{item.item_name}</span>
+                          <span className="text-slate-500 ml-2 font-mono">({item.quantity_received || item.quantity_needed} / {item.quantity_needed} units)</span>
+                          <p className="text-[11px] text-emerald-700 font-medium mt-0.5">
+                            ✅ 100% target reached. Hidden from public view automatically.
+                          </p>
+                        </div>
+                        <span className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full text-[11px] self-start sm:self-auto whitespace-nowrap">
+                          {item.updated_at ? `Fulfilled on ${new Date(item.updated_at).toLocaleDateString()}` : 'Fully Supported'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Metrics Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div 

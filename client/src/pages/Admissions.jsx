@@ -374,7 +374,7 @@ export default function Admissions({ settings, onShowToast }) {
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-500">Admissions Desk Notified:</span>
               <span className="text-emerald-700 font-semibold text-[11px] truncate">
-                {submittedData.email_notification_sent_to || settings?.contact_email || 'pn9059491777@gmail.com'}
+                {submittedData.email_notification_sent_to || settings?.notification_email || settings?.contact_email || 'pn9059491777@gmail.com'}
               </span>
             </div>
             {formData.email && (
@@ -389,12 +389,12 @@ export default function Admissions({ settings, onShowToast }) {
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
             <a
-              href={`mailto:pn9059491777@gmail.com?subject=${encodeURIComponent(`Admission Application: ${formData.child_name} (${submittedData.application_number || submittedData.app_no || 'ADM-2026-0043'})`)}&body=${encodeURIComponent(`RISE A CHILD CHILDREN HOME - Admission Desk Copy\n\nApplication No: ${submittedData.application_number || submittedData.app_no || 'ADM-2026-0043'}\nChild Name: ${formData.child_name}\nAge: ${formData.age} (${formData.dob || 'DOB not specified'})\nGender: ${formData.gender}\nClass Applying: ${formData.class_applying}\nGuardian: ${formData.guardian_name}\nPhone: ${formData.phone}\nEmail: ${formData.email || 'None'}\nAddress: ${formData.address}\nReason: ${formData.reason}\n\nSubmitted on: ${new Date().toLocaleString()}`)}`}
+              href={`mailto:${settings?.notification_email || settings?.contact_email || 'pn9059491777@gmail.com'}?subject=${encodeURIComponent(`Admission Application: ${formData.child_name} (${submittedData.application_number || submittedData.app_no || 'ADM-2026-0043'})`)}&body=${encodeURIComponent(`RISE A CHILD CHILDREN HOME - Admission Desk Copy\n\nApplication No: ${submittedData.application_number || submittedData.app_no || 'ADM-2026-0043'}\nChild Name: ${formData.child_name}\nAge: ${formData.age} (${formData.dob || 'DOB not specified'})\nGender: ${formData.gender}\nClass Applying: ${formData.class_applying}\nGuardian: ${formData.guardian_name}\nPhone: ${formData.phone}\nEmail: ${formData.email || 'None'}\nAddress: ${formData.address}\nReason: ${formData.reason}\n\nSubmitted on: ${new Date().toLocaleString()}`)}`}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center space-x-2 transition shadow-sm"
-              title="Send a verified direct copy to pn9059491777@gmail.com"
+              title={`Send a verified direct copy to ${settings?.notification_email || settings?.contact_email || 'pn9059491777@gmail.com'}`}
             >
               <Mail className="w-4 h-4" />
-              <span>Email to pn9059491777@gmail.com</span>
+              <span>Email to {settings?.notification_email || settings?.contact_email || 'pn9059491777@gmail.com'}</span>
             </a>
 
             <a

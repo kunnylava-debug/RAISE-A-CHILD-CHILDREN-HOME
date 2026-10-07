@@ -16,7 +16,7 @@ export default function NotFound({ setActiveTab, settings }) {
     { id: 'admissions', label: 'Admissions & Tracking', desc: 'Apply or check application status' },
     { id: 'staff', label: 'Staff & Guardians', desc: 'Resident mentors and caregivers' },
     { id: 'licence', label: 'Govt. Licence & JJ Act', desc: 'Statutory government compliance' },
-    { id: 'views', label: 'Campus Views', desc: 'Dormitories, dining & facility photos' },
+    { id: 'views', label: 'Campus Facilities', desc: 'Boys & Girls wings, dorms, grounds' },
     { id: 'timetable', label: 'Daily Routine', desc: 'Study, prayer and activity timetable' }
   ];
 

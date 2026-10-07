@@ -34,8 +34,33 @@ export default function Home({ setActiveTab, settings }) {
     }).catch(() => {});
   }, []);
 
+  // Multi-photo expansion for seamless browsing in lightbox
+  const allEventPhotos = React.useMemo(() => {
+    const list = [];
+    (Array.isArray(events) ? events : []).forEach(ev => {
+      if (Array.isArray(ev.images) && ev.images.length > 0) {
+        ev.images.forEach((imgUrl, i) => {
+          list.push({
+            ...ev,
+            image_url: imgUrl,
+            title: ev.images.length > 1 ? `${ev.title} (Photo ${i + 1}/${ev.images.length})` : ev.title
+          });
+        });
+      } else if (ev.image_url) {
+        list.push(ev);
+      }
+    });
+    return list;
+  }, [events]);
+
   const openLightbox = (index) => {
     setSelectedPhotoIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const openEventPhotoLightbox = (item) => {
+    const targetIdx = allEventPhotos.findIndex(p => p.id === item.id);
+    setSelectedPhotoIndex(targetIdx >= 0 ? targetIdx : 0);
     setLightboxOpen(true);
   };
 
@@ -421,10 +446,10 @@ export default function Home({ setActiveTab, settings }) {
 
                   {/* Gallery Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                    {events.slice(0, 6).map((item, idx) => (
+                    {events.slice(0, 6).map((item) => (
                       <div
                         key={item.id}
-                        onClick={() => openLightbox(idx)}
+                        onClick={() => openEventPhotoLightbox(item)}
                         className="group relative h-36 sm:h-40 rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md border border-slate-200 transition-transform duration-200 hover:-translate-y-0.5"
                       >
                         <img
@@ -433,6 +458,16 @@ export default function Home({ setActiveTab, settings }) {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
+                        
+                        {/* Multi-Photo Count Badge */}
+                        {item.images && item.images.length > 1 && (
+                          <div className="absolute top-2 right-2 z-10">
+                            <span className="bg-slate-950/80 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/20 shadow">
+                              📷 {item.images.length} Photos
+                            </span>
+                          </div>
+                        )}
+
                         <div className="absolute bottom-2 left-2 right-2 text-white">
                           <span className="inline-block text-[10px] font-bold bg-blue-600/90 px-1.5 py-0.5 rounded text-white mb-0.5">
                             {item.category || 'Event'}
@@ -713,7 +748,7 @@ export default function Home({ setActiveTab, settings }) {
       <LightboxModal
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
-        photos={events}
+        photos={allEventPhotos.length > 0 ? allEventPhotos : events}
         currentIndex={selectedPhotoIndex}
         setCurrentIndex={setSelectedPhotoIndex}
       />

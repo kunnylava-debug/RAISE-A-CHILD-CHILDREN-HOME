@@ -4,6 +4,7 @@ import defaultViews from '../data/categories_and_photos.json';
 import defaultTimetableAndMenu from '../data/timetable_and_menu.json';
 import defaultNeededAndSupporters from '../data/needed_and_supporters.json';
 import defaultAdmissions from '../data/admissions.json';
+import defaultCredentials from '../data/credentials.json';
 import { 
   exportChildrenToExcel, 
   exportChildrenToCsv, 
@@ -12,6 +13,22 @@ import {
   sortChildrenAscending,
   sortStaffAscending
 } from '../utils/exportUtils';
+
+export function getNotificationRecipientEmail() {
+  try {
+    const cached = localStorage.getItem('rac_cached_settings');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed?.notification_email && parsed.notification_email.trim()) {
+        return parsed.notification_email.trim();
+      }
+      if (parsed?.contact_email && parsed.contact_email.trim()) {
+        return parsed.contact_email.trim();
+      }
+    }
+  } catch {}
+  return defaultSettings?.notification_email || defaultSettings?.contact_email || 'pn9059491777@gmail.com';
+}
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -289,12 +306,13 @@ export async function syncAdmissionsWithCloud() {
   return merged;
 }
 
-// Dispatch automated email notification to pn9059491777@gmail.com
+// Dispatch automated email notification to dynamically configured notification email
 export async function dispatchAdmissionEmailNotification(app) {
   try {
+    const targetEmail = getNotificationRecipientEmail();
     const payload = {
       _subject: `New Hostel Admission Application: ${app.child_name} (${app.app_no})`,
-      _replyto: app.email || 'pn9059491777@gmail.com',
+      _replyto: app.email || targetEmail,
       'Application Number': app.app_no,
       'Student Full Name': app.child_name,
       'Age & DOB': `${app.age} years (${app.dob || 'Not specified'})`,
@@ -311,7 +329,7 @@ export async function dispatchAdmissionEmailNotification(app) {
       'Status': 'Pending Review'
     };
 
-    fetch('https://formsubmit.co/ajax/pn9059491777@gmail.com', {
+    fetch(`https://formsubmit.co/ajax/${encodeURIComponent(targetEmail)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -462,15 +480,16 @@ export async function syncDonationsWithCloud() {
   return merged;
 }
 
-// Dispatch automated email notification for newly recorded donation or pledge to pn9059491777@gmail.com
+// Dispatch automated email notification for newly recorded donation or pledge
 export async function dispatchDonationEmailNotification(donation) {
   try {
+    const targetEmail = getNotificationRecipientEmail();
     const isPledge = donation.entry_type === 'Pledge' || String(donation.status || '').toLowerCase().includes('pledge');
     const payload = {
       _subject: isPledge 
         ? `[PLEDGE COMMITMENT] New Pledge: ${donation.quantity_donated || 1} units of ${donation.linked_need_title || 'Materials'} from ${donation.donor_name}`
         : `[DIRECT DONATION] New Online Donation: ₹${donation.amount} from ${donation.donor_name}`,
-      _replyto: donation.donor_email || 'pn9059491777@gmail.com',
+      _replyto: donation.donor_email || targetEmail,
       'Record Type': isPledge ? 'MATERIAL / FINANCIAL PLEDGE (PENDING ADMIN CALL)' : 'DIRECT DONATION (CONFIRMED)',
       'Donor Full Name': donation.donor_name,
       'Donor Contact Phone': donation.donor_phone,
@@ -487,13 +506,38 @@ export async function dispatchDonationEmailNotification(donation) {
         : `Please call donor at ${donation.donor_phone} to verify and convey heartfelt gratitude.`
     };
 
-    await fetch('https://formsubmit.co/ajax/pn9059491777@gmail.com', {
+    await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(targetEmail)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(payload)
     });
   } catch (err) {
     console.warn('[EMAIL] Failed to dispatch donation alert:', err.message);
+  }
+}
+
+// Dispatch security email notification whenever an unauthorized/wrong password login attempt occurs
+export async function dispatchSecurityLoginAlert({ attemptedUsername }) {
+  try {
+    const targetEmail = getNotificationRecipientEmail();
+    const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const payload = {
+      _subject: `⚠️ SECURITY ALERT: Failed Admin Login Attempt on RISE A CHILD`,
+      'Security Event': 'UNAUTHORIZED ACCESS ATTEMPT (WRONG PASSWORD)',
+      'Attempted Username': attemptedUsername || 'admin',
+      'Timestamp': timestamp,
+      'Status': 'BLOCKED - INCORRECT CREDENTIALS REJECTED',
+      'Client Browser Agent': typeof navigator !== 'undefined' ? navigator.userAgent : 'Web Browser',
+      'Security Notice': 'Someone entered an incorrect administrator password. If this was you, please make sure you are using your updated administrator password. If this was not you, someone may be attempting to access your portal.'
+    };
+
+    fetch(`https://formsubmit.co/ajax/${encodeURIComponent(targetEmail)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  } catch (err) {
+    console.warn('[SECURITY] Failed to dispatch security login alert:', err.message);
   }
 }
 
@@ -536,7 +580,12 @@ async function request(endpoint, options = {}) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || `HTTP error ${response.status}`);
+      const errorObj = new Error(data.error || `HTTP error ${response.status}`);
+      errorObj.status = response.status;
+      if (response.status === 401 || response.status === 403) {
+        errorObj.isAuthRejection = true;
+      }
+      throw errorObj;
     }
 
     // Keep localStorage in sync with successful server read/write operations
@@ -568,6 +617,9 @@ async function request(endpoint, options = {}) {
 
     return data;
   } catch (err) {
+    if (err.isAuthRejection) {
+      throw err;
+    }
     console.warn(`[API Fallback Engine] Handling ${method} ${endpoint}:`, err.message);
 
     let parsedBody = {};
@@ -952,7 +1004,13 @@ async function request(endpoint, options = {}) {
         neededList = [...(defaultNeededAndSupporters.needed_items || [])];
         setStorage('rac_cached_needed', neededList);
       }
-      if (method === 'GET') return neededList;
+      if (method === 'GET') {
+        return [...neededList].sort((a, b) => {
+          const tA = new Date(a.created_at || 0).getTime() || (Number(a.id) || 0);
+          const tB = new Date(b.created_at || 0).getTime() || (Number(b.id) || 0);
+          return tB - tA;
+        });
+      }
       if (method === 'POST') {
         const newItem = {
           id: Date.now(),
@@ -962,9 +1020,10 @@ async function request(endpoint, options = {}) {
           quantity_received: Number(parsedBody.quantity_received || 0),
           estimated_price: Number(parsedBody.estimated_price || 0),
           urgency: parsedBody.urgency || 'Needed',
-          description: parsedBody.description || ''
+          description: parsedBody.description || '',
+          created_at: new Date().toISOString()
         };
-        neededList.push(newItem);
+        neededList.unshift(newItem);
         setStorage('rac_cached_needed', neededList);
         broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'CREATE', data: newItem });
         return newItem;
@@ -1033,15 +1092,14 @@ async function request(endpoint, options = {}) {
       const customUser = localStorage.getItem('rac_admin_custom_username');
       const customPass = localStorage.getItem('rac_admin_custom_pwd');
 
-      // STRICT AUTH: If custom password is set, ONLY accept custom password.
-      // Default 'admin123' is completely rejected once a custom password exists.
-      const expectedUser = customUser ? customUser.trim() : 'admin';
-      const expectedPass = customPass ? customPass.trim() : 'admin123';
+      // STRICT AUTH: Bundled custom credentials override legacy defaults
+      const expectedUser = (customUser || defaultCredentials?.username || 'Tuny777').trim();
+      const expectedPass = (customPass || defaultCredentials?.custom_password || 'Tuny777').trim();
 
       const inputUser = (parsedBody.username || '').trim();
       const inputPass = String(parsedBody.password || '').trim();
 
-      const isValidUser = inputUser === expectedUser;
+      const isValidUser = inputUser.toLowerCase() === expectedUser.toLowerCase();
       const isValidPass = inputPass === expectedPass;
 
       if (isValidUser && isValidPass) {
@@ -1053,6 +1111,8 @@ async function request(endpoint, options = {}) {
           message: 'Authenticated successfully'
         };
       } else {
+        // Dispatch security alert for wrong password attempt
+        dispatchSecurityLoginAlert({ attemptedUsername: inputUser }).catch(() => {});
         throw new Error('Invalid username or password. Please verify your credentials.');
       }
     }
@@ -1060,7 +1120,7 @@ async function request(endpoint, options = {}) {
     if (endpoint === '/auth/verify') {
       const curToken = getAuthToken();
       if (curToken) {
-        const username = localStorage.getItem('rac_admin_custom_username') || 'admin';
+        const username = localStorage.getItem('rac_admin_custom_username') || defaultCredentials?.username || 'admin';
         return { valid: true, user: { id: 1, username, role: 'admin' } };
       }
     }
@@ -1076,13 +1136,13 @@ async function request(endpoint, options = {}) {
       const expiresAt = Date.now() + 10 * 60 * 1000;
       localStorage.setItem('rac_reset_otp', JSON.stringify({ otp, expiresAt, attempts: 0 }));
       
-      // Dispatch email notification to pn9059491777@gmail.com
+      const targetEmail = getNotificationRecipientEmail();
       const params = new URLSearchParams();
       params.append('_subject', `🔐 Admin Password Reset OTP: ${otp} - RISE A CHILD CHILDREN HOME`);
       params.append('otp_code', otp);
-      params.append('recipient', 'pn9059491777@gmail.com');
+      params.append('recipient', targetEmail);
       params.append('message', `Your 6-digit administrator password recovery OTP is: ${otp}. It is valid for 10 minutes.`);
-      fetch('https://formsubmit.co/ajax/pn9059491777@gmail.com', {
+      fetch(`https://formsubmit.co/ajax/${encodeURIComponent(targetEmail)}`, {
         method: 'POST',
         body: params,
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -1090,8 +1150,8 @@ async function request(endpoint, options = {}) {
 
       return {
         success: true,
-        message: 'A 6-digit OTP code has been dispatched to pn9059491777@gmail.com. It is valid for 10 minutes.',
-        email_hint: 'pn9059491777@gmail.com'
+        message: `A 6-digit OTP code has been dispatched to ${targetEmail}. It is valid for 10 minutes.`,
+        email_hint: targetEmail
       };
     }
 
@@ -1654,6 +1714,7 @@ export const api = {
   forgotPassword: (identity) => request('/auth/forgot-password', { method: 'POST', body: { username_or_email: identity } }),
   verifyOtp: (identity, otp) => request('/auth/verify-otp', { method: 'POST', body: { username_or_email: identity, otp } }),
   resetPassword: (data) => request('/auth/reset-password', { method: 'POST', body: data }),
+  dispatchSecurityAlert: (attemptedUsername) => dispatchSecurityLoginAlert({ attemptedUsername }),
 
   // Alumni (Where Are They Now)
   getAlumni: () => request('/alumni'),

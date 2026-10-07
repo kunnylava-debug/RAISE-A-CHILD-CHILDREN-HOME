@@ -162,7 +162,7 @@ export default function Footer({ setActiveTab, settings }) {
               onClick={() => { setActiveTab('views'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               className="hover:text-white transition"
             >
-              Views
+              Campus Facilities
             </button>
             <span>•</span>
             <button 

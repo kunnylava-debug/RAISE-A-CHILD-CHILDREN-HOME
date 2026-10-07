@@ -4,15 +4,17 @@ import {
   Mail, ArrowLeft, CheckCircle2, Clock, RefreshCw, Eye, EyeOff
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
-import { api } from '../../services/api';
+import { api, getNotificationRecipientEmail } from '../../services/api';
 
 export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
   const { loginModalOpen, setLoginModalOpen, login } = useAdminAuth();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [username, setUsername] = useState('Tuny777');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const notificationEmail = getNotificationRecipientEmail();
 
   // Forgot Password / OTP Flow States
   // mode: 'login' | 'forgot'
@@ -63,17 +65,19 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
       setLoginModalOpen(false);
       onLoginSuccess?.();
     } catch (err) {
-      let msg = err.message || 'Invalid credentials.';
-      if (/json|fetch|network|failed/i.test(msg)) {
-        msg = 'Unable to connect to server. Please check your network or use default: admin / admin123';
+      let msg = err.message || 'Invalid username or password.';
+      if (/json|fetch|network|failed/i.test(msg) && !err.isAuthRejection) {
+        msg = 'Unable to connect to server. Please check your network connection.';
       }
       setError(msg);
+      // Dispatch security email notification for failed login attempt
+      api.dispatchSecurityAlert(username).catch(() => {});
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 1: Send OTP to pn9059491777@gmail.com
+  // Step 1: Send OTP to active notification email
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     if (!recoveryIdentity.trim()) {
@@ -88,7 +92,7 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
       onShowToast?.({
         type: 'success',
         title: 'Recovery OTP Dispatched',
-        message: res.message || 'A 6-digit OTP code has been dispatched to pn9059491777@gmail.com.'
+        message: res.message || `A 6-digit OTP code has been dispatched to ${notificationEmail}.`
       });
       setRecoveryStep('verify');
       setCountdown(600); // 10 minutes
@@ -110,7 +114,7 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
       onShowToast?.({
         type: 'info',
         title: 'Fresh OTP Sent',
-        message: res.message || 'A new 6-digit OTP has been sent to pn9059491777@gmail.com.'
+        message: res.message || `A new 6-digit OTP has been sent to ${notificationEmail}.`
       });
       setCountdown(600);
       setResendCooldown(60);
@@ -293,12 +297,9 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
                 </div>
               </div>
 
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-600 space-y-1">
-                <span className="font-bold text-slate-800 block">Default Credentials:</span>
-                <div className="flex justify-between font-mono text-slate-700">
-                  <span>User: <strong className="text-emerald-700">admin</strong></span>
-                  <span>Pass: <strong className="text-emerald-700">admin123</strong></span>
-                </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-600 flex items-center space-x-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>Sign in with your configured administrator username and password.</span>
               </div>
 
               <button
@@ -331,8 +332,8 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
                 <h3 className="text-lg font-bold font-serif text-slate-900">
                   Admin Password Recovery
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Secure 6-digit OTP verification via pn9059491777@gmail.com
+                <p className="text-xs text-slate-500 truncate max-w-xs">
+                  Secure 6-digit OTP verification via {notificationEmail}
                 </p>
               </div>
             </div>
@@ -353,7 +354,7 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
                     <span>Official Email Recovery</span>
                   </div>
                   <p className="text-[11px] leading-relaxed text-slate-600">
-                    A one-time verification password (OTP) will be dispatched directly to the official administrator inbox at <strong className="text-emerald-900 font-mono">pn9059491777@gmail.com</strong>.
+                    A one-time verification password (OTP) will be dispatched directly to the official administrator inbox at <strong className="text-emerald-900 font-mono">{notificationEmail}</strong>.
                   </p>
                 </div>
 
@@ -369,7 +370,7 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
                       value={recoveryIdentity}
                       onChange={e => setRecoveryIdentity(e.target.value)}
                       className="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                      placeholder="admin or pn9059491777@gmail.com"
+                      placeholder={`admin or ${notificationEmail}`}
                     />
                   </div>
                 </div>
@@ -399,9 +400,9 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
               <form onSubmit={handleVerifyOtp} className="space-y-4 text-xs sm:text-sm">
                 <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 text-xs space-y-1.5 text-slate-700">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1.5 text-emerald-800 font-bold">
-                      <Clock className="w-4 h-4 text-emerald-600" />
-                      <span>OTP Sent to pn9059491777@gmail.com</span>
+                    <div className="flex items-center space-x-1.5 text-emerald-800 font-bold truncate max-w-[200px]">
+                      <Clock className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      <span className="truncate">OTP Sent to {notificationEmail}</span>
                     </div>
                     <span className="font-mono text-emerald-700 font-bold bg-emerald-100/80 px-2 py-0.5 rounded-full text-[11px]">
                       {formatTimer(countdown)}

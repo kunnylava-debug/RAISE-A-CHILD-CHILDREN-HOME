@@ -35,7 +35,11 @@ function computeLiveNeededItems(rawItems, donList) {
       quantity_received: totalReceived,
       is_fulfilled: isFulfilled ? 1 : 0
     };
-  }).filter(Boolean);
+  }).filter(Boolean).sort((a, b) => {
+    const timeA = new Date(a.created_at || 0).getTime() || (Number(a.id) || 0);
+    const timeB = new Date(b.created_at || 0).getTime() || (Number(b.id) || 0);
+    return timeB - timeA;
+  });
 }
 
 export default function AdminDonationsTab({ onShowToast }) {

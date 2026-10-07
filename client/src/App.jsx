@@ -39,8 +39,8 @@ const SEO_CONFIG = {
     description: "Transparent, privacy-protected directory of resident students and youths pursuing primary, secondary, and higher secondary education at RISE A CHILD CHILDREN HOME."
   },
   views: {
-    title: "Campus Facilities, Dormitories & Infrastructure Views | RISE A CHILD CHILDREN HOME",
-    description: "Explore photographic views of our dormitories, dining hall, sanitized washrooms, playground, study lab, and kitchen infrastructure in Mannar Polur, Sullurpeta."
+    title: "Campus Facilities & Living Infrastructure | Boys & Girls Wings | RISE A CHILD CHILDREN HOME",
+    description: "Explore our dedicated Boys and Girls campus facilities including dormitories, hygienic kitchen, dining hall, sports grounds, study lab, and sanitized washrooms in Mannar Polur, Sullurpeta."
   },
   admissions: {
     title: "Online Admission Application & Status Tracking | RISE A CHILD CHILDREN HOME",
