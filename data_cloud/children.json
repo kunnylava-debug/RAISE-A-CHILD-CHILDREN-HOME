@@ -48,22 +48,6 @@
     "is_active": 1
   },
   {
-    "id": 1791180658378,
-    "serial_no": "SN-CH-010",
-    "name": "MADHAN",
-    "age": 18,
-    "class": "12",
-    "gender": "Female",
-    "admission_date": "2026-10-05",
-    "photo": "",
-    "guardian_name": "",
-    "guardian_phone": "",
-    "guardian_address": "",
-    "medical_notes": "GOOD",
-    "hobbies": "Sports, Art, Reading",
-    "is_active": 1
-  },
-  {
     "id": 1791368156596,
     "serial_no": "SN-CH-014",
     "name": "Student",
