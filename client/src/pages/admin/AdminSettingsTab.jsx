@@ -9,6 +9,8 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
+  const [showAdvancedSmtp, setShowAdvancedSmtp] = useState(false);
+  const [quickSavingEmail, setQuickSavingEmail] = useState(false);
 
   useEffect(() => {
     if (settings && Object.keys(settings).length > 0) {
@@ -17,6 +19,33 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
   }, [settings]);
 
   const handleChange = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const handleQuickSaveEmail = async () => {
+    const targetEmail = (form.notification_email || form.contact_email || '').trim();
+    if (!targetEmail || !targetEmail.includes('@')) {
+      onShowToast?.({ type: 'error', message: 'Please enter a valid email address.' });
+      return;
+    }
+    setQuickSavingEmail(true);
+    try {
+      const updated = {
+        ...form,
+        notification_email: targetEmail,
+        contact_email: targetEmail
+      };
+      await api.updateSettings(updated);
+      onShowToast?.({
+        type: 'success',
+        title: 'Email Address Updated!',
+        message: `Alerts will now be delivered directly to ${targetEmail}.`
+      });
+      onRefreshSettings?.();
+    } catch (err) {
+      onShowToast?.({ type: 'error', message: 'Failed to update email: ' + err.message });
+    } finally {
+      setQuickSavingEmail(false);
+    }
+  };
 
   const handleTestEmail = async () => {
     setTestingEmail(true);
@@ -514,15 +543,19 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
         </div>
       </div>
 
-      {/* Admissions Email Notifications & Automated SMTP Delivery */}
-      <div className="bg-blue-50/70 rounded-2xl p-5 sm:p-6 border border-blue-200 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center space-x-2 text-blue-900">
-            <Mail className="w-5 h-5 text-blue-600 flex-shrink-0" />
+      {/* Admissions & Notification Email Settings (Simple 1-Click Update, Zero SMTP Hassle) */}
+      <div className="bg-gradient-to-br from-blue-50/90 via-white to-indigo-50/70 rounded-2xl p-5 sm:p-7 border border-blue-200 space-y-4 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-100 pb-3">
+          <div className="flex items-center space-x-2.5 text-blue-900">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Mail className="w-5 h-5" />
+            </div>
             <div>
-              <h3 className="font-bold font-serif text-base">Admission Email Alerts & Automated SMTP Delivery</h3>
-              <p className="text-xs text-slate-600 mt-0.5">
-                Automatically delivers online application alerts to your inbox, and sends official decision emails (Accepted/Rejected) to applicants.
+              <h3 className="font-bold font-serif text-base text-slate-900">
+                Official Hostel Notification & Admissions Email
+              </h3>
+              <p className="text-xs text-slate-500">
+                Simple email setup — change your email here anytime with 1 click.
               </p>
             </div>
           </div>
@@ -531,92 +564,110 @@ export default function AdminSettingsTab({ settings, onRefreshSettings, onShowTo
             type="button"
             disabled={testingEmail}
             onClick={handleTestEmail}
-            className="self-start sm:self-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm disabled:opacity-50 flex-shrink-0"
+            className="self-start sm:self-auto px-3.5 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs disabled:opacity-50 cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>{testingEmail ? 'Testing Connection...' : 'Send Test Verification Email'}</span>
+            <span>{testingEmail ? 'Sending...' : 'Send Test Email Verification'}</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1 text-xs">
-              Admissions Notification Recipient Email (Where alerts arrive)
-            </label>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          Whenever a parent or guardian submits an online admission form, or when donors make inquiries, instant notifications are automatically sent to this email address. <strong>You do not need to configure any SMTP server names or passwords!</strong>
+        </p>
+
+        {/* Clean, Simple 1-Click Email Address Field */}
+        <div className="bg-blue-50/50 p-4 sm:p-5 rounded-2xl border border-blue-200/80 space-y-3">
+          <label className="block font-bold text-slate-800 text-xs sm:text-sm">
+            Recipient Email Address (Where all alerts arrive)
+          </label>
+          <div className="flex flex-col sm:flex-row gap-2.5">
             <input
               type="email"
+              required
               value={form.notification_email || form.contact_email || ''}
-              onChange={e => handleChange('notification_email', e.target.value)}
+              onChange={e => {
+                const val = e.target.value;
+                handleChange('notification_email', val);
+                handleChange('contact_email', val);
+              }}
               placeholder="e.g. pn9059491777@gmail.com"
-              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-semibold"
+              className="flex-1 p-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs sm:text-sm font-semibold text-slate-900"
             />
+            <button
+              type="button"
+              disabled={quickSavingEmail}
+              onClick={handleQuickSaveEmail}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl text-xs sm:text-sm transition shadow-md shadow-blue-200 flex items-center justify-center space-x-2 cursor-pointer whitespace-nowrap disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{quickSavingEmail ? 'Updating...' : 'Save New Email'}</span>
+            </button>
           </div>
-
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1 text-xs">
-              Outgoing Email Sender Name
-            </label>
-            <input
-              type="text"
-              value={form.smtp_sender_name || ''}
-              onChange={e => handleChange('smtp_sender_name', e.target.value)}
-              placeholder="e.g. RISE A CHILD CHILDREN HOME Admissions"
-              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs"
-            />
+          <div className="flex items-center space-x-2 text-[11px] text-slate-500 pt-0.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>Currently active recipient: <strong className="text-blue-700 font-semibold">{form.notification_email || form.contact_email || 'pn9059491777@gmail.com'}</strong></span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1 text-xs">SMTP Host</label>
-            <input
-              type="text"
-              value={form.smtp_host || ''}
-              onChange={e => handleChange('smtp_host', e.target.value)}
-              placeholder="smtp.gmail.com"
-              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-mono"
-            />
-          </div>
+        {/* Optional Collapsed Advanced SMTP Dropdown */}
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => setShowAdvancedSmtp(!showAdvancedSmtp)}
+            className="text-xs font-semibold text-slate-500 hover:text-blue-700 flex items-center space-x-1 cursor-pointer transition"
+          >
+            <span>{showAdvancedSmtp ? '▼ Hide Advanced SMTP Settings' : '▶ Advanced SMTP Settings (Optional - Not Needed for Normal Use)'}</span>
+          </button>
 
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1 text-xs">SMTP Port</label>
-            <input
-              type="text"
-              value={form.smtp_port || ''}
-              onChange={e => handleChange('smtp_port', e.target.value)}
-              placeholder="465 (SSL) or 587 (TLS)"
-              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1 text-xs">SMTP Username / Email</label>
-            <input
-              type="email"
-              value={form.smtp_user || ''}
-              onChange={e => handleChange('smtp_user', e.target.value)}
-              placeholder="e.g. pn9059491777@gmail.com"
-              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs"
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1 text-xs">SMTP App Password</label>
-            <input
-              type="password"
-              value={form.smtp_pass || ''}
-              onChange={e => handleChange('smtp_pass', e.target.value)}
-              placeholder="••••••••••••••••"
-              className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-mono"
-            />
-          </div>
-        </div>
-
-        <div className="bg-white/80 p-3 rounded-xl border border-blue-100 flex items-start space-x-2 text-[11px] text-slate-600">
-          <Key className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <strong className="text-slate-800">Gmail Setup Guide:</strong> If using a Gmail account (<code className="bg-slate-100 px-1 py-0.5 rounded text-blue-800">@gmail.com</code>), go to your <strong>Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords</strong>, generate a 16-letter password for &quot;Mail&quot;, and paste it in the <em>SMTP App Password</em> field above.
-          </div>
+          {showAdvancedSmtp && (
+            <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-200 space-y-3 animate-in fade-in text-xs">
+              <p className="text-[11px] text-slate-500">
+                Optional: Only fill these if you want to route outgoing mail through your own private mail server instead of direct cloud dispatch.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-600 mb-1">SMTP Host</label>
+                  <input
+                    type="text"
+                    value={form.smtp_host || ''}
+                    onChange={e => handleChange('smtp_host', e.target.value)}
+                    placeholder="smtp.gmail.com"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-600 mb-1">SMTP Port</label>
+                  <input
+                    type="text"
+                    value={form.smtp_port || ''}
+                    onChange={e => handleChange('smtp_port', e.target.value)}
+                    placeholder="465 or 587"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-600 mb-1">SMTP Username</label>
+                  <input
+                    type="email"
+                    value={form.smtp_user || ''}
+                    onChange={e => handleChange('smtp_user', e.target.value)}
+                    placeholder="user@example.com"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-600 mb-1">SMTP Password</label>
+                  <input
+                    type="password"
+                    value={form.smtp_pass || ''}
+                    onChange={e => handleChange('smtp_pass', e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

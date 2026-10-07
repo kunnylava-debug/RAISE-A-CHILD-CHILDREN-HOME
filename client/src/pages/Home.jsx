@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import VideoPlayer from '../components/VideoPlayer';
 import LightboxModal from '../components/LightboxModal';
+import HomeAIAssistant from '../components/HomeAIAssistant';
 import { api } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
@@ -727,6 +728,12 @@ export default function Home({ setActiveTab, settings }) {
           description: 'Resident children, Founder BRO.NELSON A, and dedicated caregivers & staff in Mannar Polur, Sullurpeta.'
         }]}
         currentIndex={0}
+      />
+
+      {/* Floating Interactive AI Assistant (Stable on Home Screen Only) */}
+      <HomeAIAssistant 
+        settings={settings} 
+        setActiveTab={setActiveTab} 
       />
     </div>
   );
