@@ -16,22 +16,6 @@
     "is_active": 1
   },
   {
-    "id": 1791022847069,
-    "serial_no": "SN-CH-003",
-    "name": "Student",
-    "age": 10,
-    "class": "Class 5",
-    "gender": "Male",
-    "admission_date": "2026-10-03",
-    "photo": "",
-    "guardian_name": "",
-    "guardian_phone": "",
-    "guardian_address": "",
-    "medical_notes": "Normal routine checks.",
-    "hobbies": "Sports, Art, Reading",
-    "is_active": 1
-  },
-  {
     "id": 1791180658376,
     "serial_no": "SN-CH-008",
     "name": "LIKI",
