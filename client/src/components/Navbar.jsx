@@ -78,11 +78,11 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
                 onError={(e) => { e.currentTarget.src = "/logo.png"; }}
               />
             </div>
-            <div>
-              <span className="block text-lg sm:text-xl font-bold font-serif text-slate-900 leading-tight group-hover:text-blue-600 transition-colors whitespace-nowrap">
+            <div className="min-w-0 max-w-[190px] xs:max-w-[240px] sm:max-w-none">
+              <span className="block text-sm sm:text-lg lg:text-xl font-bold font-serif text-slate-900 leading-tight group-hover:text-blue-600 transition-colors truncate sm:whitespace-normal">
                 {settings?.hostel_name || "RISE A CHILD CHILDREN HOME"}
               </span>
-              <span className="block text-xs font-semibold text-blue-700 tracking-wide uppercase whitespace-nowrap">
+              <span className="block text-[10px] sm:text-xs font-semibold text-blue-700 tracking-wide uppercase truncate sm:whitespace-normal">
                 {settings?.hostel_tagline || "A Haven of Love, Learning & Leadership"}
               </span>
             </div>

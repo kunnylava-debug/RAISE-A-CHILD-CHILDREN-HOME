@@ -120,8 +120,8 @@ export default function Home({ setActiveTab, settings }) {
               </div>
             </div>
 
-            {/* Welcoming Headline - Styled in ONE single line */}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.85rem] xl:text-[3.5rem] font-extrabold font-serif tracking-tight text-white leading-tight drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] uppercase md:whitespace-nowrap">
+            {/* Welcoming Headline */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.85rem] xl:text-[3.5rem] font-extrabold font-serif tracking-tight text-white leading-tight drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] uppercase break-words">
               {settings?.hostel_headline || "Welcome to RISE A CHILD CHILDREN HOME"}
             </h1>
 

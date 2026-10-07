@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   FileText, CheckCircle2, AlertCircle, Send, 
-  Phone, Mail, ShieldCheck, Printer, Clock, Search 
+  Phone, Mail, ShieldCheck, Printer, Clock, Search,
+  Upload, Camera, Image, X, RefreshCw
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -30,8 +31,34 @@ export default function Admissions({ settings, onShowToast }) {
   });
 
   const [loading, setLoading] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
   const [rulesAccepted, setRulesAccepted] = useState(false);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      onShowToast?.({ type: 'error', message: 'Please select a valid image file (JPG, PNG, WebP).' });
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const res = await api.uploadFile(file);
+      setFormData(prev => ({ ...prev, photo_url: res.url }));
+      onShowToast?.({
+        type: 'success',
+        title: 'Photo Attached',
+        message: "Child's photograph uploaded successfully!"
+      });
+    } catch (err) {
+      onShowToast?.({ type: 'error', message: 'Failed to upload photo: ' + err.message });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handleTrackSubmit = async (e) => {
     e.preventDefault();
@@ -537,15 +564,97 @@ export default function Admissions({ settings, onShowToast }) {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Child's Photograph URL</label>
-                  <input
-                    type="text"
-                    value={formData.photo_url}
-                    onChange={e => setFormData({ ...formData, photo_url: e.target.value })}
-                    placeholder="https://... (or leave blank to submit photograph at hostel office)"
-                    className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
+                <div className="space-y-2">
+                  <label className="block font-semibold text-slate-700 text-sm">
+                    Child's Photograph (Direct Upload from Phone Camera or Gallery)
+                  </label>
+                  
+                  {formData.photo_url ? (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl">
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-emerald-500 shadow-sm bg-white flex-shrink-0">
+                        <img 
+                          src={formData.photo_url} 
+                          alt="Child Preview" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                      <div className="space-y-2 flex-1 min-w-0">
+                        <div className="flex items-center space-x-1.5 text-emerald-900 text-xs font-bold">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                          <span>Photograph Attached Successfully</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          Image ready to be attached to official hostel application
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <label className="cursor-pointer inline-flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition">
+                            <Upload className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Change Photo</span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={handlePhotoUpload}
+                              disabled={uploadingPhoto}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, photo_url: '' }))}
+                            className="inline-flex items-center space-x-1 text-rose-600 hover:text-rose-700 text-xs font-semibold px-2 py-1.5 rounded-lg hover:bg-rose-50 transition"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Remove</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-5 text-center transition bg-slate-50/60 hover:bg-emerald-50/30">
+                      <input 
+                        type="file" 
+                        id="admission-photo-input"
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handlePhotoUpload}
+                        disabled={uploadingPhoto}
+                      />
+                      <label 
+                        htmlFor="admission-photo-input"
+                        className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                      >
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-xs">
+                          {uploadingPhoto ? (
+                            <RefreshCw className="w-6 h-6 animate-spin text-emerald-600" />
+                          ) : (
+                            <Camera className="w-6 h-6 text-emerald-700" />
+                          )}
+                        </div>
+                        <div>
+                          <span className="text-sm font-bold text-slate-800 block">
+                            {uploadingPhoto ? 'Uploading Photograph...' : 'Tap to Upload Photo from Mobile Camera or Gallery'}
+                          </span>
+                          <span className="text-xs text-slate-500 mt-0.5 block">
+                            Supports JPG, PNG, WebP (Camera or Photo Library)
+                          </span>
+                        </div>
+                        <span className="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Choose or Take Photo</span>
+                        </span>
+                      </label>
+                    </div>
+                  )}
+
+                  <div className="pt-1">
+                    <input
+                      type="text"
+                      value={formData.photo_url}
+                      onChange={e => setFormData({ ...formData, photo_url: e.target.value })}
+                      placeholder="Or enter photo URL (optional, can also leave blank to submit at office)"
+                      className="w-full p-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-600 focus:bg-white focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 

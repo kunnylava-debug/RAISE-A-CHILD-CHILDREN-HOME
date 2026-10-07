@@ -13,12 +13,9 @@ export default function Footer({ setActiveTab, settings }) {
   const hostelName = settings?.hostel_name || "RISE A CHILD CHILDREN HOME";
   const founderName = settings?.founder_name || "BRO.NELSON A";
 
-  const facebookUrl = settings?.social_facebook || "https://facebook.com/riseachild";
-  const instagramUrl = settings?.social_instagram || "https://instagram.com/riseachild";
-  const rawYoutube = (settings?.social_youtube || '').trim();
-  const youtubeUrl = rawYoutube && !rawYoutube.includes('@riseachild') && !rawYoutube.includes('search_query')
-    ? rawYoutube
-    : 'https://www.youtube.com/@nelsonministrys';
+  const facebookUrl = settings?.social_facebook?.trim() || "https://facebook.com/riseachild";
+  const instagramUrl = settings?.social_instagram?.trim() || "https://instagram.com/riseachild";
+  const youtubeUrl = settings?.social_youtube?.trim() || "https://www.youtube.com/@nelsonministrys";
 
   return (
     <footer className="bg-slate-950 text-slate-300 border-t border-slate-800/80 py-6 sm:py-8 text-xs">

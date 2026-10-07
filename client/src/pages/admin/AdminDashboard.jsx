@@ -176,8 +176,8 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Sidebar Nav (approx 3 cols) */}
-        <aside className="lg:col-span-3 glass-panel rounded-3xl border border-slate-200 p-4 shadow-sm space-y-1">
+        {/* Sidebar Nav (Desktop only) */}
+        <aside className="hidden lg:block lg:col-span-3 glass-panel rounded-3xl border border-slate-200 p-4 shadow-sm space-y-1">
           <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
             Navigation Console
           </span>
@@ -219,31 +219,64 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
         </aside>
 
         {/* Content Area (approx 9 cols) */}
-        <main id="admin-content-section" className="lg:col-span-9 scroll-mt-24">
-          {/* Mobile Quick Tab Switcher */}
-          <div className="lg:hidden mb-5 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Active Section</span>
-              <span className="text-xs sm:text-sm font-bold text-slate-900 truncate block">
-                {menuItems.find(m => m.id === activeAdminTab)?.label || 'Overview'}
-              </span>
+        <main id="admin-content-section" className="lg:col-span-9 scroll-mt-24 w-full min-w-0">
+          {/* Mobile Tab Selector & Horizontal Scrollable Pill Bar */}
+          <div className="lg:hidden mb-6 space-y-3">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Active Section</span>
+                <span className="text-xs sm:text-sm font-bold text-slate-900 truncate block">
+                  {menuItems.find(m => m.id === activeAdminTab)?.label || 'Overview'}
+                </span>
+              </div>
+              <select
+                value={activeAdminTab}
+                onChange={(e) => {
+                  const found = menuItems.find(m => m.id === e.target.value);
+                  if (found?.navigateTo) {
+                    setActiveTab(found.navigateTo);
+                  } else {
+                    handleSelectAdminTab(e.target.value);
+                  }
+                }}
+                className="bg-slate-50 border border-slate-300 text-xs font-semibold rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[200px] truncate"
+              >
+                {menuItems.map(m => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </select>
             </div>
-            <select
-              value={activeAdminTab}
-              onChange={(e) => {
-                const found = menuItems.find(m => m.id === e.target.value);
-                if (found?.navigateTo) {
-                  setActiveTab(found.navigateTo);
-                } else {
-                  handleSelectAdminTab(e.target.value);
-                }
-              }}
-              className="bg-slate-50 border border-slate-300 text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[170px] truncate"
-            >
-              {menuItems.map(m => (
-                <option key={m.id} value={m.id}>{m.label}</option>
-              ))}
-            </select>
+
+            {/* Quick Horizontal Scroll Nav Pills for Mobile */}
+            <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
+              {menuItems.slice(0, 8).map(item => {
+                const Icon = item.icon;
+                const isSelected = activeAdminTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (item.navigateTo) {
+                        setActiveTab(item.navigateTo);
+                      } else {
+                        handleSelectAdminTab(item.id);
+                      }
+                    }}
+                    className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex-shrink-0 ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{item.label.split(' ')[0]}</span>
+                    {item.badge && (
+                      <span className="bg-amber-500 text-white text-[9px] px-1 rounded-full">{item.badge}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {activeAdminTab === 'overview' && (

@@ -1,5 +1,5 @@
 @echo off
-set "PATH=C:\ProgramData\win-10\GitHubDesktop\app-3.4.5\resources\app\git\cmd;C:\ProgramData\win-10\GitHubDesktop\app-3.4.5\resources\app\git\mingw64\bin;C:\Users\win-10\AppData\Local\Programs\Git\cmd;%PATH%"
+set "PATH=%LOCALAPPDATA%\GitHubDesktop\app-3.6.6\resources\app\git\cmd;%LOCALAPPDATA%\GitHubDesktop\app-3.6.6\resources\app\git\mingw64\bin;C:\Program Files\Git\cmd;%PATH%"
 cd /d "%~dp0"
 
 echo ======================================================================

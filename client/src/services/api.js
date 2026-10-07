@@ -1020,36 +1020,40 @@ async function request(endpoint, options = {}) {
     // 7. SETTINGS OPERATIONS
     if (endpoint === '/settings') {
       const cur = getStorage('rac_cached_settings', defaultSettings);
-      if (cur && (!cur.social_youtube || cur.social_youtube.includes('@riseachild') || cur.social_youtube.includes('search_query'))) {
-        cur.social_youtube = 'https://www.youtube.com/@nelsonministrys';
-        setStorage('rac_cached_settings', cur);
-      }
       if (method === 'GET') return cur;
       if (method === 'PUT') {
         const updated = { ...cur, ...parsedBody };
         setStorage('rac_cached_settings', updated);
-        return { message: 'Settings saved successfully.' };
+        return { message: 'Settings saved successfully.', settings: updated };
       }
     }
 
     // 8. AUTH LOGIN & CREDENTIALS
     if (endpoint === '/auth/login' && method === 'POST') {
-      const customUser = localStorage.getItem('rac_admin_custom_username') || 'admin';
-      const customPass = localStorage.getItem('rac_admin_custom_pwd') || 'admin123';
+      const customUser = localStorage.getItem('rac_admin_custom_username');
+      const customPass = localStorage.getItem('rac_admin_custom_pwd');
 
-      const isValidUser = !parsedBody.username || parsedBody.username === customUser || parsedBody.username === 'admin';
-      const isValidPass = parsedBody.password === customPass || parsedBody.password === 'admin123' || parsedBody.password === 'password123';
+      // STRICT AUTH: If custom password is set, ONLY accept custom password.
+      // Default 'admin123' is completely rejected once a custom password exists.
+      const expectedUser = customUser ? customUser.trim() : 'admin';
+      const expectedPass = customPass ? customPass.trim() : 'admin123';
+
+      const inputUser = (parsedBody.username || '').trim();
+      const inputPass = String(parsedBody.password || '').trim();
+
+      const isValidUser = inputUser === expectedUser;
+      const isValidPass = inputPass === expectedPass;
 
       if (isValidUser && isValidPass) {
         const fallbackToken = 'rac_offline_token_' + Date.now();
         setAuthToken(fallbackToken);
         return {
           token: fallbackToken,
-          user: { id: 1, username: parsedBody.username || 'admin', role: 'admin' },
+          user: { id: 1, username: expectedUser, role: 'admin' },
           message: 'Authenticated successfully'
         };
       } else {
-        throw new Error('Invalid username or password. Default login is admin / admin123');
+        throw new Error('Invalid username or password. Please verify your credentials.');
       }
     }
 
@@ -1062,8 +1066,8 @@ async function request(endpoint, options = {}) {
     }
 
     if (endpoint === '/auth/update-credentials' && method === 'POST') {
-      if (parsedBody.new_username) localStorage.setItem('rac_admin_custom_username', parsedBody.new_username);
-      if (parsedBody.new_password) localStorage.setItem('rac_admin_custom_pwd', parsedBody.new_password);
+      if (parsedBody.new_username) localStorage.setItem('rac_admin_custom_username', String(parsedBody.new_username).trim());
+      if (parsedBody.new_password) localStorage.setItem('rac_admin_custom_pwd', String(parsedBody.new_password).trim());
       return { message: 'Credentials updated successfully.' };
     }
 
