@@ -13,12 +13,13 @@ function computeLiveNeededItems(rawItems, donList) {
   const list = Array.isArray(donList) ? donList : [];
 
   return rawItems.map(item => {
+    if (!item) return null;
     const matchingConfirmed = list.filter(d => {
-      if (d.status === 'Cancelled') return false;
+      if (!d || d.status === 'Cancelled') return false;
       const matchId = d.needed_item_id && String(d.needed_item_id) === String(item.id);
       const donTitle = d.linked_need_title || d.item_name;
       const matchName = donTitle && item.item_name &&
-        donTitle.toLowerCase().trim() === item.item_name.toLowerCase().trim();
+        String(donTitle).toLowerCase().trim() === String(item.item_name).toLowerCase().trim();
       const isConfirmed = d.status === 'Confirmed' ||
                           (d.entry_type === 'Direct Donation' && d.status !== 'Cancelled') ||
                           (!d.status && !d.entry_type);
@@ -34,7 +35,7 @@ function computeLiveNeededItems(rawItems, donList) {
       quantity_received: totalReceived,
       is_fulfilled: isFulfilled ? 1 : 0
     };
-  });
+  }).filter(Boolean);
 }
 
 export default function AdminDonationsTab({ onShowToast }) {
@@ -144,20 +145,22 @@ export default function AdminDonationsTab({ onShowToast }) {
 
   // Total All-Time Amount (placed first to preserve clean memoization)
   const totalAmount = useMemo(() => {
-    return donations
-      .filter(d => d.status !== 'Cancelled')
+    const list = Array.isArray(donations) ? donations : [];
+    return list
+      .filter(d => d && d.status !== 'Cancelled')
       .reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
   }, [donations]);
 
   // Compute month-by-month financial groups
   const monthlyBreakdown = useMemo(() => {
     const map = new Map();
+    const list = Array.isArray(donations) ? donations : [];
 
-    for (const d of donations) {
-      if (d.status === 'Cancelled') continue;
+    for (const d of list) {
+      if (!d || d.status === 'Cancelled') continue;
       const dateObj = new Date(d.created_at || 0);
       const isDateValid = !isNaN(dateObj.getTime());
-      const year = isDateValid ? dateObj.getFullYear() : 2026;
+      const year = isDateValid ? dateObj.getFullYear() : new Date().getFullYear();
       const monthNum = isDateValid ? (dateObj.getMonth() + 1) : 1;
       const monthKey = `${year}-${String(monthNum).padStart(2, '0')}`;
       const monthLabel = isDateValid
@@ -211,9 +214,10 @@ export default function AdminDonationsTab({ onShowToast }) {
 
   // Available Distinct Years across all donations
   const availableYears = useMemo(() => {
+    const list = Array.isArray(donations) ? donations : [];
     const set = new Set([new Date().getFullYear()]);
-    for (const d of donations) {
-      if (d.created_at) {
+    for (const d of list) {
+      if (d && d.created_at) {
         const y = new Date(d.created_at).getFullYear();
         if (!isNaN(y)) set.add(y);
       }
@@ -247,21 +251,24 @@ export default function AdminDonationsTab({ onShowToast }) {
 
   // Active Inspected Month data (or all-time summary)
   const activeInspectedMonth = useMemo(() => {
+    const list = Array.isArray(donations) ? donations : [];
     if (selectedMonth === 'all') {
       return {
         is_all: true,
         month_key: 'all',
         month_label: 'All-Time Record Ledger',
         total_amount: totalAmount,
-        direct_amount: donations.filter(d => d.entry_type !== 'Pledge' && d.status !== 'Cancelled').reduce((sum, d) => sum + (Number(d.amount) || 0), 0),
-        pledge_amount: donations.filter(d => (d.entry_type === 'Pledge' || String(d.status || '').toLowerCase().includes('pledge')) && d.status !== 'Cancelled').reduce((sum, d) => sum + (Number(d.amount) || 0), 0),
-        donors_count: donations.filter(d => d.status !== 'Cancelled').length
+        direct_amount: list.filter(d => d && d.entry_type !== 'Pledge' && d.status !== 'Cancelled').reduce((sum, d) => sum + (Number(d.amount) || 0), 0),
+        pledge_amount: list.filter(d => d && (d.entry_type === 'Pledge' || String(d.status || '').toLowerCase().includes('pledge')) && d.status !== 'Cancelled').reduce((sum, d) => sum + (Number(d.amount) || 0), 0),
+        donors_count: list.filter(d => d && d.status !== 'Cancelled').length
       };
     }
     const found = monthlyBreakdown.find(m => m.month_key === selectedMonth);
     if (found) return { is_all: false, ...found };
-    const [y, m] = selectedMonth.split('-');
-    const d = new Date(Number(y), Number(m) - 1, 1);
+    const parts = (selectedMonth && typeof selectedMonth === 'string' && selectedMonth.includes('-'))
+      ? selectedMonth.split('-')
+      : [String(new Date().getFullYear()), '01'];
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
     return {
       is_all: false,
       month_key: selectedMonth,
@@ -274,29 +281,37 @@ export default function AdminDonationsTab({ onShowToast }) {
   }, [selectedMonth, monthlyBreakdown, totalAmount, donations]);
 
   const matchedDonations = useMemo(() => {
-    return donations.filter(d => !!d.needed_item_id || !!d.linked_need_title);
+    const list = Array.isArray(donations) ? donations : [];
+    return list.filter(d => d && (!!d.needed_item_id || !!d.linked_need_title));
   }, [donations]);
 
   const pendingPledges = useMemo(() => {
-    return donations.filter(d => {
+    const list = Array.isArray(donations) ? donations : [];
+    return list.filter(d => {
+      if (!d) return false;
       const isPledgeType = d.entry_type === 'Pledge' || String(d.status || '').toLowerCase().includes('pledge');
       return isPledgeType && d.status !== 'Confirmed' && d.status !== 'Cancelled';
     });
   }, [donations]);
 
   const confirmedPledges = useMemo(() => {
-    return donations.filter(d => d.entry_type === 'Pledge' && d.status === 'Confirmed');
+    const list = Array.isArray(donations) ? donations : [];
+    return list.filter(d => d && d.entry_type === 'Pledge' && d.status === 'Confirmed');
   }, [donations]);
 
   const directDonations = useMemo(() => {
-    return donations.filter(d => {
+    const list = Array.isArray(donations) ? donations : [];
+    return list.filter(d => {
+      if (!d) return false;
       return d.entry_type === 'Direct Donation' || (!d.entry_type && !String(d.status || '').toLowerCase().includes('pledge'));
     });
   }, [donations]);
 
   // Combined Filtering: Status Mode + Selected Month
   const displayedDonations = useMemo(() => {
-    return donations.filter(d => {
+    const list = Array.isArray(donations) ? donations : [];
+    return list.filter(d => {
+      if (!d) return false;
       // Month Filter
       if (selectedMonth !== 'all') {
         const dateObj = new Date(d.created_at || 0);
@@ -846,7 +861,7 @@ export default function AdminDonationsTab({ onShowToast }) {
                   : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
               }`}
             >
-              Current Month ({now.toLocaleString('en-US', { month: 'short' })})
+              Current Month ({new Date().toLocaleString('en-US', { month: 'short' })})
             </button>
 
             <button

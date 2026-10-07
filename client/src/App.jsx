@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import RestrictionModal from './components/RestrictionModal';
 import Toast from './components/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import Home from './pages/Home';
 import Staff from './pages/Staff';
@@ -199,67 +200,69 @@ export default function App() {
 
         {/* Dynamic Page Content */}
         <main className="flex-1">
-          {activeTab === 'home' && (
-            <Home 
-              setActiveTab={handleTabChange} 
-              settings={settings} 
-              onShowToast={setToast} 
-            />
-          )}
+          <ErrorBoundary title="RISE A CHILD CHILDREN HOME">
+            {activeTab === 'home' && (
+              <Home 
+                setActiveTab={handleTabChange} 
+                settings={settings} 
+                onShowToast={setToast} 
+              />
+            )}
 
-          {activeTab === 'staff' && (
-            <Staff onShowToast={setToast} />
-          )}
+            {activeTab === 'staff' && (
+              <Staff onShowToast={setToast} />
+            )}
 
-          {activeTab === 'licence' && (
-            <Licence onShowToast={setToast} setActiveTab={setActiveTab} />
-          )}
+            {activeTab === 'licence' && (
+              <Licence onShowToast={setToast} setActiveTab={setActiveTab} />
+            )}
 
-          {activeTab === 'children' && (
-            <Children onShowToast={setToast} />
-          )}
+            {activeTab === 'children' && (
+              <Children onShowToast={setToast} />
+            )}
 
-          {activeTab === 'views' && (
-            <Views onShowToast={setToast} />
-          )}
+            {activeTab === 'views' && (
+              <Views onShowToast={setToast} />
+            )}
 
-          {activeTab === 'admissions' && (
-            <Admissions 
-              settings={settings} 
-              onShowToast={setToast} 
-            />
-          )}
+            {activeTab === 'admissions' && (
+              <Admissions 
+                settings={settings} 
+                onShowToast={setToast} 
+              />
+            )}
 
-          {activeTab === 'needed' && (
-            <Needed 
-              settings={settings} 
-              onShowToast={setToast} 
-            />
-          )}
+            {activeTab === 'needed' && (
+              <Needed 
+                settings={settings} 
+                onShowToast={setToast} 
+              />
+            )}
 
-          {activeTab === 'timetable' && (
-            <TimeTable onShowToast={setToast} />
-          )}
+            {activeTab === 'timetable' && (
+              <TimeTable onShowToast={setToast} />
+            )}
 
-          {activeTab === 'menu' && (
-            <Menu onShowToast={setToast} />
-          )}
+            {activeTab === 'menu' && (
+              <Menu onShowToast={setToast} />
+            )}
 
-          {activeTab === 'admin' && (
-            <AdminDashboard 
-              settings={settings} 
-              onRefreshSettings={fetchSettings} 
-              setActiveTab={handleTabChange} 
-              onShowToast={setToast} 
-            />
-          )}
+            {activeTab === 'admin' && (
+              <AdminDashboard 
+                settings={settings} 
+                onRefreshSettings={fetchSettings} 
+                setActiveTab={handleTabChange} 
+                onShowToast={setToast} 
+              />
+            )}
 
-          {(!['home', 'staff', 'licence', 'children', 'views', 'admissions', 'needed', 'timetable', 'menu', 'admin'].includes(activeTab)) && (
-            <NotFound 
-              setActiveTab={handleTabChange} 
-              settings={settings} 
-            />
-          )}
+            {(!['home', 'staff', 'licence', 'children', 'views', 'admissions', 'needed', 'timetable', 'menu', 'admin'].includes(activeTab)) && (
+              <NotFound 
+                setActiveTab={handleTabChange} 
+                settings={settings} 
+              />
+            )}
+          </ErrorBoundary>
         </main>
 
         {/* Global Footer */}

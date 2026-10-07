@@ -18,6 +18,7 @@ import AdminAlumniTab from './AdminAlumniTab';
 import AdminCredentialsTab from './AdminCredentialsTab';
 import AdminPaymentsTab from './AdminPaymentsTab';
 import AdminLicenceTab from './AdminLicenceTab';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import { api, subscribeToRealtimeSync } from '../../services/api';
 
 export default function AdminDashboard({ settings, onRefreshSettings, setActiveTab, onShowToast }) {
@@ -569,43 +570,59 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
           )}
 
           {activeAdminTab === 'events' && (
-            <AdminEventsTab onShowToast={onShowToast} />
+            <ErrorBoundary title="Events Calendar">
+              <AdminEventsTab onShowToast={onShowToast} />
+            </ErrorBoundary>
           )}
 
           {activeAdminTab === 'donations' && (
-            <AdminDonationsTab onShowToast={onShowToast} />
+            <ErrorBoundary title="Donations & Needs Sync">
+              <AdminDonationsTab onShowToast={onShowToast} />
+            </ErrorBoundary>
           )}
 
           {activeAdminTab === 'alumni' && (
-            <AdminAlumniTab onShowToast={onShowToast} />
+            <ErrorBoundary title="Alumni Management">
+              <AdminAlumniTab onShowToast={onShowToast} />
+            </ErrorBoundary>
           )}
 
           {activeAdminTab === 'credentials' && (
-            <AdminCredentialsTab onShowToast={onShowToast} />
+            <ErrorBoundary title="Credentials Management">
+              <AdminCredentialsTab onShowToast={onShowToast} />
+            </ErrorBoundary>
           )}
 
           {activeAdminTab === 'admissions' && (
-            <AdminAdmissionsTab onShowToast={onShowToast} />
+            <ErrorBoundary title="Admissions Management">
+              <AdminAdmissionsTab onShowToast={onShowToast} />
+            </ErrorBoundary>
           )}
 
           {activeAdminTab === 'settings' && (
-            <AdminSettingsTab 
-              settings={settings} 
-              onRefreshSettings={onRefreshSettings} 
-              onShowToast={onShowToast} 
-            />
+            <ErrorBoundary title="Site Settings">
+              <AdminSettingsTab 
+                settings={settings} 
+                onRefreshSettings={onRefreshSettings} 
+                onShowToast={onShowToast} 
+              />
+            </ErrorBoundary>
           )}
 
           {activeAdminTab === 'founder_video' && (
-            <AdminFounderVideoTab 
-              settings={settings} 
-              onRefreshSettings={onRefreshSettings} 
-              onShowToast={onShowToast} 
-            />
+            <ErrorBoundary title="Founder & Video Settings">
+              <AdminFounderVideoTab 
+                settings={settings} 
+                onRefreshSettings={onRefreshSettings} 
+                onShowToast={onShowToast} 
+              />
+            </ErrorBoundary>
           )}
 
           {activeAdminTab === 'licence' && (
-            <AdminLicenceTab onShowToast={onShowToast} />
+            <ErrorBoundary title="Licence & Registration">
+              <AdminLicenceTab onShowToast={onShowToast} />
+            </ErrorBoundary>
           )}
         </main>
       </div>
