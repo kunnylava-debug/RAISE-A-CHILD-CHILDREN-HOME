@@ -59,11 +59,11 @@
     "item_name": "Library Books & Science Activity Kits",
     "category": "Education",
     "quantity_needed": 20,
-    "quantity_received": 0,
+    "quantity_received": 20,
     "estimated_price": 15000,
     "urgency": "Needed",
     "description": "Children's illustrated encyclopedias, bilingual storybooks, dictionaries, and practical science learning kits.",
-    "is_fulfilled": 0
+    "is_fulfilled": 1
   },
   {
     "id": 1791181972584,
