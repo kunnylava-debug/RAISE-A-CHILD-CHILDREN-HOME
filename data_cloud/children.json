@@ -32,22 +32,6 @@
     "is_active": 1
   },
   {
-    "id": 1791180658374,
-    "serial_no": "SN-CH-006",
-    "name": "ABHI",
-    "age": 5,
-    "class": "Class 6",
-    "gender": "Male",
-    "admission_date": "2026-10-05",
-    "photo": "",
-    "guardian_name": "",
-    "guardian_phone": "",
-    "guardian_address": "",
-    "medical_notes": "GOOD",
-    "hobbies": "Sports, Art, Reading",
-    "is_active": 1
-  },
-  {
     "id": 1791180658376,
     "serial_no": "SN-CH-008",
     "name": "LIKI",
