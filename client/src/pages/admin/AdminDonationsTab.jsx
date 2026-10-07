@@ -355,6 +355,7 @@ export default function AdminDonationsTab({ onShowToast }) {
       return d;
     }));
 
+    let needFulfilledTitle = null;
     setNeededItems(prev => prev.map(item => {
       const matchId = donation.needed_item_id && String(donation.needed_item_id) === String(item.id);
       const matchName = donation.item_name && item.item_name &&
@@ -363,10 +364,14 @@ export default function AdminDonationsTab({ onShowToast }) {
         donation.linked_need_title.toLowerCase().trim() === item.item_name.toLowerCase().trim();
       if (matchId || matchName || matchLinked) {
         const newRec = (Number(item.quantity_received) || 0) + qtyToAdd;
+        const isNowFulfilled = newRec >= (Number(item.quantity_needed) || 1);
+        if (isNowFulfilled) {
+          needFulfilledTitle = item.item_name;
+        }
         return {
           ...item,
           quantity_received: newRec,
-          is_fulfilled: newRec >= (Number(item.quantity_needed) || 1)
+          is_fulfilled: isNowFulfilled
         };
       }
       return item;
@@ -374,8 +379,10 @@ export default function AdminDonationsTab({ onShowToast }) {
 
     onShowToast?.({
       type: 'success',
-      title: 'Pledge Confirmed & Added to Inventory',
-      message: `Pledge confirmed! Added +${qtyToAdd} units to inventory.`
+      title: needFulfilledTitle ? '🎉 Need 100% Fulfilled!' : 'Pledge Confirmed & Added to Inventory',
+      message: needFulfilledTitle 
+        ? `By this contribution, "${needFulfilledTitle}" is fulfilled! All required units gathered.`
+        : `Pledge confirmed! Added +${qtyToAdd} units to inventory.`
     });
 
     broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'CONFIRM_PLEDGE', id: donId });

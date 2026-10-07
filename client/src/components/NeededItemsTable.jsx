@@ -162,14 +162,14 @@ export default function NeededItemsTable({
                   {/* Distinct Pledge vs Donate Buttons on Mobile */}
                   <div className="pt-1 space-y-2">
                     {isFulfilled ? (
-                      <div className="flex items-center justify-between text-xs text-emerald-700 font-semibold bg-emerald-50 p-2 rounded-xl border border-emerald-100">
-                        <span className="flex items-center">
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                          All units gathered. Thank you!
+                      <div className="flex items-center justify-between text-xs text-emerald-800 font-bold bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 shadow-2xs">
+                        <span className="flex items-center leading-tight">
+                          <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-600 flex-shrink-0" />
+                          <span>By your contribution, this need is fulfilled! 🎉</span>
                         </span>
                         <button
                           onClick={() => handleDonate(item)}
-                          className="text-[11px] underline text-emerald-800 hover:text-emerald-900 font-bold"
+                          className="text-[11px] underline text-emerald-700 hover:text-emerald-900 font-bold ml-2 whitespace-nowrap"
                         >
                           Sponsor Extra
                         </button>
@@ -321,9 +321,9 @@ export default function NeededItemsTable({
                         </td>
                         <td className="py-4 px-5 text-right whitespace-nowrap">
                           {isFulfilled ? (
-                            <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 inline-flex items-center">
-                              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                              Fulfilled
+                            <span className="text-xs text-emerald-800 font-bold bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 inline-flex items-center shadow-2xs">
+                              <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
+                              <span>By your contribution, this need is fulfilled! 🎉</span>
                             </span>
                           ) : (
                             <div className="inline-flex items-center space-x-2">

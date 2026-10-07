@@ -78,6 +78,52 @@ How is your day going? How can I assist or guide you today? 😊`
     };
   }
 
+  // 2.5 Creator & Web Developer ("Who created you", "who invented you", "who created the web", etc.)
+  if (
+    query.includes('who created you') || 
+    query.includes('who invented you') || 
+    query.includes('who created u') || 
+    query.includes('who invented u') || 
+    query.includes('who make you') || 
+    query.includes('who made you') || 
+    query.includes('who built you') || 
+    query.includes('who developed you') || 
+    query.includes('who designed you') || 
+    query.includes('who programmed you') || 
+    query.includes('create the web') || 
+    query.includes('created the web') || 
+    query.includes('who created the web') || 
+    query.includes('who created the website') || 
+    query.includes('who made the website') || 
+    query.includes('who built the website') || 
+    query.includes('who developed the website') || 
+    query.includes('who created this site') || 
+    query.includes('who developed this') || 
+    query.includes('who built this') || 
+    query.includes('who is the creator') || 
+    query.includes('who is the developer') || 
+    query.includes('who is the inventor') || 
+    query.includes('who invented') || 
+    query.includes('gowtham') || 
+    query.includes('g.gowtham') || 
+    query.includes('ix_gowtham')
+  ) {
+    return {
+      text: `🌟 **Meet My Creator & Web Developer!** 💻✨💖
+
+I was created and developed by **G.gowtham**, who studied at this hostel from **2012 to 2028**! 👦🏡🎓
+
+Here are his special details:
+• **Created On**: **June 28, 2026** — *it was a very special day to him!* 🎉🎂✨
+• **Alumnus**: Studied and lived at RISE A CHILD CHILDREN HOME from 2012 to 2028.
+• **Connect With Him**: To know more about him or to collaborate to create beautiful digital platforms like this:
+  📸 **Instagram ID**: [@ix_gowtham](https://instagram.com/ix_gowtham)
+  📞 **Contact Number**: [9010484587](tel:9010484587)
+
+He built this entire platform with all his heart to empower our hostel children and keep our community connected! Feel free to reach out to him anytime! 😊🌸🙏`
+    };
+  }
+
   // 3. "Who are you" / "What is your name"
   if (query.includes('who are you') || query.includes('what is your name') || query.includes('your name') || query.includes('what can you do')) {
     return {

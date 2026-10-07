@@ -3,6 +3,7 @@ import { X, CheckCircle2, Download, Handshake, Heart, Clock } from 'lucide-react
 import NeededItemsTable from '../components/NeededItemsTable';
 import SupportSection from '../components/SupportSection';
 import SupportersWall from '../components/SupportersWall';
+import CelebrationBlastModal from '../components/CelebrationBlastModal';
 import { api, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
@@ -26,6 +27,16 @@ export default function Needed({ settings, onShowToast }) {
     quantity_donated: 1
   });
   const [donationReceipt, setDonationReceipt] = useState(null);
+
+  // Celebration blast state when need is fulfilled
+  const [celebrationBlastOpen, setCelebrationBlastOpen] = useState(false);
+  const [celebrationData, setCelebrationData] = useState({
+    itemName: '',
+    donorName: '',
+    quantityDonated: 1,
+    totalNeeded: 1,
+    receiptNo: ''
+  });
 
   // Admin Modals
   const [editNeedOpen, setEditNeedOpen] = useState(false);
@@ -181,9 +192,40 @@ export default function Needed({ settings, onShowToast }) {
         }));
       }
 
+      // Check if this contribution fulfills the target need!
+      let needFulfilledByThisDonation = false;
+      const targetItem = pledgeItem || neededItems.find(it => String(it.id) === String(payload.needed_item_id));
+      if (targetItem && !isPledge) {
+        const curRec = Number(targetItem.quantity_received) || 0;
+        const totalReq = Number(targetItem.quantity_needed) || 1;
+        if (curRec + qty >= totalReq) {
+          needFulfilledByThisDonation = true;
+        }
+      }
+
       const res = await api.recordDonation(payload);
+      if (res?.updated_need?.is_fulfilled) {
+        needFulfilledByThisDonation = true;
+      }
+
       const receiptData = res?.receipt || res?.donation || res || payload;
+      if (needFulfilledByThisDonation) {
+        receiptData.is_fulfilled_by_donation = true;
+        receiptData.quantity_needed = targetItem?.quantity_needed || res?.updated_need?.quantity_needed || 1;
+      }
       setDonationReceipt(receiptData);
+
+      // Trigger Celebration Blast Modal & Fanfare Chime!
+      if (needFulfilledByThisDonation) {
+        setCelebrationData({
+          itemName: targetItem?.item_name || res?.updated_need?.item_name || payload.linked_need_title || 'Hostel Requirement',
+          donorName: payload.donor_name || 'Generous Well-Wisher',
+          quantityDonated: qty,
+          totalNeeded: targetItem?.quantity_needed || res?.updated_need?.quantity_needed || 1,
+          receiptNo: receiptData.receipt_no || ''
+        });
+        setCelebrationBlastOpen(true);
+      }
 
       if (isPledge) {
         onShowToast?.({ 
@@ -194,10 +236,12 @@ export default function Needed({ settings, onShowToast }) {
       } else {
         onShowToast?.({ 
           type: 'success', 
-          title: 'Donation Received & Count Updated',
-          message: res.updated_need 
-            ? `Thank you! Your donation was matched to "${res.updated_need.item_name}" (${res.updated_need.quantity_received}/${res.updated_need.quantity_needed} received). Need automatically updated!`
-            : 'Thank you! Your donation was recorded and inventory updated.' 
+          title: needFulfilledByThisDonation ? '🎉 Need 100% Fulfilled!' : 'Donation Received & Count Updated',
+          message: needFulfilledByThisDonation
+            ? `By your contribution, this need is fulfilled! Thank you so much for your generosity!`
+            : (res.updated_need 
+                ? `Thank you! Your donation was matched to "${res.updated_need.item_name}" (${res.updated_need.quantity_received}/${res.updated_need.quantity_needed} received). Need automatically updated!`
+                : 'Thank you! Your donation was recorded and inventory updated.')
         });
       }
 
@@ -462,6 +506,28 @@ export default function Needed({ settings, onShowToast }) {
                       : 'Your contribution was recorded and received units increased immediately.'}
                   </p>
                 </div>
+
+                {/* Celebratory Fulfillment Card inside Receipt */}
+                {donationReceipt.is_fulfilled_by_donation && (
+                  <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-2xl p-4 shadow-lg border-2 border-emerald-300 text-center space-y-1.5 max-w-sm mx-auto">
+                    <div className="inline-flex items-center space-x-1.5 bg-white/20 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                      <span>🎉 Goal 100% Completed! ✨</span>
+                    </div>
+                    <h5 className="text-sm sm:text-base font-black leading-snug">
+                      By your contribution this need is fulfilled!
+                    </h5>
+                    <p className="text-xs text-emerald-100 leading-relaxed">
+                      All required units have been completely gathered! Heartfelt gratitude from all our children! 💖
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setCelebrationBlastOpen(true)}
+                      className="mt-1 text-[11px] underline text-emerald-100 hover:text-white font-bold inline-flex items-center space-x-1 cursor-pointer"
+                    >
+                      <span>Replay celebration blast effect 🎆</span>
+                    </button>
+                  </div>
+                )}
 
                 <div className="bg-white rounded-2xl p-4 border border-slate-200 text-left text-xs space-y-2 max-w-sm mx-auto shadow-xs">
                   <div className="flex justify-between">
@@ -812,6 +878,17 @@ export default function Needed({ settings, onShowToast }) {
           </div>
         </div>
       )}
+
+      {/* Celebration Blast Modal when a need is fulfilled */}
+      <CelebrationBlastModal
+        isOpen={celebrationBlastOpen}
+        onClose={() => setCelebrationBlastOpen(false)}
+        itemName={celebrationData.itemName}
+        donorName={celebrationData.donorName}
+        quantityDonated={celebrationData.quantityDonated}
+        totalNeeded={celebrationData.totalNeeded}
+        receiptNo={celebrationData.receiptNo}
+      />
     </div>
   );
 }
