@@ -81,10 +81,10 @@
     "item_name": "towel",
     "category": "sanantoey",
     "quantity_needed": 100,
-    "quantity_received": 0,
+    "quantity_received": 100,
     "estimated_price": 100,
     "urgency": "High",
     "description": "",
-    "is_fulfilled": 0
+    "is_fulfilled": 1
   }
 ]
