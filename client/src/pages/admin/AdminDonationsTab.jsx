@@ -195,6 +195,11 @@ export default function AdminDonationsTab({ onShowToast }) {
   }, [donations]);
 
   // Current Month Stats
+// Current Month Key
+const currentMonthKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+
+// Current Month Stats
+const currentMonthStats = useMemo(() => {
   const currentMonthStats = useMemo(() => {
     const now = new Date();
     const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
