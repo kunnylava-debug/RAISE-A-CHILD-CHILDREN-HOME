@@ -11,17 +11,6 @@
     "is_fulfilled": 1
   },
   {
-    "id": 2,
-    "item_name": "Dormitory Bunk Beds & Mattresses",
-    "category": "Dormitory & Living",
-    "quantity_needed": 10,
-    "quantity_received": 0,
-    "estimated_price": 45000,
-    "urgency": "High",
-    "description": "Sturdy steel double bunk beds with supportive high-density foam mattresses and clean bedsheets.",
-    "is_fulfilled": 0
-  },
-  {
     "id": 3,
     "item_name": "School Uniforms & Study Shoes",
     "category": "Education & Attire",
