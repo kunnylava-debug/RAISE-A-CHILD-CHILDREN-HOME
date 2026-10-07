@@ -208,6 +208,22 @@
     "is_active": 1
   },
   {
+    "id": 1791368156596,
+    "serial_no": "SN-CH-014",
+    "name": "Student",
+    "age": 10,
+    "class": "Class 5",
+    "gender": "Male",
+    "admission_date": "2026-10-07",
+    "photo": "",
+    "guardian_name": "",
+    "guardian_phone": "",
+    "guardian_address": "",
+    "medical_notes": "Normal routine checks.",
+    "hobbies": "Sports, Art, Reading",
+    "is_active": 1
+  },
+  {
     "id": 1791183519531,
     "serial_no": "537",
     "name": "gutam",
