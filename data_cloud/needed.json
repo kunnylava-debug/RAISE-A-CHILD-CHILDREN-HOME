@@ -9,16 +9,5 @@
     "urgency": "High",
     "description": "Pediatric emergency medicines, digital thermometers, antiseptic lotions, bandages, and hygiene kits.",
     "is_fulfilled": 1
-  },
-  {
-    "id": 6,
-    "item_name": "Library Books & Science Activity Kits",
-    "category": "Education",
-    "quantity_needed": 20,
-    "quantity_received": 20,
-    "estimated_price": 15000,
-    "urgency": "Needed",
-    "description": "Children's illustrated encyclopedias, bilingual storybooks, dictionaries, and practical science learning kits.",
-    "is_fulfilled": 1
   }
 ]
