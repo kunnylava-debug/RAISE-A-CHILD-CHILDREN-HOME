@@ -20,16 +20,5 @@
     "urgency": "Needed",
     "description": "Children's illustrated encyclopedias, bilingual storybooks, dictionaries, and practical science learning kits.",
     "is_fulfilled": 1
-  },
-  {
-    "id": 1791181972584,
-    "item_name": "soaps",
-    "category": "sanitaory",
-    "quantity_needed": 100,
-    "quantity_received": 100,
-    "estimated_price": 0,
-    "urgency": "High",
-    "description": "Bathing & laundry soaps for resident children.",
-    "is_fulfilled": 1
   }
 ]
