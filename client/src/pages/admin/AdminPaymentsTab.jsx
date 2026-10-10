@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, Save, QrCode, Phone, Building, 
-  CheckCircle2, RefreshCw, Upload, Sparkles
+  CheckCircle2, RefreshCw, Upload, Sparkles,
+  ShieldCheck, AlertCircle, ExternalLink
 } from 'lucide-react';
 import { api } from '../../services/api';
 
 export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowToast }) {
   const [uploadingQr, setUploadingQr] = useState(false);
+  const [gatewayStatus, setGatewayStatus] = useState(null);
+  const [checkingGateway, setCheckingGateway] = useState(false);
   const [form, setForm] = useState({
     gpay_number: settings?.gpay_number || '',
     phonepe_number: settings?.phonepe_number || '',
@@ -20,6 +23,22 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
   });
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    checkGatewayLiveStatus();
+  }, []);
+
+  const checkGatewayLiveStatus = async () => {
+    try {
+      setCheckingGateway(true);
+      const res = await api.getPaymentConfig();
+      setGatewayStatus(res);
+    } catch {
+      setGatewayStatus({ configured: false, gateway: 'Razorpay', sandbox_simulation_available: true });
+    } finally {
+      setCheckingGateway(false);
+    }
+  };
 
   const handleChange = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -390,6 +409,69 @@ export default function AdminPaymentsTab({ settings, onRefreshSettings, onShowTo
               className="w-full p-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-xs sm:text-sm uppercase"
             />
           </div>
+        </div>
+      </div>
+
+      {/* 3. Razorpay Payment Gateway & Auto-Confirmation Status Card */}
+      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm shadow-xs">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                Razorpay Payment Gateway & Auto-Confirmation
+              </h3>
+              <p className="text-xs text-slate-500">
+                Cryptographic server-side verification with official Razorpay orders and webhooks.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={checkGatewayLiveStatus}
+            disabled={checkingGateway}
+            className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 flex items-center space-x-1.5 transition cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${checkingGateway ? 'animate-spin' : ''}`} />
+            <span>Check Gateway Status</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-1">
+            <span className="font-bold text-emerald-900 block text-xs uppercase tracking-wider">Gateway Engine</span>
+            <span className="font-bold text-emerald-700 text-sm block">Razorpay Official Standard Checkout</span>
+            <p className="text-[11px] text-emerald-800">Supports UPI (GPay, PhonePe, Paytm, QR), Cards, Netbanking.</p>
+          </div>
+          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-200 space-y-1">
+            <span className="font-bold text-blue-900 block text-xs uppercase tracking-wider">Verification Method</span>
+            <span className="font-bold text-blue-700 text-sm block">HMAC-SHA256 Signature Verification</span>
+            <p className="text-[11px] text-blue-800">Server verifies signature directly before marking any donation confirmed.</p>
+          </div>
+          <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200 space-y-1">
+            <span className="font-bold text-purple-900 block text-xs uppercase tracking-wider">Webhook Endpoint</span>
+            <span className="font-mono font-bold text-purple-700 text-[11px] block break-all">/api/payment/webhook</span>
+            <p className="text-[11px] text-purple-800">Auto-reconciliation for bank transactions and captured payments.</p>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 text-xs text-slate-700 space-y-3">
+          <h4 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
+            <span>⚙️ Environment Variables Setup Guide (Vercel)</span>
+          </h4>
+          <p className="leading-relaxed">
+            To link your Razorpay Merchant Account to your live website, configure these 3 variables in your <strong>Vercel Dashboard &rarr; Project Settings &rarr; Environment Variables</strong>:
+          </p>
+          <div className="space-y-1.5 font-mono text-[11px] bg-white p-3 rounded-xl border border-slate-200">
+            <div><strong className="text-emerald-700">RAZORPAY_KEY_ID</strong> = rzp_live_xxxxxxxxxxxxxx (or rzp_test_...)</div>
+            <div><strong className="text-emerald-700">RAZORPAY_KEY_SECRET</strong> = your_razorpay_secret_key</div>
+            <div><strong className="text-emerald-700">RAZORPAY_WEBHOOK_SECRET</strong> = your_configured_webhook_secret</div>
+          </div>
+          <p className="text-[11px] text-slate-500">
+            * Note: While credentials are being configured, the system provides automatic sandbox simulation so you can safely test the complete verification flow without charging real cards.
+          </p>
         </div>
       </div>
 

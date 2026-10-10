@@ -593,3 +593,98 @@ export function parseAndValidateChildrenCsv(csvText, existingChildren = []) {
   };
 }
 
+/**
+ * Downloads live Donation & Pledge Records as Excel (.xlsx) spreadsheet
+ */
+export function exportDonationsToExcel(donations = []) {
+  const list = Array.isArray(donations) ? donations : [];
+
+  const headers = [
+    'S.No',
+    'Receipt / Reference No',
+    'Date',
+    'Time (IST)',
+    'Donor Full Name',
+    'Phone / Mobile',
+    'Email Address',
+    'Amount (₹ INR)',
+    'Payment Method',
+    'Transaction / Gateway ID',
+    'Record Type',
+    'Status',
+    'Linked Need Item',
+    'Units Donated / Pledged',
+    'Notes / Purpose'
+  ];
+
+  const dataRows = list.map((d, idx) => {
+    let dateStr = 'Recent';
+    let timeStr = '';
+    if (d.created_at) {
+      try {
+        const dt = new Date(d.created_at);
+        if (!isNaN(dt.getTime())) {
+          dateStr = dt.toISOString().split('T')[0];
+          timeStr = dt.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
+        }
+      } catch {}
+    }
+
+    const isPledge = d.entry_type === 'Pledge' || String(d.status || '').toLowerCase().includes('pledge');
+    const receiptNo = d.receipt_no || (isPledge ? `PLG-${d.id}` : `REC-${d.id}`);
+
+    return [
+      idx + 1,
+      receiptNo,
+      dateStr,
+      timeStr,
+      d.donor_name || 'Anonymous Well-Wisher',
+      d.donor_phone || '',
+      d.donor_email || '',
+      Number(d.amount) || 0,
+      d.payment_method || (isPledge ? 'Pledge' : 'UPI'),
+      d.transaction_ref || d.gateway_payment_id || '',
+      d.entry_type || (isPledge ? 'Pledge Commitment' : 'Direct Donation'),
+      d.status || (isPledge ? 'Pledged (Pending Admin Confirmation)' : 'Confirmed'),
+      d.linked_need_title || d.item_name || 'General Student Care',
+      Number(d.quantity_donated) || 1,
+      d.notes || ''
+    ];
+  });
+
+  const aoa = [headers, ...dataRows];
+  const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+
+  worksheet['!cols'] = [
+    { wch: 6 },   // S.No
+    { wch: 20 },  // Receipt / Ref
+    { wch: 14 },  // Date
+    { wch: 14 },  // Time
+    { wch: 26 },  // Donor Name
+    { wch: 18 },  // Phone
+    { wch: 28 },  // Email
+    { wch: 16 },  // Amount
+    { wch: 22 },  // Method
+    { wch: 26 },  // Txn Ref
+    { wch: 22 },  // Type
+    { wch: 24 },  // Status
+    { wch: 28 },  // Linked Need
+    { wch: 14 },  // Units
+    { wch: 35 }   // Notes
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Donations Ledger');
+
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([excelBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const filename = `RISE_A_CHILD_Donations_Ledger_${todayStr}.xlsx`;
+  triggerDownload(blob, filename);
+
+  return { success: true, count: dataRows.length, filename };
+}
+

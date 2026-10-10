@@ -140,6 +140,14 @@
       "destination": "/api/donations.js"
     },
     {
+      "source": "/api/payment/:path*",
+      "destination": "/api/payment.js"
+    },
+    {
+      "source": "/api/payment",
+      "destination": "/api/payment.js"
+    },
+    {
       "source": "/api/needed/:path*",
       "destination": "/api/needed.js"
     },

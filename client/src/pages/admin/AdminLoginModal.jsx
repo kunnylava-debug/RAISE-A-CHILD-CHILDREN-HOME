@@ -8,11 +8,20 @@ import { api, getNotificationRecipientEmail } from '../../services/api';
 
 export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
   const { loginModalOpen, setLoginModalOpen, login } = useAdminAuth();
-  const [username, setUsername] = useState('Tuny777');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Keep username and password strictly blank every time the modal opens
+  useEffect(() => {
+    if (loginModalOpen) {
+      setUsername('');
+      setPassword('');
+      setError('');
+    }
+  }, [loginModalOpen]);
 
   const notificationEmail = getNotificationRecipientEmail();
 
@@ -246,7 +255,7 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
               </div>
             )}
 
-            <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs sm:text-sm">
+            <form onSubmit={handleLoginSubmit} autoComplete="off" className="space-y-4 text-xs sm:text-sm">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Username</label>
                 <div className="relative">
@@ -254,10 +263,15 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
                   <input
                     type="text"
                     required
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck="false"
+                    name="admin_login_username"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
                     className="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    placeholder="admin"
+                    placeholder="Enter username"
                   />
                 </div>
               </div>
@@ -282,6 +296,8 @@ export default function AdminLoginModal({ onShowToast, onLoginSuccess }) {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
+                    autoComplete="new-password"
+                    name="admin_login_password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="w-full pl-9 pr-10 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"

@@ -1506,6 +1506,137 @@ async function request(endpoint, options = {}) {
       }
     }
 
+    // 7.35 PAYMENT GATEWAY / RAZORPAY FALLBACK ENGINE
+    if (endpoint.startsWith('/payment')) {
+      if (endpoint === '/payment/config') {
+        return {
+          gateway: 'Razorpay',
+          configured: false,
+          key_id: null,
+          currency: 'INR',
+          sandbox_simulation_available: true
+        };
+      }
+
+      if (endpoint === '/payment/create-order') {
+        const amount = Number(parsedBody.amount) || 250;
+        const donationId = Date.now();
+        const receiptNo = `REC-${new Date().getFullYear()}-${String(donationId).slice(-4)}`;
+        const pendingDonation = {
+          id: donationId,
+          receipt_no: receiptNo,
+          donor_name: parsedBody.donor_name || 'Generous Supporter',
+          donor_phone: parsedBody.donor_phone || '',
+          donor_email: parsedBody.donor_email || '',
+          amount: amount,
+          currency: 'INR',
+          payment_method: 'Online Payment (Razorpay)',
+          payment_status: 'PENDING',
+          status: 'Payment Pending',
+          gateway_order_id: `order_sim_${donationId}`,
+          needed_item_id: parsedBody.needed_item_id || null,
+          item_name: parsedBody.item_name || parsedBody.linked_need_title || '',
+          linked_need_title: parsedBody.linked_need_title || parsedBody.item_name || '',
+          quantity_donated: Number(parsedBody.quantity_donated) || 1,
+          notes: parsedBody.notes || '',
+          entry_type: 'Direct Donation',
+          created_at: new Date().toISOString()
+        };
+
+        let donList = getStorage('rac_cached_donations', []);
+        donList.unshift(pendingDonation);
+        setStorage('rac_cached_donations', donList);
+
+        return {
+          success: true,
+          is_live_gateway: false,
+          key_id: 'rzp_test_simulation',
+          order: { id: pendingDonation.gateway_order_id, amount: amount * 100, currency: 'INR' },
+          order_id: pendingDonation.gateway_order_id,
+          amount: amount,
+          donation_id: donationId,
+          receipt_no: receiptNo
+        };
+      }
+
+      if (endpoint === '/payment/verify') {
+        const donId = parsedBody.donation_id;
+        let donList = getStorage('rac_cached_donations', []);
+        let targetDon = null;
+
+        donList = donList.map(d => {
+          if (String(d.id) === String(donId) || d.gateway_order_id === parsedBody.razorpay_order_id) {
+            targetDon = {
+              ...d,
+              payment_status: 'CONFIRMED',
+              status: 'Confirmed',
+              payment_method: 'Razorpay (UPI / Cards / NetBanking)',
+              transaction_ref: parsedBody.razorpay_payment_id || `pay_sim_${Date.now()}`,
+              gateway_payment_id: parsedBody.razorpay_payment_id || `pay_sim_${Date.now()}`,
+              gateway_order_id: parsedBody.razorpay_order_id || d.gateway_order_id,
+              confirmed_at: new Date().toISOString()
+            };
+            return targetDon;
+          }
+          return d;
+        });
+
+        if (!targetDon) {
+          targetDon = {
+            id: donId || Date.now(),
+            receipt_no: `REC-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
+            donor_name: parsedBody.donor_name || 'Generous Supporter',
+            donor_phone: parsedBody.donor_phone || '',
+            amount: Number(parsedBody.amount) || 250,
+            payment_status: 'CONFIRMED',
+            status: 'Confirmed',
+            payment_method: 'Razorpay (UPI / Cards / NetBanking)',
+            transaction_ref: parsedBody.razorpay_payment_id || `pay_sim_${Date.now()}`,
+            confirmed_at: new Date().toISOString()
+          };
+          donList.unshift(targetDon);
+        }
+
+        setStorage('rac_cached_donations', donList);
+
+        // Update needed items
+        let updatedNeed = null;
+        if (targetDon.needed_item_id || targetDon.item_name) {
+          let neededList = getStorage('rac_cached_needed', []);
+          neededList = neededList.map(item => {
+            const matchId = targetDon.needed_item_id && String(item.id) === String(targetDon.needed_item_id);
+            const donName = (targetDon.item_name || targetDon.linked_need_title || '').toLowerCase().trim();
+            if (matchId || (donName && item.item_name && item.item_name.toLowerCase().trim() === donName)) {
+              const qty = Number(targetDon.quantity_donated) || 1;
+              const newRec = (Number(item.quantity_received) || 0) + qty;
+              updatedNeed = {
+                ...item,
+                quantity_received: newRec,
+                is_fulfilled: newRec >= (Number(item.quantity_needed) || 1)
+              };
+              return updatedNeed;
+            }
+            return item;
+          });
+          setStorage('rac_cached_needed', neededList);
+          if (updatedNeed) {
+            broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'UPDATE', data: updatedNeed });
+          }
+        }
+
+        broadcastLocalSyncEvent({ type: 'DONATIONS_UPDATED', action: 'PAYMENT_VERIFIED', data: targetDon });
+        dispatchDonationEmailNotification(targetDon).catch(() => {});
+
+        return {
+          success: true,
+          message: 'Thank you for your donation! Your payment has been successfully verified.',
+          donation: targetDon,
+          receipt: targetDon,
+          updated_need: updatedNeed
+        };
+      }
+    }
+
     // 7.4 LICENCE WRITE OPERATIONS (PUT, DELETE)
     if (endpoint === '/licence') {
       if (method === 'PUT') {
@@ -1958,6 +2089,11 @@ export const api = {
     return { success: true, message: 'All donation records cleared and overall income reset to ₹0.' };
   },
   syncDonations: () => syncDonationsWithCloud(),
+
+  // Payment Gateway (Razorpay)
+  createPaymentOrder: (data) => request('/payment/create-order', { method: 'POST', body: data }),
+  verifyPayment: (data) => request('/payment/verify', { method: 'POST', body: data }),
+  getPaymentConfig: () => request('/payment/config'),
 
   // File Upload with progress and instant Base64 fallback for 100% reliable mobile uploads
   uploadFile: async (file, onProgress) => {

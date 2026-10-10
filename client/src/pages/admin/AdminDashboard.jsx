@@ -4,7 +4,7 @@ import {
   FileText, ShieldCheck, Image, Clock, Utensils, 
   Heart, CreditCard, LogOut, ArrowRight, ExternalLink, 
   Calendar, PackageCheck, GraduationCap, KeyRound, Lock, Share2,
-  Download, FileSpreadsheet, CheckCircle2
+  Download, FileSpreadsheet, CheckCircle2, Trash2
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import AdminSettingsTab from './AdminSettingsTab';
@@ -69,6 +69,17 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
       setFulfilledNeedsAlerts(fulfilled);
     }).catch(console.error);
   }, [adminUser]);
+
+  const handleDeleteFulfilledNeed = async (itemId) => {
+    if (!window.confirm('Delete and clear this fulfilled requirement permanently from hostel records?')) return;
+    setFulfilledNeedsAlerts(prev => prev.filter(item => String(item.id) !== String(itemId)));
+    try {
+      await api.deleteNeededItem(itemId);
+      loadStats();
+    } catch (err) {
+      console.warn('Delete fulfilled need error:', err);
+    }
+  };
 
   useEffect(() => {
     if (!adminUser) return;
@@ -322,9 +333,19 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
                             ✅ 100% target reached. Hidden from public view automatically.
                           </p>
                         </div>
-                        <span className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full text-[11px] self-start sm:self-auto whitespace-nowrap">
-                          {item.updated_at ? `Fulfilled on ${new Date(item.updated_at).toLocaleDateString()}` : 'Fully Supported'}
-                        </span>
+                        <div className="flex items-center space-x-2 self-start sm:self-auto">
+                          <span className="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full text-[11px] whitespace-nowrap">
+                            {item.updated_at ? `Fulfilled on ${new Date(item.updated_at).toLocaleDateString()}` : 'Fully Supported'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteFulfilledNeed(item.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                            title="Delete fulfilled requirement"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

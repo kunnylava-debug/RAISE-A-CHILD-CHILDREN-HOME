@@ -4,9 +4,10 @@ import {
   CheckCircle2, AlertCircle, 
   Filter, Calendar, Phone, MessageSquare, Trash2,
   Clock, Handshake, Check, XCircle, DollarSign,
-  History, CalendarDays, X
+  History, CalendarDays, X, Download
 } from 'lucide-react';
 import { api, subscribeToRealtimeSync, broadcastLocalSyncEvent } from '../../services/api';
+import { exportDonationsToExcel } from '../../utils/exportUtils';
 
 function computeLiveNeededItems(rawItems, donList) {
   if (!Array.isArray(rawItems)) return [];
@@ -570,6 +571,78 @@ export default function AdminDonationsTab({ onShowToast }) {
     }
   };
 
+  const fulfilledItems = useMemo(() => {
+    return (neededItems || []).filter(item => {
+      if (!item) return false;
+      const rec = Number(item.quantity_received) || 0;
+      const needed = Number(item.quantity_needed) || 1;
+      return item.is_fulfilled === 1 || item.is_fulfilled === true || rec >= needed;
+    });
+  }, [neededItems]);
+
+  const handleDeleteFulfilledNeed = async (needItem) => {
+    if (!window.confirm(`Delete and clear fulfilled requirement "${needItem.item_name}"? This will permanently remove it from hostel records.`)) {
+      return;
+    }
+    const needId = needItem.id;
+    setNeededItems(prev => prev.filter(item => String(item.id) !== String(needId)));
+    onShowToast?.({
+      type: 'success',
+      title: 'Fulfilled Need Deleted',
+      message: `"${needItem.item_name}" has been cleared.`
+    });
+    broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'DELETE', id: needId });
+
+    try {
+      await api.deleteNeededItem(needId);
+      loadData(false);
+    } catch (err) {
+      console.warn('Delete fulfilled need error:', err.message);
+    }
+  };
+
+  const handleClearAllFulfilledNeeds = async () => {
+    if (fulfilledItems.length === 0) return;
+    if (!window.confirm(`Clear and remove all ${fulfilledItems.length} fulfilled need(s)? This will permanently purge completed items.`)) {
+      return;
+    }
+    const idsToRemove = fulfilledItems.map(f => String(f.id));
+    setNeededItems(prev => prev.filter(item => !idsToRemove.includes(String(item.id))));
+    onShowToast?.({
+      type: 'success',
+      title: 'Fulfilled Needs Cleared',
+      message: `Successfully purged ${fulfilledItems.length} fulfilled item(s).`
+    });
+    broadcastLocalSyncEvent({ type: 'NEEDED_UPDATED', action: 'DELETE_ALL_FULFILLED' });
+
+    try {
+      for (const item of fulfilledItems) {
+        await api.deleteNeededItem(item.id).catch(() => {});
+      }
+      loadData(false);
+    } catch (err) {
+      console.warn('Clear all fulfilled needs error:', err.message);
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const recordsToExport = (displayedDonations && displayedDonations.length > 0) ? displayedDonations : donations;
+      if (!recordsToExport || recordsToExport.length === 0) {
+        onShowToast?.({ type: 'error', message: 'No donation records available to export.' });
+        return;
+      }
+      const res = exportDonationsToExcel(recordsToExport);
+      onShowToast?.({
+        type: 'success',
+        title: 'Excel Export Successful',
+        message: `Exported ${res.count} donation record(s) to ${res.filename}`
+      });
+    } catch (err) {
+      onShowToast?.({ type: 'error', message: err.message || 'Failed to export Excel file.' });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header & Stats Banner */}
@@ -594,6 +667,15 @@ export default function AdminDonationsTab({ onShowToast }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-xl text-xs sm:text-sm flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+            title="Download donation receipts as Excel (.xlsx)"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600" />
+            <span>📥 Export to Excel</span>
+          </button>
           <button
             type="button"
             onClick={() => setResetModalOpen(true)}
@@ -698,6 +780,56 @@ export default function AdminDonationsTab({ onShowToast }) {
           <p className="text-[11px] text-slate-500 mt-1">Auto-incremented to received inventory</p>
         </div>
       </div>
+
+      {/* FULFILLED NEEDS STATUS & PURGE SECTION (Requirement 3) */}
+      {fulfilledItems.length > 0 && (
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-300 rounded-3xl p-5 sm:p-6 shadow-sm space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center space-x-2.5 text-emerald-900 font-bold">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <div>
+                <h3 className="font-serif text-base sm:text-lg">
+                  🎉 Fulfilled Needs Archive ({fulfilledItems.length})
+                </h3>
+                <p className="text-xs text-slate-600 font-normal">
+                  These requirements have met 100% of their target and are automatically hidden from the public website. You can delete or clear fulfilled items here anytime.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearAllFulfilledNeeds}
+              className="self-start sm:self-auto px-3.5 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
+              title="Clear all fulfilled needs permanently"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <span>Clear All Fulfilled ({fulfilledItems.length})</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+            {fulfilledItems.map(item => (
+              <div key={item.id} className="bg-white p-3.5 rounded-2xl border border-emerald-200 flex items-center justify-between shadow-xs">
+                <div>
+                  <span className="font-bold text-slate-900 text-sm block">{item.item_name}</span>
+                  <span className="text-[11px] text-emerald-700 font-semibold block">
+                    ✅ {item.quantity_received || item.quantity_needed} / {item.quantity_needed} units gathered (100% Fulfilled)
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium">Category: {item.category || 'General'}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteFulfilledNeed(item)}
+                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
+                  title={`Delete & clear "${item.item_name}"`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* YEARLY & MONTHLY INSPECTION DASHBOARD (ACTIVE MONTH VIEW ONLY) */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 rounded-3xl p-5 sm:p-7 text-white shadow-lg space-y-5">
