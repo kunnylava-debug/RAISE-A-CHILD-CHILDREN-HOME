@@ -31,16 +31,5 @@
     "urgency": "High",
     "description": "Bathing & laundry soaps for resident children.",
     "is_fulfilled": 1
-  },
-  {
-    "id": 1791375315988,
-    "item_name": "towel",
-    "category": "sanantoey",
-    "quantity_needed": 100,
-    "quantity_received": 100,
-    "estimated_price": 100,
-    "urgency": "High",
-    "description": "",
-    "is_fulfilled": 1
   }
 ]
