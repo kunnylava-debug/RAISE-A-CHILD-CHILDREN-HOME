@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   Building2, Users, ArrowDown, Sparkles, Image, Plus, Trash2, 
   ZoomIn, FolderPlus, X, Camera, Utensils, BookOpen, Heart, 
-  Shield, Activity, CheckCircle, ChevronRight, Layers, Flame
+  Shield, Activity, CheckCircle, ChevronRight, Layers, Flame, RotateCcw
 } from 'lucide-react';
-import { api } from '../services/api';
+import { api, broadcastLocalSyncEvent, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import LightboxModal from '../components/LightboxModal';
 
@@ -295,6 +295,14 @@ export default function Views({ onShowToast }) {
   const [activeWing, setActiveWing] = useState('all'); // 'all' | 'boys' | 'girls'
   const [customPhotos, setCustomPhotos] = useState([]);
   const [customCategories, setCustomCategories] = useState([]);
+  const [deletedPhotoIds, setDeletedPhotoIds] = useState(() => {
+    try {
+      const stored = localStorage.getItem('rac_campus_deleted_photo_ids');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   // Lightbox State
@@ -318,7 +326,7 @@ export default function Views({ onShowToast }) {
 
   const { adminUser } = useAdminAuth();
 
-  // Load custom photos and categories
+  // Load custom photos, categories, and deleted predefined photo IDs
   const loadCampusData = () => {
     try {
       setLoading(true);
@@ -330,6 +338,22 @@ export default function Views({ onShowToast }) {
       if (savedCats) {
         setCustomCategories(JSON.parse(savedCats));
       }
+      const savedDeleted = localStorage.getItem('rac_campus_deleted_photo_ids');
+      if (savedDeleted) {
+        setDeletedPhotoIds(JSON.parse(savedDeleted));
+      }
+
+      // Sync deleted photo IDs from cloud settings so all devices hide/delete unwanted photos
+      api.getSettings().then(st => {
+        if (st && Array.isArray(st.campus_deleted_photo_ids)) {
+          setDeletedPhotoIds(prev => {
+            const combined = Array.from(new Set([...prev, ...st.campus_deleted_photo_ids]));
+            localStorage.setItem('rac_campus_deleted_photo_ids', JSON.stringify(combined));
+            return combined;
+          });
+        }
+      }).catch(() => {});
+
       // Also sync with server views endpoint if available
       api.getViews().then(serverData => {
         if (Array.isArray(serverData) && serverData.length > 0) {
@@ -366,6 +390,19 @@ export default function Views({ onShowToast }) {
 
   useEffect(() => {
     loadCampusData();
+    const unsubscribe = subscribeToRealtimeSync?.((event) => {
+      if (event?.type === 'CAMPUS_UPDATED') {
+        const savedDeleted = localStorage.getItem('rac_campus_deleted_photo_ids');
+        if (savedDeleted) {
+          try { setDeletedPhotoIds(JSON.parse(savedDeleted)); } catch {}
+        }
+        const savedPhotos = localStorage.getItem('rac_campus_custom_photos');
+        if (savedPhotos) {
+          try { setCustomPhotos(JSON.parse(savedPhotos)); } catch {}
+        }
+      }
+    });
+    return () => unsubscribe?.();
   }, []);
 
   // Jump to specific wing with smooth scroll
@@ -387,14 +424,20 @@ export default function Views({ onShowToast }) {
     setLightboxOpen(true);
   };
 
-  // Merge default photos with any custom uploaded photos for a facility
+  // Merge default photos with any custom uploaded photos for a facility, excluding any deleted photos
   const getFacilityPhotos = (facility) => {
     const matchedCustom = customPhotos.filter(p => {
       const matchWing = p.wing === 'both' || p.wing === facility.wing;
       const matchType = p.facility_type === facility.category_slug || p.facility_type === facility.id;
       return matchWing && matchType;
     });
-    return [...facility.defaultPhotos, ...matchedCustom];
+    const combined = [...(facility.defaultPhotos || []), ...matchedCustom];
+    return combined.filter(p => {
+      if (!p) return false;
+      const pid = String(p.id || '');
+      const pUrl = String(p.image_url || '');
+      return !deletedPhotoIds.includes(pid) && !deletedPhotoIds.includes(pUrl);
+    });
   };
 
   // Upload photo handler
@@ -444,6 +487,10 @@ export default function Views({ onShowToast }) {
       });
     } catch {}
 
+    try {
+      broadcastLocalSyncEvent?.({ type: 'CAMPUS_UPDATED', action: 'ADD_PHOTO', data: newPhoto });
+    } catch {}
+
     onShowToast?.({ type: 'success', message: 'Facility photo added successfully!' });
     setPhotoTitle('');
     setPhotoDesc('');
@@ -451,13 +498,56 @@ export default function Views({ onShowToast }) {
     setNewPhotoModalOpen(false);
   };
 
-  // Delete custom photo
-  const handleDeletePhoto = (photoId) => {
-    if (!window.confirm('Delete this photograph?')) return;
-    const updated = customPhotos.filter(p => p.id !== photoId);
-    setCustomPhotos(updated);
-    localStorage.setItem('rac_campus_custom_photos', JSON.stringify(updated));
-    onShowToast?.({ type: 'success', message: 'Photo deleted' });
+  // Delete photo (works for BOTH predefined photos like Dormitory & Kitchen and custom photos)
+  const handleDeletePhoto = async (photo) => {
+    const photoTitle = photo.title || 'this photograph';
+    if (!window.confirm(`Delete "${photoTitle}" from campus facilities?`)) return;
+
+    const pid = String(photo.id || '');
+    const pUrl = String(photo.image_url || '');
+
+    // 1. Add to deleted IDs list
+    const updatedDeleted = Array.from(new Set([...deletedPhotoIds, pid, pUrl].filter(Boolean)));
+    setDeletedPhotoIds(updatedDeleted);
+    localStorage.setItem('rac_campus_deleted_photo_ids', JSON.stringify(updatedDeleted));
+
+    // 2. If it was a custom photo, remove from custom list
+    if (customPhotos.some(p => String(p.id) === pid || String(p.image_url) === pUrl)) {
+      const updatedCustom = customPhotos.filter(p => String(p.id) !== pid && String(p.image_url) !== pUrl);
+      setCustomPhotos(updatedCustom);
+      localStorage.setItem('rac_campus_custom_photos', JSON.stringify(updatedCustom));
+      try {
+        if (photo.id && String(photo.id).startsWith('photo_')) {
+          await api.deletePhoto(photo.id).catch(() => {});
+        }
+      } catch {}
+    }
+
+    // 3. Persist deleted photo IDs to cloud settings so all devices stay in sync
+    try {
+      await api.updateSettings({ campus_deleted_photo_ids: updatedDeleted }).catch(() => {});
+    } catch {}
+
+    // 4. Broadcast sync event across windows/tabs
+    try {
+      broadcastLocalSyncEvent?.({ type: 'CAMPUS_UPDATED', action: 'DELETE_PHOTO', id: pid });
+    } catch {}
+
+    onShowToast?.({ type: 'success', message: `Photograph "${photoTitle}" deleted from campus!` });
+  };
+
+  // Restore deleted/hidden predefined campus photos
+  const handleRestoreDeletedPhotos = async () => {
+    if (!window.confirm('Restore all hidden/deleted predefined campus photographs (dormitory, kitchen, sports, etc.)?')) return;
+    setDeletedPhotoIds([]);
+    localStorage.removeItem('rac_campus_deleted_photo_ids');
+    try {
+      await api.updateSettings({ campus_deleted_photo_ids: [] }).catch(() => {});
+    } catch {}
+    try {
+      broadcastLocalSyncEvent?.({ type: 'CAMPUS_UPDATED', action: 'RESTORE_ALL' });
+    } catch {}
+    onShowToast?.({ type: 'success', message: 'All campus photographs restored successfully!' });
   };
 
   // Add custom facility category
@@ -519,6 +609,16 @@ export default function Views({ onShowToast }) {
 
         {adminUser && (
           <div className="flex flex-wrap items-center gap-2.5 self-start">
+            {deletedPhotoIds.length > 0 && (
+              <button
+                onClick={handleRestoreDeletedPhotos}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-3.5 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 transition border border-slate-300 shadow-xs"
+                title="Restore all hidden/deleted predefined campus photographs"
+              >
+                <RotateCcw className="w-4 h-4 text-blue-600" />
+                <span>Restore Deleted Photos ({deletedPhotoIds.length})</span>
+              </button>
+            )}
             <button
               onClick={() => setNewCatModalOpen(true)}
               className="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 transition shadow-sm"
@@ -769,64 +869,84 @@ export default function Views({ onShowToast }) {
                   )}
 
                   {/* Facility Photos Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {photos.map((photo, pIdx) => (
-                      <div
-                        key={photo.id || pIdx}
-                        className="group relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between hover:-translate-y-1"
-                      >
-                        <div
-                          onClick={() => openFacilityLightbox(photos, pIdx)}
-                          className="relative h-52 bg-slate-100 overflow-hidden cursor-pointer"
+                  {photos.length === 0 ? (
+                    <div className="py-8 px-4 text-center bg-slate-50/80 rounded-2xl border border-dashed border-slate-200 text-slate-400">
+                      <Camera className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                      <p className="text-xs font-semibold text-slate-500">No photographs currently displayed for this facility.</p>
+                      {adminUser && (
+                        <button
+                          onClick={() => {
+                            setPhotoWing('boys');
+                            setPhotoFacilityKey(facility.category_slug || facility.id);
+                            setNewPhotoModalOpen(true);
+                          }}
+                          className="mt-2 text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center space-x-1"
                         >
-                          <img
-                            src={photo.image_url}
-                            alt={photo.title || facility.name}
-                            loading="lazy"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
-                            }}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="bg-white/95 text-slate-900 text-xs font-bold px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5 shadow">
-                              <ZoomIn className="w-4 h-4 text-blue-600" />
-                              <span>Click to Expand</span>
-                            </span>
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add New Photograph</span>
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {photos.map((photo, pIdx) => (
+                        <div
+                          key={photo.id || pIdx}
+                          className="group relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between hover:-translate-y-1"
+                        >
+                          <div
+                            onClick={() => openFacilityLightbox(photos, pIdx)}
+                            className="relative h-52 bg-slate-100 overflow-hidden cursor-pointer"
+                          >
+                            <img
+                              src={photo.image_url}
+                              alt={photo.title || facility.name}
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
+                              }}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="bg-white/95 text-slate-900 text-xs font-bold px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5 shadow">
+                                <ZoomIn className="w-4 h-4 text-blue-600" />
+                                <span>Click to Expand</span>
+                              </span>
+                            </div>
+                            {/* Mobile Tap Zoom Hint */}
+                            <div className="sm:hidden absolute bottom-2 right-2 bg-slate-950/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center space-x-1">
+                              <ZoomIn className="w-3 h-3" />
+                              <span>Tap zoom</span>
+                            </div>
                           </div>
-                          {/* Mobile Tap Zoom Hint */}
-                          <div className="sm:hidden absolute bottom-2 right-2 bg-slate-950/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center space-x-1">
-                            <ZoomIn className="w-3 h-3" />
-                            <span>Tap zoom</span>
-                          </div>
-                        </div>
 
-                        <div className="p-3.5 flex items-center justify-between">
-                          <div className="pr-2">
-                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                              {photo.title || facility.name}
-                            </h4>
-                            {photo.description && (
-                              <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
-                                {photo.description}
-                              </p>
+                          <div className="p-3.5 flex items-center justify-between">
+                            <div className="pr-2">
+                              <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
+                                {photo.title || facility.name}
+                              </h4>
+                              {photo.description && (
+                                <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+                                  {photo.description}
+                                </p>
+                              )}
+                            </div>
+
+                            {adminUser && (
+                              <button
+                                onClick={() => handleDeletePhoto(photo)}
+                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                                title="Delete photo from campus"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             )}
                           </div>
-
-                          {adminUser && String(photo.id).startsWith('photo_') && (
-                            <button
-                              onClick={() => handleDeletePhoto(photo.id)}
-                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
-                              title="Delete photo"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -928,64 +1048,84 @@ export default function Views({ onShowToast }) {
                   )}
 
                   {/* Facility Photos Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {photos.map((photo, pIdx) => (
-                      <div
-                        key={photo.id || pIdx}
-                        className="group relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between hover:-translate-y-1"
-                      >
-                        <div
-                          onClick={() => openFacilityLightbox(photos, pIdx)}
-                          className="relative h-52 bg-slate-100 overflow-hidden cursor-pointer"
+                  {photos.length === 0 ? (
+                    <div className="py-8 px-4 text-center bg-slate-50/80 rounded-2xl border border-dashed border-slate-200 text-slate-400">
+                      <Camera className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                      <p className="text-xs font-semibold text-slate-500">No photographs currently displayed for this facility.</p>
+                      {adminUser && (
+                        <button
+                          onClick={() => {
+                            setPhotoWing('girls');
+                            setPhotoFacilityKey(facility.category_slug || facility.id);
+                            setNewPhotoModalOpen(true);
+                          }}
+                          className="mt-2 text-xs font-bold text-rose-600 hover:text-rose-700 inline-flex items-center space-x-1"
                         >
-                          <img
-                            src={photo.image_url}
-                            alt={photo.title || facility.name}
-                            loading="lazy"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80';
-                            }}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="bg-white/95 text-slate-900 text-xs font-bold px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5 shadow">
-                              <ZoomIn className="w-4 h-4 text-rose-600" />
-                              <span>Click to Expand</span>
-                            </span>
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add New Photograph</span>
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {photos.map((photo, pIdx) => (
+                        <div
+                          key={photo.id || pIdx}
+                          className="group relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between hover:-translate-y-1"
+                        >
+                          <div
+                            onClick={() => openFacilityLightbox(photos, pIdx)}
+                            className="relative h-52 bg-slate-100 overflow-hidden cursor-pointer"
+                          >
+                            <img
+                              src={photo.image_url}
+                              alt={photo.title || facility.name}
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80';
+                              }}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="bg-white/95 text-slate-900 text-xs font-bold px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5 shadow">
+                                <ZoomIn className="w-4 h-4 text-rose-600" />
+                                <span>Click to Expand</span>
+                              </span>
+                            </div>
+                            {/* Mobile Tap Zoom Hint */}
+                            <div className="sm:hidden absolute bottom-2 right-2 bg-slate-950/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center space-x-1">
+                              <ZoomIn className="w-3 h-3" />
+                              <span>Tap zoom</span>
+                            </div>
                           </div>
-                          {/* Mobile Tap Zoom Hint */}
-                          <div className="sm:hidden absolute bottom-2 right-2 bg-slate-950/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center space-x-1">
-                            <ZoomIn className="w-3 h-3" />
-                            <span>Tap zoom</span>
-                          </div>
-                        </div>
 
-                        <div className="p-3.5 flex items-center justify-between">
-                          <div className="pr-2">
-                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                              {photo.title || facility.name}
-                            </h4>
-                            {photo.description && (
-                              <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
-                                {photo.description}
-                              </p>
+                          <div className="p-3.5 flex items-center justify-between">
+                            <div className="pr-2">
+                              <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
+                                {photo.title || facility.name}
+                              </h4>
+                              {photo.description && (
+                                <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+                                  {photo.description}
+                                </p>
+                              )}
+                            </div>
+
+                            {adminUser && (
+                              <button
+                                onClick={() => handleDeletePhoto(photo)}
+                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                                title="Delete photo from campus"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             )}
                           </div>
-
-                          {adminUser && String(photo.id).startsWith('photo_') && (
-                            <button
-                              onClick={() => handleDeletePhoto(photo.id)}
-                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
-                              title="Delete photo"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}

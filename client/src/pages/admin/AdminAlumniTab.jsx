@@ -1,9 +1,37 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   GraduationCap, Plus, Edit2, Trash2, User, Upload,
-  MapPin, Briefcase, Calendar, RefreshCw, X, Check 
+  MapPin, Briefcase, Calendar, RefreshCw, X, Check, CloudCheck, Sparkles 
 } from 'lucide-react';
-import { api } from '../../services/api';
+import { api, subscribeToRealtimeSync } from '../../services/api';
+
+// Utility to compress high-res mobile photos before uploading/saving to cloud
+function compressImage(file, maxWidth = 800, quality = 0.8) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(event.target.result);
+    };
+    reader.onerror = () => resolve(null);
+  });
+}
 
 export default function AdminAlumniTab({ onShowToast }) {
   const [alumni, setAlumni] = useState([]);
@@ -28,6 +56,8 @@ export default function AdminAlumniTab({ onShowToast }) {
   const loadAlumni = useCallback(async () => {
     try {
       setLoading(true);
+      // Synchronize with cloud store so local device records merge across all devices
+      await api.syncAlumni().catch(() => {});
       const data = await api.getAlumni();
       setAlumni(data || []);
     } catch (err) {
@@ -39,6 +69,12 @@ export default function AdminAlumniTab({ onShowToast }) {
 
   useEffect(() => {
     loadAlumni();
+    const unsubscribe = subscribeToRealtimeSync((event) => {
+      if (event?.type === 'ALUMNI_UPDATED') {
+        loadAlumni();
+      }
+    });
+    return () => unsubscribe?.();
   }, [loadAlumni]);
 
   const handleOpenCreate = () => {
@@ -118,6 +154,10 @@ export default function AdminAlumniTab({ onShowToast }) {
         </div>
 
         <div className="flex items-center space-x-3">
+          <span className="hidden sm:inline-flex items-center space-x-1.5 text-[11px] bg-emerald-50 text-emerald-700 font-bold px-3 py-1.5 rounded-xl border border-emerald-200 shadow-xs">
+            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Synced Across All Devices</span>
+          </span>
           <button
             onClick={loadAlumni}
             className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-slate-50 transition"
@@ -349,9 +389,15 @@ export default function AdminAlumniTab({ onShowToast }) {
                         if (!file) return;
                         setUploadingPhoto(true);
                         try {
-                          const res = await api.uploadFile(file);
-                          setForm({ ...form, photo_url: res.url });
-                          onShowToast?.({ type: 'success', message: 'Alumni photo uploaded successfully!' });
+                          const compressed = await compressImage(file, 800, 0.82);
+                          if (compressed) {
+                            setForm({ ...form, photo_url: compressed });
+                            onShowToast?.({ type: 'success', message: 'Alumni photo compressed and prepared for multi-device sync!' });
+                          } else {
+                            const res = await api.uploadFile(file);
+                            setForm({ ...form, photo_url: res.url });
+                            onShowToast?.({ type: 'success', message: 'Alumni photo uploaded successfully!' });
+                          }
                         } catch (err) {
                           onShowToast?.({ type: 'error', message: 'Failed to upload photo: ' + err.message });
                         } finally {

@@ -8,7 +8,7 @@ import {
 import VideoPlayer from '../components/VideoPlayer';
 import LightboxModal from '../components/LightboxModal';
 import HomeAIAssistant from '../components/HomeAIAssistant';
-import { api } from '../services/api';
+import { api, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function Home({ setActiveTab, settings }) {
@@ -21,17 +21,28 @@ export default function Home({ setActiveTab, settings }) {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
   useEffect(() => {
-    api.getEvents().then(data => setEvents(Array.isArray(data) ? data : [])).catch(() => setEvents([]));
-    api.getAlumni().then(data => setAlumni(Array.isArray(data) ? data : [])).catch(() => setAlumni([]));
-    api.getChildren({ limit: 1 }).then(data => {
-      if (data && typeof data.total_children === 'number') {
-        setChildrenStats({
-          total: data.total_children ?? 0,
-          boys: data.boys_count ?? 0,
-          girls: data.girls_count ?? 0
-        });
+    const fetchHomeData = () => {
+      api.getEvents().then(data => setEvents(Array.isArray(data) ? data : [])).catch(() => setEvents([]));
+      api.getAlumni().then(data => setAlumni(Array.isArray(data) ? data : [])).catch(() => setAlumni([]));
+      api.getChildren({ limit: 1 }).then(data => {
+        if (data && typeof data.total_children === 'number') {
+          setChildrenStats({
+            total: data.total_children ?? 0,
+            boys: data.boys_count ?? 0,
+            girls: data.girls_count ?? 0
+          });
+        }
+      }).catch(() => {});
+    };
+
+    fetchHomeData();
+
+    const unsubscribe = subscribeToRealtimeSync((event) => {
+      if (event?.type === 'ALUMNI_UPDATED' || event?.type === 'EVENTS_UPDATED' || event?.type === 'CHILDREN_UPDATED') {
+        fetchHomeData();
       }
-    }).catch(() => {});
+    });
+    return () => unsubscribe?.();
   }, []);
 
   // Multi-photo expansion for seamless browsing in lightbox

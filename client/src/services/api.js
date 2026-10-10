@@ -306,6 +306,50 @@ export async function syncAdmissionsWithCloud() {
   return merged;
 }
 
+// Bidirectionally synchronize alumni records across all devices via shared cloud store
+export async function syncAlumniWithCloud() {
+  const localList = getStorage('rac_cached_alumni', []);
+  let cloudList = [];
+  try {
+    const res = await request('/alumni');
+    if (Array.isArray(res)) cloudList = res;
+  } catch (e) {
+    console.warn('[ALUMNI CLOUD SYNC] Cloud fetch notice:', e?.message);
+  }
+
+  // Merge cloudList and localList (deduplicate by id or name)
+  const map = new Map();
+  for (const item of cloudList) {
+    const key = String(item.id || item.name || '').trim().toLowerCase();
+    if (key) map.set(key, item);
+  }
+
+  // Check if local device has offline or previously created records not in cloud
+  const itemsToUpload = [];
+  for (const item of localList) {
+    const key = String(item.id || item.name || '').trim().toLowerCase();
+    if (key && !map.has(key)) {
+      map.set(key, item);
+      itemsToUpload.push(item);
+    }
+  }
+
+  const merged = Array.from(map.values()).sort((a, b) => {
+    return (Number(a.order_num) || 0) - (Number(b.order_num) || 0) || (Number(a.id) || 0) - (Number(b.id) || 0);
+  });
+
+  setStorage('rac_cached_alumni', merged);
+
+  // If local had records not yet uploaded to the cloud, push them to cloud
+  if (itemsToUpload.length > 0) {
+    try {
+      await request('/alumni', { method: 'POST', body: { records: itemsToUpload } }).catch(() => {});
+    } catch {}
+  }
+
+  return merged;
+}
+
 // Dispatch automated email notification to dynamically configured notification email
 export async function dispatchAdmissionEmailNotification(app) {
   try {
@@ -546,6 +590,7 @@ if (typeof window !== 'undefined') {
   setTimeout(() => {
     syncAdmissionsWithCloud().catch(() => {});
     syncDonationsWithCloud().catch(() => {});
+    syncAlumniWithCloud().catch(() => {});
   }, 300);
 }
 
@@ -1847,11 +1892,33 @@ export const api = {
   resetPassword: (data) => request('/auth/reset-password', { method: 'POST', body: data }),
   dispatchSecurityAlert: (attemptedUsername) => dispatchSecurityLoginAlert({ attemptedUsername }),
 
-  // Alumni (Where Are They Now)
-  getAlumni: () => request('/alumni'),
-  createAlumni: (data) => request('/alumni', { method: 'POST', body: data }),
-  updateAlumni: (id, data) => request(`/alumni/${id}`, { method: 'PUT', body: data }),
-  deleteAlumni: (id) => request(`/alumni/${id}`, { method: 'DELETE' }),
+  // Alumni (Where Are They Now - Multi-Device Cloud Sync)
+  getAlumni: async () => {
+    try {
+      const data = await request('/alumni');
+      if (Array.isArray(data)) {
+        setStorage('rac_cached_alumni', data);
+        return data;
+      }
+    } catch {}
+    return getStorage('rac_cached_alumni', []);
+  },
+  createAlumni: async (data) => {
+    const res = await request('/alumni', { method: 'POST', body: data });
+    broadcastLocalSyncEvent({ type: 'ALUMNI_UPDATED', action: 'CREATE', data: res });
+    return res;
+  },
+  updateAlumni: async (id, data) => {
+    const res = await request(`/alumni/${id}`, { method: 'PUT', body: data });
+    broadcastLocalSyncEvent({ type: 'ALUMNI_UPDATED', action: 'UPDATE', data: res });
+    return res;
+  },
+  deleteAlumni: async (id) => {
+    const res = await request(`/alumni/${id}`, { method: 'DELETE' });
+    broadcastLocalSyncEvent({ type: 'ALUMNI_UPDATED', action: 'DELETE', id });
+    return res;
+  },
+  syncAlumni: () => syncAlumniWithCloud(),
 
   // Settings
   getSettings: () => request('/settings'),
@@ -2232,6 +2299,10 @@ if (typeof window !== 'undefined') {
       notifySyncListeners({ type: 'DONATIONS_UPDATED', action: 'STORAGE_CHANGE' });
     } else if (e.key === 'rac_cached_needed') {
       notifySyncListeners({ type: 'NEEDED_UPDATED', action: 'STORAGE_CHANGE' });
+    } else if (e.key === 'rac_cached_alumni') {
+      notifySyncListeners({ type: 'ALUMNI_UPDATED', action: 'STORAGE_CHANGE' });
+    } else if (e.key === 'rac_campus_deleted_photo_ids') {
+      notifySyncListeners({ type: 'CAMPUS_UPDATED', action: 'STORAGE_CHANGE' });
     }
   });
 }
