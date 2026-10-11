@@ -4,8 +4,17 @@ import { api, getAuthToken, setAuthToken } from '../services/api';
 const AdminAuthContext = createContext(null);
 
 export function AdminAuthProvider({ children }) {
-  const [adminUser, setAdminUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [adminUser, setAdminUser] = useState(() => {
+    try {
+      const token = getAuthToken();
+      if (token) {
+        const username = localStorage.getItem('rac_admin_custom_username') || 'admin';
+        return { id: 1, username, role: 'admin' };
+      }
+    } catch {}
+    return null;
+  });
+  const [loading, setLoading] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   useEffect(() => {

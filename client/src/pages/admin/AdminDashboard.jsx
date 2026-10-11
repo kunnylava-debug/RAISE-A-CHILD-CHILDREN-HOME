@@ -18,6 +18,7 @@ import AdminAlumniTab from './AdminAlumniTab';
 import AdminCredentialsTab from './AdminCredentialsTab';
 import AdminPaymentsTab from './AdminPaymentsTab';
 import AdminLicenceTab from './AdminLicenceTab';
+import AdminCampusPhotosTab from './AdminCampusPhotosTab';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { api, subscribeToRealtimeSync } from '../../services/api';
 
@@ -155,7 +156,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
     { id: 'licence', label: 'Licence & Certificate', icon: ShieldCheck },
     { id: 'manage_children', label: 'Children Records', icon: Users, navigateTo: 'children' },
     { id: 'manage_staff', label: 'Staff Profiles', icon: Users, navigateTo: 'staff' },
-    { id: 'manage_views', label: 'Facility Photos', icon: Image, navigateTo: 'views' },
+    { id: 'campus_photos', label: 'Facility Photos (Delete & Manage)', icon: Image },
     { id: 'timetable', label: 'Daily Routine & Schedule', icon: Clock },
     { id: 'manage_menu', label: 'Food Time Table & Menu', icon: Utensils, navigateTo: 'menu' },
     { id: 'manage_needed', label: 'Needs & Supporters', icon: Heart, navigateTo: 'needed' },
@@ -608,6 +609,14 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
                   </button>
 
                   <button
+                    onClick={() => handleSelectAdminTab('campus_photos')}
+                    className="p-4 bg-white hover:bg-rose-50/70 rounded-2xl border border-rose-200 font-bold text-slate-800 text-left transition flex items-center justify-between shadow-xs hover:border-rose-400"
+                  >
+                    <span>Manage & Delete Facility Photos (Dormitory, Kitchen)</span>
+                    <ArrowRight className="w-4 h-4 text-rose-600" />
+                  </button>
+
+                  <button
                     onClick={() => setActiveTab('needed')}
                     className="p-4 bg-white hover:bg-blue-50/60 rounded-2xl border border-slate-200 font-bold text-slate-800 text-left transition flex items-center justify-between shadow-xs hover:border-blue-300"
                   >
@@ -692,6 +701,12 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
           {activeAdminTab === 'licence' && (
             <ErrorBoundary title="Licence & Registration">
               <AdminLicenceTab onShowToast={onShowToast} />
+            </ErrorBoundary>
+          )}
+
+          {(activeAdminTab === 'campus_photos' || activeAdminTab === 'manage_views') && (
+            <ErrorBoundary title="Campus Facility Photos">
+              <AdminCampusPhotosTab onShowToast={onShowToast} />
             </ErrorBoundary>
           )}
         </main>

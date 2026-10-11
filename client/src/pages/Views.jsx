@@ -4,12 +4,12 @@ import {
   ZoomIn, FolderPlus, X, Camera, Utensils, BookOpen, Heart, 
   Shield, Activity, CheckCircle, ChevronRight, Layers, Flame, RotateCcw
 } from 'lucide-react';
-import { api, broadcastLocalSyncEvent, subscribeToRealtimeSync } from '../services/api';
+import { api, broadcastLocalSyncEvent, subscribeToRealtimeSync, getAuthToken } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import LightboxModal from '../components/LightboxModal';
 
 // Built-in comprehensive campus facilities templates for Boys & Girls wings
-const BASE_BOYS_FACILITIES = [
+export const BASE_BOYS_FACILITIES = [
   {
     id: 'boys-rooms',
     category_slug: 'rooms',
@@ -150,7 +150,7 @@ const BASE_BOYS_FACILITIES = [
   }
 ];
 
-const BASE_GIRLS_FACILITIES = [
+export const BASE_GIRLS_FACILITIES = [
   {
     id: 'girls-rooms',
     category_slug: 'rooms',
@@ -326,7 +326,8 @@ export default function Views({ onShowToast }) {
   const [manageModalOpen, setManageModalOpen] = useState(false);
   const [managingFacility, setManagingFacility] = useState(null);
 
-  const { adminUser } = useAdminAuth();
+  const { adminUser, setLoginModalOpen } = useAdminAuth();
+  const isStaffOrAdmin = Boolean(adminUser || getAuthToken());
 
   const handleOpenManageFacilityModal = (facility) => {
     setManagingFacility(facility);
@@ -614,7 +615,7 @@ export default function Views({ onShowToast }) {
           </p>
         </div>
 
-        {adminUser && (
+        {isStaffOrAdmin ? (
           <div className="flex flex-wrap items-center gap-2.5 self-start">
             {deletedPhotoIds.length > 0 && (
               <button
@@ -644,7 +645,7 @@ export default function Views({ onShowToast }) {
         ) : (
           <div className="bg-slate-100/90 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs text-slate-600 flex items-center space-x-2.5 self-start">
             <Shield className="w-4 h-4 text-slate-500 flex-shrink-0" />
-            <span>Admin mode: <a href="#/admin" className="font-bold text-blue-600 hover:text-blue-800 underline">Log in here</a> to delete or upload campus photos.</span>
+            <span>Admin mode: <button type="button" onClick={() => setLoginModalOpen(true)} className="font-bold text-blue-600 hover:text-blue-800 underline">Log in here</button> to delete or upload campus photos.</span>
           </div>
         )}
       </div>
@@ -849,7 +850,7 @@ export default function Views({ onShowToast }) {
                       <span className="text-xs bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-xl">
                         {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
                       </span>
-                      {adminUser && (
+                      {isStaffOrAdmin && (
                         <>
                           {photos.length > 0 && (
                             <button
@@ -899,7 +900,7 @@ export default function Views({ onShowToast }) {
                     <div className="py-8 px-4 text-center bg-slate-50/80 rounded-2xl border border-dashed border-slate-200 text-slate-400">
                       <Camera className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                       <p className="text-xs font-semibold text-slate-500">No photographs currently displayed for this facility.</p>
-                      {adminUser && (
+                      {isStaffOrAdmin && (
                         <button
                           onClick={() => {
                             setPhotoWing('boys');
@@ -921,7 +922,7 @@ export default function Views({ onShowToast }) {
                           className="group relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between hover:-translate-y-1"
                         >
                           {/* Direct Floating Delete Button for Admin */}
-                          {adminUser && (
+                          {isStaffOrAdmin && (
                             <button
                               type="button"
                               onClick={(e) => {
@@ -975,7 +976,7 @@ export default function Views({ onShowToast }) {
                               )}
                             </div>
 
-                            {adminUser && (
+                            {isStaffOrAdmin && (
                               <button
                                 onClick={() => handleDeletePhoto(photo)}
                                 className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition flex-shrink-0 cursor-pointer"
@@ -1059,7 +1060,7 @@ export default function Views({ onShowToast }) {
                       <span className="text-xs bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-xl">
                         {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
                       </span>
-                      {adminUser && (
+                      {isStaffOrAdmin && (
                         <>
                           {photos.length > 0 && (
                             <button
@@ -1109,7 +1110,7 @@ export default function Views({ onShowToast }) {
                     <div className="py-8 px-4 text-center bg-slate-50/80 rounded-2xl border border-dashed border-slate-200 text-slate-400">
                       <Camera className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                       <p className="text-xs font-semibold text-slate-500">No photographs currently displayed for this facility.</p>
-                      {adminUser && (
+                      {isStaffOrAdmin && (
                         <button
                           onClick={() => {
                             setPhotoWing('girls');
@@ -1131,7 +1132,7 @@ export default function Views({ onShowToast }) {
                           className="group relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between hover:-translate-y-1"
                         >
                           {/* Direct Floating Delete Button for Admin */}
-                          {adminUser && (
+                          {isStaffOrAdmin && (
                             <button
                               type="button"
                               onClick={(e) => {
@@ -1185,7 +1186,7 @@ export default function Views({ onShowToast }) {
                               )}
                             </div>
 
-                            {adminUser && (
+                            {isStaffOrAdmin && (
                               <button
                                 onClick={() => handleDeletePhoto(photo)}
                                 className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition flex-shrink-0 cursor-pointer"
@@ -1514,7 +1515,7 @@ export default function Views({ onShowToast }) {
         photos={lightboxPhotos}
         currentIndex={selectedPhotoIndex}
         setCurrentIndex={setSelectedPhotoIndex}
-        onDeletePhoto={adminUser ? handleDeletePhoto : null}
+        onDeletePhoto={isStaffOrAdmin ? handleDeletePhoto : null}
       />
     </div>
   );
