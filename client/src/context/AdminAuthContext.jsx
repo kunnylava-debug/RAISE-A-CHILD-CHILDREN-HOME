@@ -28,11 +28,20 @@ export function AdminAuthProvider({ children }) {
 
       api.verifyAuth()
         .then(res => {
-          setAdminUser(res.user);
+          if (res?.user) setAdminUser(res.user);
         })
-        .catch(() => {
-          setAuthToken(null);
-          setAdminUser(null);
+        .catch((err) => {
+          if (err?.isAuthRejection || err?.status === 401 || err?.status === 403) {
+            setAuthToken(null);
+            setAdminUser(null);
+          } else {
+            // Preserve valid local offline session when network check is unavailable
+            const curToken = getAuthToken();
+            if (curToken) {
+              const username = localStorage.getItem('rac_admin_custom_username') || 'admin';
+              setAdminUser({ id: 1, username, role: 'admin' });
+            }
+          }
         })
         .finally(() => {
           setLoading(false);

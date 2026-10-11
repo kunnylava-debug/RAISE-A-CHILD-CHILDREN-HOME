@@ -158,6 +158,20 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
               <Heart className="w-4 h-4 fill-white/80" />
               <span>Support Us</span>
             </button>
+
+            {/* Admin Console Shortcut */}
+            <button
+              onClick={() => handleNavClick('admin')}
+              className={`ml-2 px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 border ${
+                activeTab === 'admin'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
+                  : 'bg-slate-900 hover:bg-slate-800 text-white border-slate-700'
+              }`}
+              title="Administrator Operations & Campus Photo Management"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+              <span>Admin</span>
+            </button>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -228,13 +242,21 @@ export default function Navbar({ activeTab, setActiveTab, settings }) {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-200">
+            <div className="pt-4 border-t border-slate-200 space-y-2.5">
               <button
                 onClick={() => handleNavClick('needed')}
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold py-3 px-4 rounded-xl shadow-md flex items-center justify-center space-x-2"
               >
                 <Heart className="w-5 h-5 fill-white/80" />
                 <span>Support Our Children (Donate)</span>
+              </button>
+
+              <button
+                onClick={() => handleNavClick('admin')}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl shadow-sm flex items-center justify-center space-x-2 border border-slate-700"
+              >
+                <ShieldCheck className="w-5 h-5 text-blue-400" />
+                <span>Admin Login & Photo Delete Desk</span>
               </button>
             </div>
           </div>
