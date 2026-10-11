@@ -617,35 +617,59 @@ export default function Views({ onShowToast }) {
 
         {isStaffOrAdmin ? (
           <div className="flex flex-wrap items-center gap-2.5 self-start">
+            <button
+              type="button"
+              onClick={() => {
+                setManagingFacility(boysFacilities[0] || girlsFacilities[0]);
+                setManageModalOpen(true);
+              }}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow-md hover:shadow-lg transition cursor-pointer"
+              title="Delete photographs from Dormitory, Kitchen, and living quarters"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete Campus Photos</span>
+            </button>
             {deletedPhotoIds.length > 0 && (
               <button
+                type="button"
                 onClick={handleRestoreDeletedPhotos}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-3.5 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 transition border border-slate-300 shadow-xs"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-3.5 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 transition border border-slate-300 shadow-xs cursor-pointer"
                 title="Restore all hidden/deleted predefined campus photographs"
               >
                 <RotateCcw className="w-4 h-4 text-blue-600" />
-                <span>Restore Deleted Photos ({deletedPhotoIds.length})</span>
+                <span>Restore Deleted ({deletedPhotoIds.length})</span>
               </button>
             )}
             <button
+              type="button"
               onClick={() => setNewCatModalOpen(true)}
-              className="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 transition shadow-sm"
+              className="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 transition shadow-sm cursor-pointer"
             >
               <FolderPlus className="w-4 h-4 text-emerald-400" />
               <span>Add Facility Category</span>
             </button>
             <button
+              type="button"
               onClick={() => setNewPhotoModalOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow-md transition"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow-md transition cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Upload Facility Photo</span>
             </button>
           </div>
         ) : (
-          <div className="bg-slate-100/90 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs text-slate-600 flex items-center space-x-2.5 self-start">
-            <Shield className="w-4 h-4 text-slate-500 flex-shrink-0" />
-            <span>Admin mode: <button type="button" onClick={() => setLoginModalOpen(true)} className="font-bold text-blue-600 hover:text-blue-800 underline">Log in here</button> to delete or upload campus photos.</span>
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 sm:px-4 sm:py-2.5 text-xs text-blue-900 flex flex-col sm:flex-row sm:items-center gap-2.5 self-start shadow-xs">
+            <div className="flex items-center space-x-2">
+              <Shield className="w-4 h-4 text-blue-600 flex-shrink-0" />
+              <span className="font-semibold">Administrator Controls:</span>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setLoginModalOpen(true)} 
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs shadow-xs transition cursor-pointer whitespace-nowrap"
+            >
+              Admin Login to Delete / Upload Photos
+            </button>
           </div>
         )}
       </div>
@@ -1432,10 +1456,34 @@ export default function Views({ onShowToast }) {
               </button>
             </div>
 
-            <div className="py-3 text-xs text-slate-600 flex-shrink-0">
+            <div className="py-2 text-xs text-slate-600 flex-shrink-0">
               <p>
                 Delete any unwanted photographs below. Deleting removes the photograph from both public view and your administration list. You can restore default photographs anytime via the top banner button.
               </p>
+            </div>
+
+            {/* Quick Facility Switcher Dropdown */}
+            <div className="mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200 flex-shrink-0">
+              <span className="text-xs font-bold text-slate-700">Choose Facility to Delete Photos From:</span>
+              <select
+                value={managingFacility.id}
+                onChange={(e) => {
+                  const target = [...boysFacilities, ...girlsFacilities].find(f => f.id === e.target.value);
+                  if (target) setManagingFacility(target);
+                }}
+                className="text-xs font-bold bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 max-w-full sm:max-w-xs"
+              >
+                <optgroup label="👦 Boys Residential Campus">
+                  {boysFacilities.map(f => (
+                    <option key={f.id} value={f.id}>👦 {f.name} ({getFacilityPhotos(f).length} photos)</option>
+                  ))}
+                </optgroup>
+                <optgroup label="👧 Girls Residential Campus">
+                  {girlsFacilities.map(f => (
+                    <option key={f.id} value={f.id}>👧 {f.name} ({getFacilityPhotos(f).length} photos)</option>
+                  ))}
+                </optgroup>
+              </select>
             </div>
 
             <div className="overflow-y-auto flex-1 space-y-3.5 pr-1">

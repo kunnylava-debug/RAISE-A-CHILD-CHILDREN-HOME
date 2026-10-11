@@ -144,6 +144,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
 
   const menuItems = [
     { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
+    { id: 'campus_photos', label: 'Campus Photos (Delete Dormitory, Kitchen)', icon: Image, badge: 'Delete & Upload' },
     { id: 'social_links', label: 'Follow Us (Facebook, Instagram & YouTube)', icon: Share2 },
     { id: 'payments', label: 'PhonePe, GPay & UPI Options', icon: CreditCard },
     { id: 'events', label: 'Events & Celebrations', icon: Calendar },
@@ -156,7 +157,6 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
     { id: 'licence', label: 'Licence & Certificate', icon: ShieldCheck },
     { id: 'manage_children', label: 'Children Records', icon: Users, navigateTo: 'children' },
     { id: 'manage_staff', label: 'Staff Profiles', icon: Users, navigateTo: 'staff' },
-    { id: 'campus_photos', label: 'Facility Photos (Delete & Manage)', icon: Image },
     { id: 'timetable', label: 'Daily Routine & Schedule', icon: Clock },
     { id: 'manage_menu', label: 'Food Time Table & Menu', icon: Utensils, navigateTo: 'menu' },
     { id: 'manage_needed', label: 'Needs & Supporters', icon: Heart, navigateTo: 'needed' },
@@ -280,7 +280,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
 
             {/* Quick Horizontal Scroll Nav Pills for Mobile */}
             <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
-              {menuItems.slice(0, 8).map(item => {
+              {menuItems.map(item => {
                 const Icon = item.icon;
                 const isSelected = activeAdminTab === item.id;
                 return (
@@ -402,6 +402,41 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
                     <ArrowRight className="w-3 h-3 ml-1" />
                   </span>
                 </div>
+              </div>
+
+              {/* Campus Photos Quick Delete & Manage Card */}
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-3xl p-6 sm:p-7 text-white shadow-lg border border-indigo-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                <div className="flex items-start space-x-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
+                    <Trash2 className="w-6 h-6 text-rose-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-300 bg-rose-500/20 px-2.5 py-0.5 rounded-full border border-rose-400/30">
+                        Campus Living Infrastructure
+                      </span>
+                      <span className="text-[10px] font-bold text-blue-200 bg-white/10 px-2 py-0.5 rounded-md">
+                        Boys & Girls Wings
+                      </span>
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-bold font-serif text-white mt-1">
+                      Campus Facility Photos (Dormitory, Kitchen, Grounds)
+                    </h3>
+                    <p className="text-xs text-blue-100/70 mt-1 max-w-xl leading-relaxed">
+                      Delete unwanted photos or upload new photographs for dormitories, modern kitchens, sports play arena, dining hall, and washrooms.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectAdminTab('campus_photos')}
+                  className="px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition cursor-pointer self-start sm:self-auto whitespace-nowrap"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Open Photo Delete Center</span>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
               </div>
 
               {/* One-Click Instant Data Exports (Active Hostel Records) */}
