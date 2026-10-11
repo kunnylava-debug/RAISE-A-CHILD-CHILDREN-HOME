@@ -326,17 +326,10 @@ export default function Views({ onShowToast }) {
   const [manageModalOpen, setManageModalOpen] = useState(false);
   const [managingFacility, setManagingFacility] = useState(null);
 
+  const { adminUser, setLoginModalOpen } = useAdminAuth();
   const isStaffOrAdmin = Boolean(adminUser || getAuthToken() || localStorage.getItem('rac_admin_token') || localStorage.getItem('shanti_admin_token'));
 
   const handleOpenManageFacilityModal = (facility) => {
-    if (!isStaffOrAdmin) {
-      setLoginModalOpen(true);
-      onShowToast?.({
-        type: 'info',
-        message: 'Admin authorization required. Please log in to delete campus photographs.'
-      });
-      return;
-    }
     setManagingFacility(facility);
     setManageModalOpen(true);
   };
@@ -635,10 +628,6 @@ export default function Views({ onShowToast }) {
           <button
             type="button"
             onClick={() => {
-              if (!isStaffOrAdmin) {
-                setLoginModalOpen(true);
-                return;
-              }
               setManagingFacility(boysFacilities[0] || girlsFacilities[0]);
               setManageModalOpen(true);
             }}

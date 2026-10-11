@@ -145,6 +145,7 @@ export default function AdminDashboard({ settings, onRefreshSettings, setActiveT
   const menuItems = [
     { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
     { id: 'campus_photos', label: 'Campus Photos (Delete Dormitory, Kitchen)', icon: Image, badge: 'Delete & Upload' },
+    { id: 'manage_views', label: 'Go to Campus Page (Live Delete Controls)', icon: ExternalLink, navigateTo: 'views' },
     { id: 'social_links', label: 'Follow Us (Facebook, Instagram & YouTube)', icon: Share2 },
     { id: 'payments', label: 'PhonePe, GPay & UPI Options', icon: CreditCard },
     { id: 'events', label: 'Events & Celebrations', icon: Calendar },
