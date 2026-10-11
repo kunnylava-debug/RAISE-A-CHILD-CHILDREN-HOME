@@ -1946,6 +1946,7 @@ export const api = {
   createChild: (data) => request('/children', { method: 'POST', body: data }),
   updateChild: (id, data) => request(`/children/${id}`, { method: 'PUT', body: data }),
   deleteChild: (id) => request(`/children/${id}`, { method: 'DELETE' }),
+  runChildrenPromotions: () => request('/children', { method: 'POST', body: { action: 'run_promotions' } }),
   importChildrenCsv: async (payload) => {
     return request('/children/import-csv', { method: 'POST', body: payload });
   },

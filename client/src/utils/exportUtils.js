@@ -399,6 +399,7 @@ export async function parseSpreadsheetFileToCsv(file) {
 export function normalizeCsvHeader(h) {
   const clean = (h || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   if (['fullname', 'name', 'childname', 'studentname', 'student', 'child', 'studentfullname', 'beneficiaryname', 'beneficiary', 'nameofthechild'].includes(clean)) return 'name';
+  if (['dob', 'dateofbirth', 'birthdate', 'birthday', 'bday', 'dateofbirthdob'].includes(clean)) return 'dob';
   if (['age', 'years', 'ageyears', 'ageinyears', 'yearsold'].includes(clean)) return 'age';
   if (['gender', 'sex', 'gendersex', 'morf', 'mf'].includes(clean)) return 'gender';
   if (['class', 'grade', 'classgrade', 'standard', 'std', 'studyclass', 'currentclass', 'education', 'studying', 'course'].includes(clean)) return 'class';
@@ -566,10 +567,23 @@ export function parseAndValidateChildrenCsv(csvText, existingChildren = []) {
       ? rowObj.serial_no
       : `SN-CH-${String(nextSerialNum++).padStart(3, '0')}`;
 
+    const dob = rowObj.dob || '';
+    if (dob) {
+      const birth = new Date(dob);
+      if (!isNaN(birth.getTime())) {
+        const today = new Date();
+        let calculated = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) calculated--;
+        if (calculated >= 0 && calculated <= 35) age = calculated;
+      }
+    }
+
     validRecords.push({
       _rowNumber: lineNum,
       serial_no,
       name,
+      dob,
       age,
       class: finalClass,
       gender,

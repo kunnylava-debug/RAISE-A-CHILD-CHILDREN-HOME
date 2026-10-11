@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
-export default function LightboxModal({ isOpen, onClose, photos = [], currentIndex = 0, setCurrentIndex }) {
+export default function LightboxModal({ isOpen, onClose, photos = [], currentIndex = 0, setCurrentIndex, onDeletePhoto }) {
   const handleNext = React.useCallback(() => {
     if (setCurrentIndex && photos.length > 0) {
       setCurrentIndex((currentIndex + 1) % photos.length);
@@ -82,6 +82,22 @@ export default function LightboxModal({ isOpen, onClose, photos = [], currentInd
             <span className="inline-block mt-2 text-xs text-slate-400 bg-white/10 px-3 py-1 rounded-full">
               {currentIndex + 1} of {photos.length}
             </span>
+          )}
+          {onDeletePhoto && (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onDeletePhoto(current);
+                }}
+                className="inline-flex items-center space-x-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg transition"
+                title="Delete this photograph"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete This Photograph</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

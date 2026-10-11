@@ -323,8 +323,15 @@ export default function Views({ onShowToast }) {
   const [photoDesc, setPhotoDesc] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [manageModalOpen, setManageModalOpen] = useState(false);
+  const [managingFacility, setManagingFacility] = useState(null);
 
   const { adminUser } = useAdminAuth();
+
+  const handleOpenManageFacilityModal = (facility) => {
+    setManagingFacility(facility);
+    setManageModalOpen(true);
+  };
 
   // Load custom photos, categories, and deleted predefined photo IDs
   const loadCampusData = () => {
@@ -634,6 +641,11 @@ export default function Views({ onShowToast }) {
               <span>Upload Facility Photo</span>
             </button>
           </div>
+        ) : (
+          <div className="bg-slate-100/90 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs text-slate-600 flex items-center space-x-2.5 self-start">
+            <Shield className="w-4 h-4 text-slate-500 flex-shrink-0" />
+            <span>Admin mode: <a href="#/admin" className="font-bold text-blue-600 hover:text-blue-800 underline">Log in here</a> to delete or upload campus photos.</span>
+          </div>
         )}
       </div>
 
@@ -833,22 +845,36 @@ export default function Views({ onShowToast }) {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 self-start sm:self-center">
+                    <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
                       <span className="text-xs bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-xl">
                         {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
                       </span>
                       {adminUser && (
-                        <button
-                          onClick={() => {
-                            setPhotoWing('boys');
-                            setPhotoFacilityKey(facility.category_slug || facility.id);
-                            setNewPhotoModalOpen(true);
-                          }}
-                          className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1 shadow-xs transition"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Add Photo</span>
-                        </button>
+                        <>
+                          {photos.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenManageFacilityModal(facility)}
+                              className="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1 border border-rose-200 transition shadow-xs cursor-pointer"
+                              title="Delete photos from this facility"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Delete Photos ({photos.length})</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPhotoWing('boys');
+                              setPhotoFacilityKey(facility.category_slug || facility.id);
+                              setNewPhotoModalOpen(true);
+                            }}
+                            className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1 shadow-xs transition cursor-pointer"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add Photo</span>
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -894,6 +920,22 @@ export default function Views({ onShowToast }) {
                           key={photo.id || pIdx}
                           className="group relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between hover:-translate-y-1"
                         >
+                          {/* Direct Floating Delete Button for Admin */}
+                          {adminUser && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePhoto(photo);
+                              }}
+                              className="absolute top-2.5 right-2.5 z-20 bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-xl shadow-md transition flex items-center space-x-1 text-xs font-bold cursor-pointer"
+                              title="Delete this photograph"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Delete</span>
+                            </button>
+                          )}
+
                           <div
                             onClick={() => openFacilityLightbox(photos, pIdx)}
                             className="relative h-52 bg-slate-100 overflow-hidden cursor-pointer"
@@ -936,10 +978,11 @@ export default function Views({ onShowToast }) {
                             {adminUser && (
                               <button
                                 onClick={() => handleDeletePhoto(photo)}
-                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                                className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition flex-shrink-0 cursor-pointer"
                                 title="Delete photo from campus"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Delete</span>
                               </button>
                             )}
                           </div>
@@ -1012,22 +1055,36 @@ export default function Views({ onShowToast }) {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 self-start sm:self-center">
+                    <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
                       <span className="text-xs bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-xl">
                         {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
                       </span>
                       {adminUser && (
-                        <button
-                          onClick={() => {
-                            setPhotoWing('girls');
-                            setPhotoFacilityKey(facility.category_slug || facility.id);
-                            setNewPhotoModalOpen(true);
-                          }}
-                          className="text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1 shadow-xs transition"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Add Photo</span>
-                        </button>
+                        <>
+                          {photos.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenManageFacilityModal(facility)}
+                              className="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1 border border-rose-200 transition shadow-xs cursor-pointer"
+                              title="Delete photos from this facility"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Delete Photos ({photos.length})</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPhotoWing('girls');
+                              setPhotoFacilityKey(facility.category_slug || facility.id);
+                              setNewPhotoModalOpen(true);
+                            }}
+                            className="text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1 shadow-xs transition cursor-pointer"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add Photo</span>
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -1073,6 +1130,22 @@ export default function Views({ onShowToast }) {
                           key={photo.id || pIdx}
                           className="group relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between hover:-translate-y-1"
                         >
+                          {/* Direct Floating Delete Button for Admin */}
+                          {adminUser && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePhoto(photo);
+                              }}
+                              className="absolute top-2.5 right-2.5 z-20 bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-xl shadow-md transition flex items-center space-x-1 text-xs font-bold cursor-pointer"
+                              title="Delete this photograph"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Delete</span>
+                            </button>
+                          )}
+
                           <div
                             onClick={() => openFacilityLightbox(photos, pIdx)}
                             className="relative h-52 bg-slate-100 overflow-hidden cursor-pointer"
@@ -1115,10 +1188,11 @@ export default function Views({ onShowToast }) {
                             {adminUser && (
                               <button
                                 onClick={() => handleDeletePhoto(photo)}
-                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                                className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition flex-shrink-0 cursor-pointer"
                                 title="Delete photo from campus"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Delete</span>
                               </button>
                             )}
                           </div>
@@ -1332,6 +1406,107 @@ export default function Views({ onShowToast }) {
         </div>
       )}
 
+      {/* Dedicated Facility Photos Manager Modal */}
+      {manageModalOpen && managingFacility && (
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4 flex-shrink-0">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                  Delete & Manage Photographs
+                </span>
+                <h3 className="text-xl font-bold font-serif text-slate-900 mt-1">
+                  {managingFacility.name}
+                </h3>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setManageModalOpen(false);
+                  setManagingFacility(null);
+                }} 
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="py-3 text-xs text-slate-600 flex-shrink-0">
+              <p>
+                Delete any unwanted photographs below. Deleting removes the photograph from both public view and your administration list. You can restore default photographs anytime via the top banner button.
+              </p>
+            </div>
+
+            <div className="overflow-y-auto flex-1 space-y-3.5 pr-1">
+              {getFacilityPhotos(managingFacility).length === 0 ? (
+                <div className="py-12 text-center text-slate-400">
+                  <Camera className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                  <p className="font-semibold text-sm">No photographs currently present for this facility.</p>
+                </div>
+              ) : (
+                getFacilityPhotos(managingFacility).map((p, idx) => (
+                  <div
+                    key={p.id || idx}
+                    className="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-200 transition gap-4"
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0">
+                      <img
+                        src={p.image_url}
+                        alt={p.title}
+                        className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-slate-200"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-slate-900 truncate">
+                          {p.title || 'Photograph ' + (idx + 1)}
+                        </h4>
+                        {p.description && (
+                          <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                            {p.description}
+                          </p>
+                        )}
+                        <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
+                          ID: {p.id || 'predefined'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePhoto(p)}
+                      className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-sm transition flex-shrink-0 cursor-pointer"
+                      title="Delete this photograph"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Photo</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 flex justify-between items-center flex-shrink-0 mt-3">
+              <span className="text-xs text-slate-500">
+                {getFacilityPhotos(managingFacility).length} photo(s) in this facility
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setManageModalOpen(false);
+                  setManagingFacility(null);
+                }}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Lightbox Viewer */}
       <LightboxModal
         isOpen={lightboxOpen}
@@ -1339,6 +1514,7 @@ export default function Views({ onShowToast }) {
         photos={lightboxPhotos}
         currentIndex={selectedPhotoIndex}
         setCurrentIndex={setSelectedPhotoIndex}
+        onDeletePhoto={adminUser ? handleDeletePhoto : null}
       />
     </div>
   );

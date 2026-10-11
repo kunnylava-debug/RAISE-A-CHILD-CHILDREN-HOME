@@ -4,11 +4,41 @@ import {
   Plus, Edit3, Trash2, X, ChevronLeft, ChevronRight, 
   Eye, LayoutGrid, Table as TableIcon,
   FileSpreadsheet, ExternalLink, Download, RefreshCw, Copy, 
-  CheckCircle, Check, Settings, AlertCircle, FileText, Mail
+  CheckCircle, Check, Settings, AlertCircle, FileText, Mail,
+  Calendar, Sparkles, GraduationCap
 } from 'lucide-react';
 import { api, subscribeToRealtimeSync } from '../services/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { parseAndValidateChildrenCsv, parseSpreadsheetFileToCsv } from '../utils/exportUtils';
+
+export function computeAgeFromDob(dobStr) {
+  if (!dobStr) return null;
+  const dob = new Date(dobStr);
+  if (isNaN(dob.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return Math.max(0, age);
+}
+
+export function isBirthdayToday(dobStr) {
+  if (!dobStr) return false;
+  const dob = new Date(dobStr);
+  if (isNaN(dob.getTime())) return false;
+  const today = new Date();
+  return today.getMonth() === dob.getMonth() && today.getDate() === dob.getDate();
+}
+
+export function isBirthdayThisMonth(dobStr) {
+  if (!dobStr) return false;
+  const dob = new Date(dobStr);
+  if (isNaN(dob.getTime())) return false;
+  const today = new Date();
+  return today.getMonth() === dob.getMonth();
+}
 
 export default function Children({ onShowToast }) {
   const [childrenData, setChildrenData] = useState({
@@ -39,6 +69,10 @@ export default function Children({ onShowToast }) {
   const [copiedScript, setCopiedScript] = useState(false);
   const [webhookInput, setWebhookInput] = useState('');
   const [savingWebhook, setSavingWebhook] = useState(false);
+
+  // Automatic Academic Promotion & Birthday Engine State
+  const [runningPromotions, setRunningPromotions] = useState(false);
+  const [promotionStatus, setPromotionStatus] = useState(null);
 
   // CSV Import State
   const [csvImportModalOpen, setCsvImportModalOpen] = useState(false);
@@ -284,6 +318,27 @@ function doPost(e) {
     }
   };
 
+  const handleRunPromotionCheck = async () => {
+    try {
+      setRunningPromotions(true);
+      const res = await api.runChildrenPromotions();
+      setPromotionStatus(res);
+      onShowToast?.({
+        type: 'success',
+        title: 'Promotion Engine Active',
+        message: res.message || 'Academic promotion & birthday check completed successfully!'
+      });
+      fetchChildren(page, false);
+    } catch (err) {
+      onShowToast?.({
+        type: 'error',
+        message: 'Promotion check error: ' + err.message
+      });
+    } finally {
+      setRunningPromotions(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       {/* 1. TOP STATS: PROMINENT TOTAL CHILDREN COUNTER (Mobile & Desktop) */}
@@ -460,11 +515,23 @@ function doPost(e) {
               type="button"
               onClick={handleSyncGoogleSheet}
               disabled={syncingSheet}
-              className="px-3.5 py-2.5 bg-teal-700 hover:bg-teal-600 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 disabled:opacity-50"
+              className="px-3.5 py-2.5 bg-teal-700 hover:bg-teal-600 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 disabled:opacity-50 cursor-pointer"
               title="Sync from Google Sheet to Website"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncingSheet ? 'animate-spin' : ''}`} />
               <span>{syncingSheet ? 'Syncing...' : 'Sync from Sheet'}</span>
+            </button>
+
+            {/* Automatic Academic Promotion & Birthday Engine Button */}
+            <button
+              type="button"
+              onClick={handleRunPromotionCheck}
+              disabled={runningPromotions}
+              className="px-3.5 py-2.5 bg-indigo-700 hover:bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 shadow-md shadow-indigo-900/30 cursor-pointer disabled:opacity-50"
+              title="Verify academic class promotion (April 1st) and birthday age increments"
+            >
+              <GraduationCap className={`w-4 h-4 ${runningPromotions ? 'animate-bounce' : ''}`} />
+              <span>{runningPromotions ? 'Checking...' : 'Promotion & Birthday Engine'}</span>
             </button>
 
             <button
@@ -475,6 +542,20 @@ function doPost(e) {
             >
               <Settings className="w-4 h-4" />
             </button>
+          </div>
+
+          {/* Automatic Promotion & Birthday Engine Information Strip */}
+          <div className="bg-white/10 rounded-2xl p-3 border border-white/15 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center space-x-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+              <span>
+                <strong>Academic Session:</strong> {childrenData?.academic_year || '2026-2027'} (Next automatic April grade advancement: {childrenData?.next_promotion_date || '2027-04-01'})
+              </span>
+            </div>
+            <div className="flex items-center space-x-3 text-emerald-300 font-semibold text-[11px]">
+              <span>🎂 Birthday Auto-Increment: Active</span>
+              <span>🎓 Automatic April Promotion: Active</span>
+            </div>
           </div>
         </div>
       )}
@@ -601,6 +682,7 @@ function doPost(e) {
                 setEditChild({
                   serial_no: '',
                   name: '',
+                  dob: '',
                   age: 10,
                   class: 'Class 5',
                   gender: 'Male',
@@ -721,9 +803,16 @@ function doPost(e) {
                 </span>
 
                 <div className="absolute bottom-3 left-3 right-3 text-white">
-                  <h3 className="text-base font-bold font-serif leading-tight">
-                    {child.name}
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-bold font-serif leading-tight">
+                      {child.name}
+                    </h3>
+                    {isBirthdayToday(child.dob) && (
+                      <span className="bg-amber-400 text-slate-900 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow">
+                        🎂 Today!
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs text-slate-300">
                     Age: {child.age} yrs • {child.gender}
                   </span>
@@ -736,6 +825,18 @@ function doPost(e) {
                     <span>Enrolled:</span>
                     <span className="font-semibold text-slate-700">{child.admission_date}</span>
                   </div>
+                  {child.dob && (
+                    <div className="flex items-center justify-between text-slate-500">
+                      <span className="flex items-center space-x-1">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        <span>Birth Date:</span>
+                      </span>
+                      <span className="font-semibold text-slate-700">
+                        {child.dob}
+                        {isBirthdayToday(child.dob) && <span className="ml-1 text-amber-600 font-bold">🎂 Today!</span>}
+                      </span>
+                    </div>
+                  )}
                   {child.hobbies && (
                     <div className="pt-1">
                       <span className="text-slate-400 block text-[10px] uppercase font-bold">Interests</span>
@@ -832,7 +933,15 @@ function doPost(e) {
                       </div>
                     </td>
                     <td className="py-3 px-3 sm:px-4 font-bold text-slate-800 whitespace-nowrap">{child.name}</td>
-                    <td className="py-3 px-3 sm:px-4 text-slate-600 whitespace-nowrap">{child.age} yrs</td>
+                    <td className="py-3 px-3 sm:px-4 text-slate-600 whitespace-nowrap">
+                      <span className="font-semibold">{child.age} yrs</span>
+                      {child.dob && (
+                        <span className="block text-[10px] text-slate-400 font-mono">
+                          {child.dob}
+                          {isBirthdayToday(child.dob) && <span className="ml-1 text-amber-600 font-bold">🎂 Today!</span>}
+                        </span>
+                      )}
+                    </td>
                     <td className="py-3 px-3 sm:px-4 font-semibold text-emerald-700 whitespace-nowrap">{child.class}</td>
                     <td className="py-3 px-3 sm:px-4 text-slate-600 whitespace-nowrap">{child.gender}</td>
                     <td className="py-3 px-3 sm:px-4 text-slate-500 font-mono text-xs whitespace-nowrap hidden sm:table-cell">{child.admission_date}</td>
@@ -945,6 +1054,22 @@ function doPost(e) {
                   <span className="font-semibold text-slate-700">Date of Admission:</span>
                   <span className="font-mono text-slate-900">{selectedChild.admission_date}</span>
                 </div>
+                {selectedChild.dob && (
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-700">Date of Birth (DOB):</span>
+                    <span className="font-mono text-slate-900 flex items-center space-x-1">
+                      <span>{selectedChild.dob}</span>
+                      {isBirthdayToday(selectedChild.dob) && <span className="ml-1 text-amber-600 font-bold">🎂 Today!</span>}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="font-semibold text-slate-700">Academic Progression:</span>
+                  <span className="text-emerald-700 font-bold text-xs flex items-center space-x-1">
+                    <GraduationCap className="w-3.5 h-3.5 text-emerald-600 inline" />
+                    <span>Auto-promotes every April 1st</span>
+                  </span>
+                </div>
                 <div className="flex justify-between">
                   <span className="font-semibold text-slate-700">Hobbies & Activities:</span>
                   <span className="text-slate-900">{selectedChild.hobbies || 'Sports, Art, Reading'}</span>
@@ -1049,12 +1174,32 @@ function doPost(e) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Age *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Date of Birth (DOB)</label>
+                  <input
+                    type="date"
+                    value={editChild.dob || ''}
+                    onChange={e => {
+                      const newDob = e.target.value;
+                      const calculatedAge = computeAgeFromDob(newDob);
+                      setEditChild({
+                        ...editChild,
+                        dob: newDob,
+                        ...(calculatedAge !== null ? { age: calculatedAge } : {})
+                      });
+                    }}
+                    className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                    <span>Age *</span>
+                    {editChild.dob && <span className="text-[10px] text-emerald-600 font-bold">Auto</span>}
+                  </label>
                   <input
                     type="number"
-                    min="4"
+                    min="1"
                     max="35"
                     required
                     value={editChild.age}
@@ -1069,9 +1214,20 @@ function doPost(e) {
                     onChange={e => setEditChild({ ...editChild, class: e.target.value })}
                     className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white"
                   >
-                    {Array.from({ length: 12 }, (_, i) => `Class ${i + 1}`).map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
+                    <option value="LKG">LKG</option>
+                    <option value="UKG">UKG</option>
+                    <option value="1st">1st (Class 1)</option>
+                    <option value="2nd">2nd (Class 2)</option>
+                    <option value="3rd">3rd (Class 3)</option>
+                    <option value="4th">4th (Class 4)</option>
+                    <option value="5th">5th (Class 5)</option>
+                    <option value="6th">6th (Class 6)</option>
+                    <option value="7th">7th (Class 7)</option>
+                    <option value="8th">8th (Class 8)</option>
+                    <option value="9th">9th (Class 9)</option>
+                    <option value="10th">10th (Class 10 / SSC)</option>
+                    <option value="Inter 1st Year">Inter 1st Year (11th)</option>
+                    <option value="Inter 2nd Year">Inter 2nd Year (12th)</option>
                     <option value="College / Degree">College / Degree</option>
                     <option value="Vocational / ITI">Vocational / ITI</option>
                   </select>
@@ -1086,6 +1242,19 @@ function doPost(e) {
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Automatic Academic & Birthday Engine Notice */}
+              <div className="bg-emerald-50/90 border border-emerald-200/80 rounded-xl p-3 text-xs text-emerald-900 flex items-start space-x-2.5">
+                <Sparkles className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-bold block text-emerald-800">
+                    Automatic Birthday Age Increments & April Class Promotion Active
+                  </span>
+                  <p className="text-[11px] text-emerald-700 leading-relaxed">
+                    Setting the Date of Birth automatically calculates the child's exact age and increments it every year on their birthday. School class automatically promotes to the next academic grade every <strong>April 1st</strong>!
+                  </p>
                 </div>
               </div>
 
